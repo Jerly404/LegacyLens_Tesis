@@ -1,0 +1,41 @@
+<div class="h-[calc(100vh-10rem)] flex flex-col">
+  <div class="mb-4">
+    <h1 class="text-2xl font-bold tracking-tight">AI Assistant</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Interact with your legacy codebase using retrieval-augmented generation (RAG) models.</p>
+  </div>
+
+  <!-- Chat Screen -->
+  <div class="flex-1 glass-panel rounded-2xl p-6 border border-slate-200/50 dark:border-slate-800/50 flex flex-col justify-between overflow-hidden shadow-xl">
+    <!-- Chat log -->
+    <div class="flex-1 overflow-auto space-y-4 pr-2">
+      <div class="flex items-start">
+        <div class="bg-brand-500/10 border border-brand-500/20 text-brand-700 dark:text-brand-300 p-4 rounded-2xl max-w-xl">
+          <p class="text-sm font-semibold mb-1">CodeLens AI Agent</p>
+          <p class="text-sm">Hello! I have indexed the legacy system. You can ask me how classes are structured, how libraries interact, or query architecture reports.</p>
+        </div>
+      </div>
+      <div class="flex items-start justify-end">
+        <div class="bg-slate-200 dark:bg-slate-800 p-4 rounded-2xl max-w-xl text-right">
+          <p class="text-sm font-semibold mb-1">You</p>
+          <p class="text-sm">Explain the database connection pool configuration in the service module.</p>
+        </div>
+      </div>
+      <div class="flex items-start">
+        <div class="bg-brand-500/10 border border-brand-500/20 text-brand-700 dark:text-brand-300 p-4 rounded-2xl max-w-xl">
+          <p class="text-sm font-semibold mb-1">CodeLens AI Agent</p>
+          <p class="text-sm">Based on vector retrieval results from `database.service.ts`, the system uses Prisma ORM with connection pooling set to 20 maximum connections, a 30s timeout, and a Redis caching proxy for session tokens.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Box -->
+    <div class="mt-6 flex gap-4">
+      <input 
+        type="text" 
+        placeholder="Type a message or code-based query..."
+        class="flex-1 px-4 py-3 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-brand-500 dark:focus:border-brand-500 text-sm transition"
+      >
+      <app-button>Send</app-button>
+    </div>
+  </div>
+</div>

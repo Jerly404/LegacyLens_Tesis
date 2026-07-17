@@ -1,0 +1,25 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight">{ title }</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Enterprise workspace component for CodeLens AI SaaS.</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <app-card title="Workspace Details" subtitle="Active metrics container">
+      <div class="space-y-4">
+        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          This feature supports clean-code visual integrations including AST parsing tree outputs, structural analysis grids, and local execution pipelines.
+        </p>
+        <app-button variant="secondary">Refresh Metrics</app-button>
+      </div>
+    </app-card>
+
+    <app-card title="Syntax Preview" subtitle="Real-time rendering">
+      <app-monaco-editor [code]="codeSample()"></app-monaco-editor>
+    </app-card>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6">
+    <app-diagram [definition]="diagramDef()"></app-diagram>
+  </div>
+</div>

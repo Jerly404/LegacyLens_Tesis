@@ -1,0 +1,66 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  DEVELOPER
+  VIEWER
+}
+
+enum ProjectStatus {
+  PENDING
+  ANALYZING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(DEVELOPER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  projects  Project[]
+  auditLogs AuditLog[]
+}
+
+model Project {
+  id            String        @id @default(uuid())
+  name          String
+  description   String?
+  repositoryUrl String?
+  status        ProjectStatus @default(PENDING)
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  analyses      Analysis[]
+}
+
+model Analysis {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  step        String
+  progress    Int      @default(0)
+  result      Json?
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  resource  String
+  details   String
+  timestamp DateTime @default(now())
+}

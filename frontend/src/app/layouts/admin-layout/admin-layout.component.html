@@ -1,0 +1,77 @@
+<div class="min-h-screen flex bg-slate-50 dark:bg-dark-bg text-slate-900 dark:text-slate-100 transition-colors duration-300">
+  <!-- Sidebar -->
+  <aside 
+    [class.w-64]="sidebarOpen" 
+    [class.w-20]="!sidebarOpen"
+    class="bg-white dark:bg-dark-card border-r border-slate-200 dark:border-dark-border flex flex-col justify-between transition-all duration-300 ease-in-out z-20"
+  >
+    <div>
+      <!-- Brand Logo -->
+      <div class="h-16 flex items-center px-6 border-b border-slate-200 dark:border-dark-border">
+        <span class="material-icons text-brand-500 text-3xl">insights</span>
+        <span class="ml-3 font-semibold text-lg tracking-wider text-slate-800 dark:text-white transition-opacity duration-200" [class.opacity-0]="!sidebarOpen">CodeLens AI</span>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="p-4 space-y-1">
+        <a routerLink="/dashboard" routerLinkActive="bg-brand-500/10 text-brand-500 font-semibold" class="flex items-center px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition duration-150">
+          <span class="material-icons">dashboard</span>
+          <span class="ml-4 transition-opacity duration-200" [class.opacity-0]="!sidebarOpen">Dashboard</span>
+        </a>
+        <a routerLink="/projects" routerLinkActive="bg-brand-500/10 text-brand-500 font-semibold" class="flex items-center px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition duration-150">
+          <span class="material-icons">folder</span>
+          <span class="ml-4 transition-opacity duration-200" [class.opacity-0]="!sidebarOpen">Projects</span>
+        </a>
+        <a routerLink="/upload" routerLinkActive="bg-brand-500/10 text-brand-500 font-semibold" class="flex items-center px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition duration-150">
+          <span class="material-icons">cloud_upload</span>
+          <span class="ml-4 transition-opacity duration-200" [class.opacity-0]="!sidebarOpen">Upload Code</span>
+        </a>
+        <a routerLink="/ai-chat" routerLinkActive="bg-brand-500/10 text-brand-500 font-semibold" class="flex items-center px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition duration-150">
+          <span class="material-icons">chat</span>
+          <span class="ml-4 transition-opacity duration-200" [class.opacity-0]="!sidebarOpen">AI Chat</span>
+        </a>
+        <a routerLink="/settings" routerLinkActive="bg-brand-500/10 text-brand-500 font-semibold" class="flex items-center px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition duration-150">
+          <span class="material-icons">settings</span>
+          <span class="ml-4 transition-opacity duration-200" [class.opacity-0]="!sidebarOpen">Settings</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- User Profile Footer -->
+    <div class="p-4 border-t border-slate-200 dark:border-dark-border flex items-center justify-between">
+      <div class="flex items-center">
+        <span class="material-icons text-3xl text-slate-400">account_circle</span>
+        <div class="ml-3 overflow-hidden transition-all duration-200" [class.w-0]="!sidebarOpen">
+          <p class="text-xs font-semibold truncate">{{ authService.currentUser()?.name }}</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">{{ authService.currentUser()?.role }}</p>
+        </div>
+      </div>
+      <button (click)="authService.logout()" class="material-icons text-red-500 hover:text-red-600 transition" [class.hidden]="!sidebarOpen">logout</button>
+    </div>
+  </aside>
+
+  <!-- Content Wrapper -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="h-16 bg-white dark:bg-dark-card border-b border-slate-200 dark:border-dark-border flex items-center justify-between px-6 z-10 shadow-sm">
+      <div class="flex items-center">
+        <button (click)="toggleSidebar()" class="material-icons text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-xl">menu</button>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center space-x-3">
+        <button 
+          (click)="themeService.toggleTheme()" 
+          class="material-icons text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-xl"
+        >
+          {{ themeService.isDarkMode() ? 'light_mode' : 'dark_mode' }}
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Panel -->
+    <main class="flex-1 overflow-auto p-6 md:p-8">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
