@@ -1,25 +1,189 @@
-<div class="space-y-6">
-  <div>
-    <h1 class="text-2xl font-bold tracking-tight">{ title }</h1>
-    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Enterprise workspace component for CodeLens AI SaaS.</p>
-  </div>
+<div class="space-y-8 max-w-7xl mx-auto">
+  @if (architectureData(); as arch) {
+    <!-- Top Header & Primary Pattern Recovery Card -->
+    <div class="bg-[#151821] border border-blue-500/30 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+      <!-- Ambient Glow -->
+      <div class="absolute -top-20 -right-20 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <app-card title="Workspace Details" subtitle="Active metrics container">
-      <div class="space-y-4">
-        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-          This feature supports clean-code visual integrations including AST parsing tree outputs, structural analysis grids, and local execution pipelines.
-        </p>
-        <app-button variant="secondary">Refresh Metrics</app-button>
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div class="space-y-3">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-mono text-purple-400">
+            <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+            AI ARCHITECTURAL REVERSE-ENGINEERING
+          </div>
+
+          <div class="flex items-center gap-3">
+            <h1 class="text-3xl font-extrabold text-white">Detected Architecture:</h1>
+            <span class="text-3xl font-extrabold gradient-text-blue-purple">{{ arch.type }} Architecture</span>
+          </div>
+
+          <p class="text-sm text-slate-300 max-w-3xl leading-relaxed">
+            {{ arch.summary }}
+          </p>
+        </div>
+
+        <!-- Confidence Gauge -->
+        <div class="bg-black/30 border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center shrink-0 min-w-[200px]">
+          <span class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Detection Confidence</span>
+          <span class="text-4xl font-extrabold text-emerald-400 my-1">{{ arch.confidence }}%</span>
+          <span class="text-[11px] text-slate-400">Verified by DeepSeek Coder</span>
+        </div>
       </div>
-    </app-card>
 
-    <app-card title="Syntax Preview" subtitle="Real-time rendering">
-      <app-monaco-editor [code]="codeSample()"></app-monaco-editor>
-    </app-card>
-  </div>
+      <!-- Architectural Pattern Probabilities -->
+      <div class="mt-8 pt-6 border-t border-white/[0.08]">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">Pattern Probability Distribution:</span>
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-xs font-mono">
+          @for (style of architectureStyles; track style.name) {
+            <div 
+              class="p-2.5 rounded-xl border text-center transition"
+              [class]="style.match ? 'bg-blue-600/20 border-blue-400 text-white shadow-glow-primary/20' : 'bg-white/[0.02] border-white/5 text-slate-400'"
+            >
+              <span class="block font-semibold text-[11px] truncate">{{ style.name }}</span>
+              <span class="block text-xs font-bold mt-0.5" [class.text-blue-400]="style.match">{{ style.confidence }}%</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
 
-  <div class="grid grid-cols-1 gap-6">
-    <app-diagram [definition]="diagramDef()"></app-diagram>
-  </div>
+    <!-- AI Explanation & Evidence Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- AI Explanation -->
+      <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl space-y-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2 pb-3 border-b border-white/[0.08]">
+          <span class="material-symbols-outlined text-purple-400 text-lg">psychology</span>
+          Architectural Assessment & Erosion Analysis
+        </h3>
+
+        <p class="text-xs text-slate-300 leading-relaxed">
+          {{ arch.explanation }}
+        </p>
+
+        <div class="space-y-2 pt-2">
+          <span class="text-xs font-semibold text-rose-400 block uppercase tracking-wider">Identified Architectural Liabilities:</span>
+          <div class="space-y-1.5">
+            @for (risk of arch.risks; track risk) {
+              <div class="flex items-start gap-2 text-xs text-slate-300 bg-rose-500/5 p-2.5 rounded-xl border border-rose-500/15">
+                <span class="material-symbols-outlined text-rose-400 text-sm mt-0.5">warning</span>
+                <span>{{ risk }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Architectural Evidence Breakdown -->
+      <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl space-y-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2 pb-3 border-b border-white/[0.08]">
+          <span class="material-symbols-outlined text-blue-400 text-lg">fact_check</span>
+          Code Evidence & AST Patterns
+        </h3>
+
+        <div class="space-y-3">
+          @for (ev of arch.evidence; track ev.title) {
+            <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-bold text-white">{{ ev.title }}</h4>
+                <span class="text-[10px] font-mono text-blue-400">{{ ev.confidence }}% match</span>
+              </div>
+              <p class="text-[11px] text-slate-400">{{ ev.description }}</p>
+              
+              <div class="flex flex-wrap gap-1.5 pt-1">
+                @for (file of ev.files; track file) {
+                  <span class="px-2 py-0.5 rounded bg-white/5 text-[10px] font-mono text-slate-300 border border-white/5">{{ file }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Detected Layers & Components Topology -->
+    <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl space-y-4">
+      <h3 class="text-base font-bold text-white flex items-center gap-2 pb-3 border-b border-white/[0.08]">
+        <span class="material-symbols-outlined text-emerald-400 text-lg">layers</span>
+        Detected Architectural Layers & Boundaries
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        @for (layer of arch.layers; track layer.name) {
+          <div class="p-4 rounded-xl bg-white/[0.02] border border-white/10 space-y-2 flex flex-col justify-between">
+            <div>
+              <span class="text-xs font-bold text-blue-400 uppercase tracking-wider">{{ layer.name }}</span>
+              <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">{{ layer.description }}</p>
+            </div>
+
+            <div class="pt-3 border-t border-white/5 space-y-1">
+              <span class="text-[10px] text-slate-500 uppercase block">Components:</span>
+              <div class="flex flex-wrap gap-1">
+                @for (comp of layer.components; track comp) {
+                  <span class="px-1.5 py-0.5 rounded bg-white/5 text-[10px] font-mono text-slate-300">{{ comp }}</span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- AI Refactoring Recommendations Section -->
+    <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 md:p-8 shadow-xl space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+        <div>
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <span class="material-symbols-outlined text-amber-400 text-xl">auto_fix_high</span>
+            AI Refactoring & Technical Debt Remediation Plan
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">High-priority modernization actions prioritized by architectural impact.</p>
+        </div>
+
+        <a routerLink="/ai-chat" class="text-xs text-blue-400 hover:underline flex items-center gap-1 font-semibold">
+          Ask AI to generate refactoring PRs
+          <span class="material-symbols-outlined text-xs">arrow_forward</span>
+        </a>
+      </div>
+
+      <div class="space-y-4">
+        @for (rec of recommendations(); track rec.id) {
+          <div class="p-5 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-blue-500/30 transition space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                @if (rec.severity === 'CRITICAL') {
+                  <app-badge variant="danger" size="md">CRITICAL</app-badge>
+                } @else if (rec.severity === 'HIGH') {
+                  <app-badge variant="warning" size="md">HIGH PRIORITY</app-badge>
+                } @else {
+                  <app-badge variant="info" size="md">MEDIUM</app-badge>
+                }
+
+                <h4 class="text-sm font-bold text-white">{{ rec.title }}</h4>
+              </div>
+
+              <span class="text-xs font-mono text-slate-400">{{ rec.file }}</span>
+            </div>
+
+            <p class="text-xs text-slate-300 leading-relaxed">{{ rec.explanation }}</p>
+
+            <div class="bg-black/30 p-3 rounded-xl border border-white/5 text-xs text-slate-200">
+              <span class="text-slate-500 font-semibold block mb-1">Recommended Solution:</span>
+              <span>{{ rec.recommendation }}</span>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[11px] font-mono text-slate-500">Category: {{ rec.category }}</span>
+              <button 
+                (click)="askAiAboutRecommendation(rec)"
+                class="px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 text-xs font-semibold rounded-lg border border-blue-500/20 transition flex items-center gap-1"
+              >
+                <span class="material-symbols-outlined text-sm">psychology</span>
+                Ask AI to Refactor
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
 </div>

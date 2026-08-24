@@ -4,11 +4,15 @@ import { Injectable, signal } from '@angular/core';
   providedIn: 'root'
 })
 export class ThemeService {
-  isDarkMode = signal<boolean>(false);
+  isDarkMode = signal<boolean>(true);
+
+  constructor() {
+    this.initTheme();
+  }
 
   initTheme() {
-    const theme = localStorage.getItem('theme') || 'dark';
-    this.setTheme(theme === 'dark');
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    this.setTheme(savedTheme === 'dark');
   }
 
   setTheme(isDark: boolean) {

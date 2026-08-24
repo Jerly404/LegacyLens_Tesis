@@ -1,25 +1,149 @@
-<div class="space-y-6">
-  <div>
-    <h1 class="text-2xl font-bold tracking-tight">{ title }</h1>
-    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Enterprise workspace component for CodeLens AI SaaS.</p>
+<div class="space-y-6 max-w-7xl mx-auto">
+  <!-- Header Banner -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+    <div>
+      <h1 class="text-3xl font-extrabold tracking-tight text-white">Analysis Reports & Technical Audits</h1>
+      <p class="text-xs text-slate-400 mt-1">
+        Generate executive summaries, architectural compliance audits, and modernization roadmaps for stakeholders.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button 
+        (click)="exportReport('markdown')" 
+        [disabled]="isExporting()"
+        class="px-3.5 py-2 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
+      >
+        <span class="material-symbols-outlined text-sm">download</span>
+        Export Markdown
+      </button>
+
+      <button 
+        (click)="exportReport('docx')" 
+        [disabled]="isExporting()"
+        class="px-3.5 py-2 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
+      >
+        <span class="material-symbols-outlined text-sm">description</span>
+        Export DOCX
+      </button>
+
+      <button 
+        (click)="exportReport('pdf')" 
+        [disabled]="isExporting()"
+        class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/20 flex items-center gap-1.5 disabled:opacity-50"
+      >
+        <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+        Export PDF
+      </button>
+    </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <app-card title="Workspace Details" subtitle="Active metrics container">
-      <div class="space-y-4">
-        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-          This feature supports clean-code visual integrations including AST parsing tree outputs, structural analysis grids, and local execution pipelines.
-        </p>
-        <app-button variant="secondary">Refresh Metrics</app-button>
+  <!-- Report Type Selector Tabs -->
+  <div class="flex items-center gap-2 overflow-x-auto bg-[#151821] p-1.5 rounded-2xl border border-white/[0.08] text-xs font-medium">
+    <button 
+      (click)="loadReport('EXECUTIVE')"
+      [class]="activeType() === 'EXECUTIVE' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
+      class="px-4 py-2 rounded-xl transition flex items-center gap-2"
+    >
+      <span class="material-symbols-outlined text-base">business_center</span>
+      Executive Summary
+    </button>
+
+    <button 
+      (click)="loadReport('TECHNICAL')"
+      [class]="activeType() === 'TECHNICAL' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
+      class="px-4 py-2 rounded-xl transition flex items-center gap-2"
+    >
+      <span class="material-symbols-outlined text-base">code</span>
+      Technical Architecture
+    </button>
+
+    <button 
+      (click)="loadReport('ARCHITECTURE')"
+      [class]="activeType() === 'ARCHITECTURE' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
+      class="px-4 py-2 rounded-xl transition flex items-center gap-2"
+    >
+      <span class="material-symbols-outlined text-base">account_tree</span>
+      Architecture Report
+    </button>
+
+    <button 
+      (click)="loadReport('METRICS')"
+      [class]="activeType() === 'METRICS' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
+      class="px-4 py-2 rounded-xl transition flex items-center gap-2"
+    >
+      <span class="material-symbols-outlined text-base">analytics</span>
+      Code Metrics & Quality
+    </button>
+
+    <button 
+      (click)="loadReport('REFACTORING')"
+      [class]="activeType() === 'REFACTORING' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
+      class="px-4 py-2 rounded-xl transition flex items-center gap-2"
+    >
+      <span class="material-symbols-outlined text-base">auto_fix_high</span>
+      AI Refactoring Plan
+    </button>
+  </div>
+
+  <!-- Formatted Report Document Preview -->
+  @if (currentReport(); as rep) {
+    <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-8 shadow-2xl space-y-8 max-w-5xl mx-auto">
+      <!-- Report Header Strip -->
+      <div class="pb-6 border-b border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <span class="text-[11px] font-mono uppercase tracking-wider text-blue-400 block">LEGACYAI ENTERPRISE REPORT</span>
+          <h2 class="text-2xl font-extrabold text-white mt-1">{{ rep.title }}</h2>
+          <p class="text-xs text-slate-400 mt-1 font-mono">Target: {{ projectService.selectedProject().name }} • Generated: {{ rep.generatedAt }}</p>
+        </div>
+
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          Verified by DeepSeek Coder 33B
+        </span>
       </div>
-    </app-card>
 
-    <app-card title="Syntax Preview" subtitle="Real-time rendering">
-      <app-monaco-editor [code]="codeSample()"></app-monaco-editor>
-    </app-card>
-  </div>
+      <!-- Executive Brief / Summary Card -->
+      <div class="bg-[#11131B] border border-white/5 rounded-2xl p-6 space-y-2">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Executive Assessment</h3>
+        <p class="text-xs text-slate-200 leading-relaxed">{{ rep.summary }}</p>
+      </div>
 
-  <div class="grid grid-cols-1 gap-6">
-    <app-diagram [definition]="diagramDef()"></app-diagram>
-  </div>
+      <!-- Report Sections -->
+      <div class="space-y-6">
+        @for (sec of rep.sections; track sec.title) {
+          <div class="space-y-3">
+            <h3 class="text-base font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              {{ sec.title }}
+            </h3>
+
+            <pre class="font-sans text-xs text-slate-300 leading-relaxed whitespace-pre-wrap select-text">{{ sec.content }}</pre>
+
+            <!-- Embedded Metrics Table if present -->
+            @if (sec.metrics) {
+              <div class="bg-black/30 rounded-xl p-4 border border-white/5 overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <tbody class="divide-y divide-white/5">
+                    @for (entry of sec.metrics | keyvalue; track entry.key) {
+                      <tr>
+                        <td class="py-2 text-slate-400 font-medium">{{ entry.key }}</td>
+                        <td class="py-2 text-right font-mono font-bold text-blue-400">{{ entry.value }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Report Sign-off Footer -->
+      <div class="pt-6 border-t border-white/[0.08] flex items-center justify-between text-[11px] text-slate-500 font-mono">
+        <span>Prepared by LegacyAI Autonomous Engine</span>
+        <span>Confidential Enterprise Architecture Review</span>
+      </div>
+    </div>
+  }
 </div>

@@ -29,7 +29,7 @@ export class AnalyzerService {
 
   async update(id: string, dto: UpdateAnalyzerDto): Promise<AnalyzerEntity> {
     await this.findOne(id);
-    return this.repository.update(id, dto);
+    return this.repository.update(id, dto as any);
   }
 
   async remove(id: string): Promise<boolean> {

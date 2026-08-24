@@ -29,7 +29,7 @@ export class NotificationsService {
 
   async update(id: string, dto: UpdateNotificationsDto): Promise<NotificationsEntity> {
     await this.findOne(id);
-    return this.repository.update(id, dto);
+    return this.repository.update(id, dto as any);
   }
 
   async remove(id: string): Promise<boolean> {

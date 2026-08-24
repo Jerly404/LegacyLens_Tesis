@@ -1,40 +1,68 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
-import { ApiClientService } from '../../core/http/api-client.service';
-import { CardComponent } from '../../shared/components/card/card.component';
-import { ButtonComponent } from '../../shared/components/button/button.component';
-import { EditorComponent } from '../../shared/components/editor/editor.component';
-import { ChartComponent } from '../../shared/components/chart/chart.component';
-import { DiagramComponent } from '../../shared/components/diagram/diagram.component';
+import { ProjectService } from '../../core/projects/project.service';
+import { SettingsService } from '../../core/settings/settings.service';
+import { NotificationService } from '../../core/notifications/notification.service';
+import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
+import { BadgeComponent } from '../../shared/components/badge/badge.component';
+import { Project } from '@codelens/shared';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, EditorComponent, ChartComponent, DiagramComponent],
+  imports: [CommonModule, RouterModule, StatCardComponent, BadgeComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent {
-  private authService = inject(AuthService);
-  private apiClient = inject(ApiClientService);
-  private router = inject(Router);
+  authService = inject(AuthService);
+  projectService = inject(ProjectService);
+  settingsService = inject(SettingsService);
+  notificationService = inject(NotificationService);
 
-  email = signal('');
-  password = signal('');
-  loading = signal(false);
+  recentActivities = signal([
+    {
+      id: 'act-1',
+      title: 'Analysis completed',
+      project: 'legacy-banking-api',
+      time: '12 min ago',
+      icon: 'check_circle',
+      color: 'text-emerald-400',
+      description: 'Reverse-engineered 1,842 files and recovered Layered Architecture.'
+    },
+    {
+      id: 'act-2',
+      title: 'Documentation generated',
+      project: 'ecommerce-system',
+      time: '1 hour ago',
+      icon: 'description',
+      color: 'text-blue-400',
+      description: 'Compiled OpenAPI specifications & Database dictionary.'
+    },
+    {
+      id: 'act-3',
+      title: 'Architecture detected',
+      project: 'healthcare-hl7-api',
+      time: '3 hours ago',
+      icon: 'account_tree',
+      color: 'text-purple-400',
+      description: 'Layered architecture verified with 91% AI confidence.'
+    },
+    {
+      id: 'act-4',
+      title: 'Project uploaded',
+      project: 'payment-gateway',
+      time: '5 hours ago',
+      icon: 'cloud_upload',
+      color: 'text-amber-400',
+      description: 'Repository unpacked and AST indexing started.'
+    }
+  ]);
 
-  // Mock Feature Data
-  title = 'Dashboard';
-  codeSample = signal('// CodeLens AI analysis workspace\nfunction analyzeCodebase(repo: string) {\n  console.log("Analyzing " + repo);\n}');
-  diagramDef = signal('graph TD\n  A[Source Code] --> B(AST Parser)\n  B --> C{{Tree Sitter}}\n  C --> D[UML Generator]\n  C --> E[RAG Vector Store]');
-
-  login() {
-    this.loading.set(true);
-    this.authService.login(this.email()).subscribe(() => {
-      this.loading.set(false);
-    });
+  selectProject(proj: Project) {
+    this.projectService.setSelectedProject(proj);
+    this.notificationService.info('Active Project', `Selected ${proj.name}`);
   }
 }

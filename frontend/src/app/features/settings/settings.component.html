@@ -1,25 +1,224 @@
-<div class="space-y-6">
-  <div>
-    <h1 class="text-2xl font-bold tracking-tight">{ title }</h1>
-    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Enterprise workspace component for CodeLens AI SaaS.</p>
+<div class="space-y-8 max-w-5xl mx-auto">
+  <!-- Header Banner -->
+  <div class="pb-4 border-b border-white/[0.08]">
+    <h1 class="text-3xl font-extrabold tracking-tight text-white">Platform Settings & Local AI Infrastructure</h1>
+    <p class="text-xs text-slate-400 mt-1">
+      Manage local open-source LLM runtimes, GPU memory bounds, Ollama server connection, and workspace preferences.
+    </p>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <app-card title="Workspace Details" subtitle="Active metrics container">
-      <div class="space-y-4">
-        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-          This feature supports clean-code visual integrations including AST parsing tree outputs, structural analysis grids, and local execution pipelines.
-        </p>
-        <app-button variant="secondary">Refresh Metrics</app-button>
+  <!-- SECTION 1: Local AI Models Selector -->
+  <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 md:p-8 shadow-xl space-y-4">
+    <div class="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+      <div class="flex items-center gap-2.5">
+        <span class="material-symbols-outlined text-purple-400 text-xl">psychology</span>
+        <div>
+          <h2 class="text-base font-bold text-white">Local Large Language Models</h2>
+          <p class="text-xs text-slate-400">Available open-source code models executed locally on your GPU hardware.</p>
+        </div>
       </div>
-    </app-card>
 
-    <app-card title="Syntax Preview" subtitle="Real-time rendering">
-      <app-monaco-editor [code]="codeSample()"></app-monaco-editor>
-    </app-card>
+      <span class="text-xs font-mono text-slate-500">Ollama / GGUF Runtime</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+      @for (m of settingsService.models(); track m.id) {
+        <div 
+          (click)="selectModel(m.id)"
+          [class]="settingsService.selectedModelId() === m.id ? 'bg-blue-600/15 border-blue-500 shadow-glow-primary/20' : 'bg-white/[0.02] border-white/10 hover:border-white/20'"
+          class="p-5 rounded-2xl border cursor-pointer transition space-y-3 relative overflow-hidden"
+        >
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-sm font-bold text-white">{{ m.name }}</h3>
+                @if (settingsService.selectedModelId() === m.id) {
+                  <span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-mono font-semibold border border-blue-500/30">ACTIVE</span>
+                }
+              </div>
+              <span class="text-[11px] font-mono text-slate-400">{{ m.provider }}</span>
+            </div>
+
+            @if (m.status === 'ONLINE') {
+              <app-badge variant="success" [dot]="true">Online</app-badge>
+            } @else {
+              <app-badge variant="outline">Standby</app-badge>
+            }
+          </div>
+
+          <p class="text-xs text-slate-300 leading-relaxed">{{ m.description }}</p>
+
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-white/5 text-[11px] font-mono text-slate-400">
+            <div>
+              <span class="text-slate-500 block">Parameters:</span>
+              <span class="font-bold text-slate-200">{{ m.parameters }}</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Context Window:</span>
+              <span class="font-bold text-blue-400">{{ m.contextWindow }}</span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
   </div>
 
-  <div class="grid grid-cols-1 gap-6">
-    <app-diagram [definition]="diagramDef()"></app-diagram>
+  <!-- SECTION 2: Local AI Server & GPU Status (2 Cols) -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Local AI Server Connection -->
+    <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl space-y-4 flex flex-col justify-between">
+      <div>
+        <div class="flex items-center gap-2 pb-3 border-b border-white/[0.08]">
+          <span class="material-symbols-outlined text-blue-400 text-lg">dns</span>
+          <h2 class="text-base font-bold text-white">Local AI Server Endpoint</h2>
+        </div>
+
+        <div class="mt-4 space-y-3">
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Configure the local HTTP daemon (Ollama, LM Studio, or vLLM) for AST embeddings and RAG completions.
+          </p>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-slate-300">Server Endpoint URL</label>
+            <div class="flex items-center gap-2">
+              <input 
+                type="text" 
+                [(ngModel)]="serverUrl" 
+                class="flex-1 bg-[#0E1017] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
+                placeholder="http://localhost:11434"
+              />
+              <button 
+                (click)="testConnection()"
+                [disabled]="isTesting()"
+                class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shrink-0 disabled:opacity-50 flex items-center gap-1"
+              >
+                <span class="material-symbols-outlined text-sm" [class.animate-spin]="isTesting()">refresh</span>
+                {{ isTesting() ? 'Testing...' : 'Test Ping' }}
+              </button>
+            </div>
+          </div>
+
+          @if (pingResult()) {
+            <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 flex items-center gap-2 font-mono">
+              <span class="material-symbols-outlined text-base">check_circle</span>
+              <span>{{ pingResult() }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-white/[0.08] text-[11px] text-slate-500 font-mono flex justify-between">
+        <span>Protocol: HTTP JSON REST</span>
+        <span>Version: Ollama v0.3.12</span>
+      </div>
+    </div>
+
+    <!-- GPU Hardware Status -->
+    <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-emerald-400 text-lg">memory</span>
+          <h2 class="text-base font-bold text-white">Hardware GPU Acceleration</h2>
+        </div>
+        <span class="text-xs font-mono text-emerald-400 font-bold">ACTIVE</span>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="flex justify-between items-center bg-white/[0.02] p-3 rounded-xl border border-white/5">
+          <span class="text-slate-400">GPU Device</span>
+          <span class="font-bold text-white font-mono">{{ settingsService.systemHealth().gpuName }}</span>
+        </div>
+
+        <div class="bg-white/[0.02] p-3 rounded-xl border border-white/5 space-y-2">
+          <div class="flex justify-between font-mono">
+            <span class="text-slate-400">VRAM Usage</span>
+            <span class="font-bold text-blue-400">{{ settingsService.systemHealth().vramUsedGB }} GB / {{ settingsService.systemHealth().vramTotalGB }} GB (90%)</span>
+          </div>
+          <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" [style.width]="'90%'"></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-white/[0.02] p-3 rounded-xl border border-white/5">
+            <span class="text-slate-500 text-[10px] uppercase block">Compute Load</span>
+            <span class="font-bold text-emerald-400 font-mono text-sm mt-0.5 block">{{ settingsService.systemHealth().gpuUtilization }}%</span>
+          </div>
+          <div class="bg-white/[0.02] p-3 rounded-xl border border-white/5">
+            <span class="text-slate-500 text-[10px] uppercase block">Temperature</span>
+            <span class="font-bold text-slate-200 font-mono text-sm mt-0.5 block">{{ settingsService.systemHealth().gpuTemperature }}°C (Optimal)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: Workspace Preferences -->
+  <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 md:p-8 shadow-xl space-y-6">
+    <div class="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-blue-400 text-xl">tune</span>
+        <h2 class="text-base font-bold text-white">Application Preferences</h2>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+      <div class="space-y-4">
+        <div class="space-y-1.5">
+          <label class="text-xs font-medium text-slate-300">Theme Mode</label>
+          <div class="flex items-center gap-2">
+            <button 
+              (click)="themeService.setTheme(true)"
+              [class]="themeService.isDarkMode() ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-400'"
+              class="px-4 py-2 rounded-xl border border-white/10 font-medium transition"
+            >
+              Dark Mode (Default)
+            </button>
+            <button 
+              (click)="themeService.setTheme(false)"
+              [class]="!themeService.isDarkMode() ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-400'"
+              class="px-4 py-2 rounded-xl border border-white/10 font-medium transition"
+            >
+              Light Mode
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="text-xs font-medium text-slate-300">Language</label>
+          <select class="w-full bg-[#0E1017] border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+            <option value="en">English (US)</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <label class="flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/10 cursor-pointer">
+          <input type="checkbox" [(ngModel)]="autoSave" class="w-4 h-4 rounded text-blue-600 bg-[#151821] border-white/20">
+          <div>
+            <span class="font-bold text-white block">Auto-save generated documentation</span>
+            <span class="text-[11px] text-slate-400">Persist in-memory edits to local workspace</span>
+          </div>
+        </label>
+
+        <label class="flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/10 cursor-pointer">
+          <input type="checkbox" [(ngModel)]="notificationsEnabled" class="w-4 h-4 rounded text-blue-600 bg-[#151821] border-white/20">
+          <div>
+            <span class="font-bold text-white block">Real-time analysis toast notifications</span>
+            <span class="text-[11px] text-slate-400">Show pipeline completion and GPU alerts</span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="pt-4 border-t border-white/[0.08] flex justify-end">
+      <button 
+        (click)="savePreferences()" 
+        class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-blue-600/20 active:scale-[0.98]"
+      >
+        Save Workspace Preferences
+      </button>
+    </div>
   </div>
 </div>

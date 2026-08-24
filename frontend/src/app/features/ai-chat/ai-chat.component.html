@@ -1,41 +1,189 @@
-<div class="h-[calc(100vh-10rem)] flex flex-col">
-  <div class="mb-4">
-    <h1 class="text-2xl font-bold tracking-tight">AI Assistant</h1>
-    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Interact with your legacy codebase using retrieval-augmented generation (RAG) models.</p>
-  </div>
-
-  <!-- Chat Screen -->
-  <div class="flex-1 glass-panel rounded-2xl p-6 border border-slate-200/50 dark:border-slate-800/50 flex flex-col justify-between overflow-hidden shadow-xl">
-    <!-- Chat log -->
-    <div class="flex-1 overflow-auto space-y-4 pr-2">
-      <div class="flex items-start">
-        <div class="bg-brand-500/10 border border-brand-500/20 text-brand-700 dark:text-brand-300 p-4 rounded-2xl max-w-xl">
-          <p class="text-sm font-semibold mb-1">CodeLens AI Agent</p>
-          <p class="text-sm">Hello! I have indexed the legacy system. You can ask me how classes are structured, how libraries interact, or query architecture reports.</p>
-        </div>
+<div class="max-w-7xl mx-auto space-y-6">
+  <!-- Header Bar -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+        <span class="material-symbols-outlined text-2xl">psychology</span>
       </div>
-      <div class="flex items-start justify-end">
-        <div class="bg-slate-200 dark:bg-slate-800 p-4 rounded-2xl max-w-xl text-right">
-          <p class="text-sm font-semibold mb-1">You</p>
-          <p class="text-sm">Explain the database connection pool configuration in the service module.</p>
-        </div>
-      </div>
-      <div class="flex items-start">
-        <div class="bg-brand-500/10 border border-brand-500/20 text-brand-700 dark:text-brand-300 p-4 rounded-2xl max-w-xl">
-          <p class="text-sm font-semibold mb-1">CodeLens AI Agent</p>
-          <p class="text-sm">Based on vector retrieval results from `database.service.ts`, the system uses Prisma ORM with connection pooling set to 20 maximum connections, a 30s timeout, and a Redis caching proxy for session tokens.</p>
-        </div>
+      <div>
+        <h1 class="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
+          AI Code Intelligence & RAG Chat
+          <span class="text-xs font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30">DeepSeek Coder 33B</span>
+        </h1>
+        <p class="text-xs text-slate-400 mt-0.5">
+          Ask questions against indexed AST nodes, call hierarchies, and architectural patterns in {{ projectService.selectedProject().name }}.
+        </p>
       </div>
     </div>
 
-    <!-- Input Box -->
-    <div class="mt-6 flex gap-4">
-      <input 
-        type="text" 
-        placeholder="Type a message or code-based query..."
-        class="flex-1 px-4 py-3 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-brand-500 dark:focus:border-brand-500 text-sm transition"
-      >
-      <app-button>Send</app-button>
+    <button 
+      (click)="newChat()"
+      class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/20 flex items-center gap-1.5 self-start sm:self-auto"
+    >
+      <span class="material-symbols-outlined text-base">add</span>
+      New Chat Session
+    </button>
+  </div>
+
+  <!-- Chat Workspace Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[720px]">
+    <!-- Left Conversation Threads List -->
+    <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-4 shadow-xl flex flex-col h-full">
+      <div class="pb-3 border-b border-white/[0.08] mb-3 flex items-center justify-between">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Conversations</span>
+        <span class="text-[10px] font-mono text-slate-500">{{ chatService.conversations().length }} threads</span>
+      </div>
+
+      <div class="flex-1 overflow-y-auto space-y-1.5 pr-1">
+        @for (conv of chatService.conversations(); track conv.id) {
+          <div 
+            (click)="chatService.selectConversation(conv.id)"
+            [class]="chatService.activeConversation().id === conv.id ? 'bg-blue-600/20 text-blue-400 border-blue-500 shadow-glow-primary/10' : 'bg-white/[0.02] border-white/5 text-slate-300 hover:bg-white/5'"
+            class="p-3 rounded-xl border cursor-pointer transition flex items-center justify-between group"
+          >
+            <div class="min-w-0 pr-2">
+              <h4 class="text-xs font-semibold text-white truncate">{{ conv.title }}</h4>
+              <span class="text-[10px] font-mono text-slate-500 block mt-0.5">{{ conv.updatedAt }}</span>
+            </div>
+            <button 
+              (click)="chatService.deleteConversation(conv.id); $event.stopPropagation()"
+              class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-rose-400 transition p-1"
+            >
+              <span class="material-symbols-outlined text-sm">delete</span>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Right Chat Viewport -->
+    <div class="lg:col-span-3 bg-[#151821] border border-white/[0.08] rounded-2xl shadow-xl flex flex-col h-full overflow-hidden">
+      <!-- Chat Messages Container -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-[#0E1017]">
+        @if (chatService.activeConversation().messages.length === 0) {
+          <!-- Empty Chat Teaser -->
+          <div class="text-center py-12 space-y-4 max-w-lg mx-auto">
+            <div class="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mx-auto">
+              <span class="material-symbols-outlined text-3xl">psychology</span>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white">Ask anything about this codebase</h3>
+              <p class="text-xs text-slate-400 mt-1">DeepSeek Coder retrieves exact AST classes, methods, and line citations.</p>
+            </div>
+
+            <!-- Suggested questions pills -->
+            <div class="pt-4 space-y-2 text-left">
+              <span class="text-xs font-semibold text-slate-400 block text-center">Suggested queries:</span>
+              <div class="flex flex-col gap-2">
+                @for (q of suggestedQuestions; track q) {
+                  <button 
+                    (click)="askSuggested(q)"
+                    class="p-2.5 rounded-xl bg-[#151821] hover:bg-blue-600/15 border border-white/10 hover:border-blue-500/30 text-xs text-slate-300 hover:text-blue-300 text-left transition flex items-center gap-2"
+                  >
+                    <span class="material-symbols-outlined text-blue-400 text-sm">chat</span>
+                    <span>{{ q }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        } @else {
+          @for (msg of chatService.activeConversation().messages; track msg.id) {
+            @if (msg.sender === 'user') {
+              <!-- User Message -->
+              <div class="flex justify-end">
+                <div class="max-w-xl bg-blue-600 text-white p-4 rounded-2xl rounded-tr-sm shadow-lg text-xs leading-relaxed">
+                  <p class="font-medium">{{ msg.content }}</p>
+                  <span class="text-[10px] text-blue-200 block text-right mt-1 font-mono">{{ msg.timestamp }}</span>
+                </div>
+              </div>
+            } @else {
+              <!-- AI Assistant Response -->
+              <div class="flex items-start gap-3 max-w-3xl">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-blue-600 flex items-center justify-center text-white shrink-0 mt-1 shadow-md">
+                  <span class="material-symbols-outlined text-base">psychology</span>
+                </div>
+
+                <div class="flex-1 bg-[#151821] border border-white/10 p-5 rounded-2xl rounded-tl-sm space-y-3 shadow-xl">
+                  <div class="text-xs text-slate-200 font-sans leading-relaxed select-text space-y-2">
+                    <pre class="font-sans text-xs text-slate-200 whitespace-pre-wrap leading-relaxed">{{ msg.content }}</pre>
+                  </div>
+
+                  <!-- Source Citations Pills -->
+                  @if (msg.sources && msg.sources.length > 0) {
+                    <div class="pt-3 border-t border-white/5 space-y-1.5">
+                      <span class="text-[11px] font-mono uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs">attach_file</span>
+                        Referenced Sources & Citations:
+                      </span>
+                      <div class="flex flex-wrap gap-2">
+                        @for (src of msg.sources; track src.file) {
+                          <button 
+                            (click)="openCitation(src.file, src.startLine)"
+                            class="px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-[11px] font-mono text-blue-400 transition flex items-center gap-1.5"
+                          >
+                            <span class="material-symbols-outlined text-xs">code</span>
+                            <span>{{ src.file }}:{{ src.startLine }}-{{ src.endLine }}</span>
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Suggested Follow-ups -->
+                  @if (msg.suggestedNextQuestions && msg.suggestedNextQuestions.length > 0) {
+                    <div class="pt-2 flex flex-wrap gap-1.5">
+                      @for (sq of msg.suggestedNextQuestions; track sq) {
+                        <button 
+                          (click)="askSuggested(sq)"
+                          class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-slate-400 hover:text-slate-200 border border-white/5 transition"
+                        >
+                          + {{ sq }}
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          }
+
+          <!-- Live Typing Indicator -->
+          @if (chatService.isGenerating()) {
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-purple-600/30 flex items-center justify-center text-purple-400 shrink-0">
+                <span class="material-symbols-outlined text-base animate-pulse">psychology</span>
+              </div>
+              <div class="bg-[#151821] border border-white/10 px-4 py-3 rounded-2xl flex items-center gap-2 text-xs text-slate-400">
+                <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+                <span>DeepSeek Coder is analyzing indexed AST symbols & formulating response...</span>
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Chat Prompt Input Bar -->
+      <div class="p-4 bg-[#11131B] border-t border-white/[0.08]">
+        <form (ngSubmit)="send()" class="flex items-center gap-3">
+          <input 
+            type="text" 
+            [(ngModel)]="promptInput" 
+            name="prompt"
+            [disabled]="chatService.isGenerating()"
+            placeholder="Ask anything about the architecture, security, or dependencies in this codebase..."
+            class="flex-1 bg-[#151821] border border-white/10 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+          />
+          <button 
+            type="submit"
+            [disabled]="!promptInput() || chatService.isGenerating()"
+            class="px-5 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/25 disabled:opacity-40 flex items-center gap-1.5 shrink-0 active:scale-[0.98]"
+          >
+            <span>Send Query</span>
+            <span class="material-symbols-outlined text-base">send</span>
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 </div>

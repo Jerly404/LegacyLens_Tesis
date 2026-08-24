@@ -1,40 +1,51 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { AuthService } from '../../core/auth/auth.service';
-import { ApiClientService } from '../../core/http/api-client.service';
-import { CardComponent } from '../../shared/components/card/card.component';
-import { ButtonComponent } from '../../shared/components/button/button.component';
-import { EditorComponent } from '../../shared/components/editor/editor.component';
-import { ChartComponent } from '../../shared/components/chart/chart.component';
-import { DiagramComponent } from '../../shared/components/diagram/diagram.component';
+import { RouterModule, Router } from '@angular/router';
+import { ProjectService } from '../../core/projects/project.service';
+import { NotificationService } from '../../core/notifications/notification.service';
+import { BadgeComponent } from '../../shared/components/badge/badge.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { Project } from '@codelens/shared';
 
 @Component({
   selector: 'app-projects',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, EditorComponent, ChartComponent, DiagramComponent],
+  imports: [CommonModule, FormsModule, RouterModule, BadgeComponent, EmptyStateComponent],
   templateUrl: './projects.component.html',
   styleUrls: ['./projects.component.css']
 })
 export class ProjectsComponent {
-  private authService = inject(AuthService);
-  private apiClient = inject(ApiClientService);
-  private router = inject(Router);
+  projectService = inject(ProjectService);
+  notificationService = inject(NotificationService);
+  router = inject(Router);
 
-  email = signal('');
-  password = signal('');
-  loading = signal(false);
+  searchQuery = signal<string>('');
+  selectedFilter = signal<'ALL' | 'COMPLETED' | 'ANALYZING' | 'FAILED'>('ALL');
+  viewMode = signal<'grid' | 'table'>('grid');
 
-  // Mock Feature Data
-  title = 'Projects';
-  codeSample = signal('// CodeLens AI analysis workspace\nfunction analyzeCodebase(repo: string) {\n  console.log("Analyzing " + repo);\n}');
-  diagramDef = signal('graph TD\n  A[Source Code] --> B(AST Parser)\n  B --> C{{Tree Sitter}}\n  C --> D[UML Generator]\n  C --> E[RAG Vector Store]');
+  filteredProjects = computed(() => {
+    const q = this.searchQuery().toLowerCase().trim();
+    const f = this.selectedFilter();
 
-  login() {
-    this.loading.set(true);
-    this.authService.login(this.email()).subscribe(() => {
-      this.loading.set(false);
+    return this.projectService.projects().filter(p => {
+      const matchesSearch = !q || p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q) || p.mainLanguage.toLowerCase().includes(q) || p.architecture.toLowerCase().includes(q);
+      const matchesFilter = f === 'ALL' || p.status === f;
+      return matchesSearch && matchesFilter;
     });
+  });
+
+  openProject(proj: Project) {
+    this.projectService.setSelectedProject(proj);
+    this.router.navigate(['/project-overview']);
+  }
+
+  deleteProject(event: Event, proj: Project) {
+    event.stopPropagation();
+    if (confirm(`Are you sure you want to delete "${proj.name}"?`)) {
+      this.projectService.deleteProject(proj.id).subscribe(() => {
+        this.notificationService.success('Project Deleted', `Removed ${proj.name}`);
+      });
+    }
   }
 }

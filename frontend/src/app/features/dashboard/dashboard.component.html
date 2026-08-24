@@ -1,46 +1,273 @@
-<div class="space-y-6">
-  <div class="flex justify-between items-center">
+<div class="space-y-8 max-w-7xl mx-auto">
+  <!-- Header Banner -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
     <div>
-      <h1 class="text-2xl font-bold tracking-tight">Enterprise Overview</h1>
-      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Analyze legacy code repositories running local Large Language Models.</p>
+      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-mono mb-2 border border-blue-500/20">
+        <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+        AI SAAS WORKSPACE
+      </div>
+      <h1 class="text-3xl font-extrabold tracking-tight text-white">
+        Welcome back, <span class="gradient-text-blue-purple">{{ authService.currentUser()?.name }}</span>
+      </h1>
+      <p class="text-sm text-slate-400 mt-1">
+        Overview of reverse-engineered legacy codebases, local AI health, and automated technical documentation.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <a 
+        routerLink="/upload" 
+        class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-sm font-semibold rounded-xl transition shadow-lg shadow-blue-600/20 active:scale-[0.98]"
+      >
+        <span class="material-symbols-outlined text-lg">upload_file</span>
+        <span>Upload Project</span>
+      </a>
     </div>
   </div>
 
-  <!-- KPI Stats Grid -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-    <app-card title="Total Projects" subtitle="Codebases currently indexed">
-      <div class="flex justify-between items-center mt-2">
-        <span class="text-3xl font-extrabold">12</span>
-        <span class="material-icons text-brand-500 bg-brand-500/10 p-3 rounded-2xl">folder</span>
-      </div>
-    </app-card>
-    <app-card title="Total Code Lines" subtitle="AST parser parsed lines">
-      <div class="flex justify-between items-center mt-2">
-        <span class="text-3xl font-extrabold">1.2M</span>
-        <span class="material-icons text-emerald-500 bg-emerald-500/10 p-3 rounded-2xl">code</span>
-      </div>
-    </app-card>
-    <app-card title="AI Queries" subtitle="Prompt completions from local LLM">
-      <div class="flex justify-between items-center mt-2">
-        <span class="text-3xl font-extrabold">34,102</span>
-        <span class="material-icons text-purple-500 bg-purple-500/10 p-3 rounded-2xl">psychology</span>
-      </div>
-    </app-card>
-    <app-card title="System Health" subtitle="Ollama, Qdrant, MinIO, Redis">
-      <div class="flex justify-between items-center mt-2">
-        <span class="text-3xl font-extrabold text-emerald-500">100%</span>
-        <span class="material-icons text-emerald-500 bg-emerald-500/10 p-3 rounded-2xl">dns</span>
-      </div>
-    </app-card>
+  <!-- 5 KPI Statistics Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <app-stat-card 
+      label="Projects Analyzed" 
+      [value]="projectService.projects().length" 
+      change="+2 this week" 
+      trend="up" 
+      icon="folder" 
+      iconColor="blue"
+      subtext="Enterprise codebases"
+    ></app-stat-card>
+
+    <app-stat-card 
+      label="Files Analyzed" 
+      value="5,012" 
+      change="+1.8k AST" 
+      trend="up" 
+      icon="code" 
+      iconColor="purple"
+      subtext="Indexed source files"
+    ></app-stat-card>
+
+    <app-stat-card 
+      label="Docs Generated" 
+      value="48 Pages" 
+      change="100% Ready" 
+      trend="up" 
+      icon="description" 
+      iconColor="emerald"
+      subtext="OpenAPI & Architecture"
+    ></app-stat-card>
+
+    <app-stat-card 
+      label="Architecture Detected" 
+      value="94% Conf." 
+      change="N-Tier Layered" 
+      trend="neutral" 
+      icon="account_tree" 
+      iconColor="amber"
+      subtext="Pattern matching score"
+    ></app-stat-card>
+
+    <app-stat-card 
+      label="Avg. Processing Time" 
+      value="01:42 min" 
+      change="42 files/s" 
+      trend="up" 
+      icon="speed" 
+      iconColor="cyan"
+      subtext="Local GPU inference"
+    ></app-stat-card>
   </div>
 
-  <!-- Visual Analytics & Charts -->
+  <!-- AI System Status Card & Activity Row -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-2">
-      <app-chart title="Engine Execution Speed (ms per file)"></app-chart>
+    <!-- Highlighted AI Status Card -->
+    <div class="bg-gradient-to-br from-[#151821] to-[#1a1e2e] border border-blue-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between">
+      <!-- Glow effect -->
+      <div class="absolute -top-12 -right-12 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+      <div>
+        <div class="flex items-center justify-between pb-4 border-b border-white/10">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-blue-400 text-xl">psychology</span>
+            <span class="text-xs font-bold uppercase tracking-widest text-slate-300">Local AI Engine</span>
+          </div>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            {{ settingsService.systemHealth().status }}
+          </span>
+        </div>
+
+        <div class="mt-4 space-y-3.5">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-400">Active Model</span>
+            <span class="font-mono font-bold text-white bg-white/5 px-2 py-0.5 rounded border border-white/10">
+              {{ settingsService.systemHealth().activeModel }}
+            </span>
+          </div>
+
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-400">Hardware Accelerator</span>
+            <span class="font-semibold text-slate-200 flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm text-blue-400">memory</span>
+              {{ settingsService.systemHealth().gpuName }}
+            </span>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-400">VRAM Allocation</span>
+              <span class="font-mono text-blue-400 font-semibold">{{ settingsService.systemHealth().vramUsedGB }} GB / {{ settingsService.systemHealth().vramTotalGB }} GB</span>
+            </div>
+            <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
+              <div 
+                class="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+                [style.width]="(settingsService.systemHealth().vramUsedGB / settingsService.systemHealth().vramTotalGB * 100) + '%'"
+              ></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-1 text-xs">
+            <div class="bg-white/5 p-2 rounded-xl border border-white/5">
+              <span class="text-[11px] text-slate-400 block">Workload</span>
+              <span class="font-semibold text-emerald-400 mt-0.5 block">{{ settingsService.systemHealth().currentWorkload }}</span>
+            </div>
+            <div class="bg-white/5 p-2 rounded-xl border border-white/5">
+              <span class="text-[11px] text-slate-400 block">Core Temp</span>
+              <span class="font-semibold text-slate-200 mt-0.5 block">{{ settingsService.systemHealth().gpuTemperature }}°C</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+        <span class="text-[11px] text-slate-400 font-mono">Ollama: 11434</span>
+        <a routerLink="/settings" class="text-xs text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1">
+          Configure AI
+          <span class="material-symbols-outlined text-xs">chevron_right</span>
+        </a>
+      </div>
     </div>
-    <div>
-      <app-diagram></app-diagram>
+
+    <!-- Recent Activity Timeline (2 Cols) -->
+    <div class="lg:col-span-2 bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl">
+      <div class="flex items-center justify-between pb-4 border-b border-white/[0.08] mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <span class="material-symbols-outlined text-blue-400 text-lg">history</span>
+          Recent Activity Timeline
+        </h3>
+        <span class="text-xs text-slate-400">Live AI reverse-engineering stream</span>
+      </div>
+
+      <div class="space-y-4">
+        @for (act of recentActivities(); track act.id) {
+          <div class="flex items-start gap-3.5 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] transition border border-white/5">
+            <div class="mt-0.5 p-2 rounded-xl bg-white/5 border border-white/10 shrink-0">
+              <span class="material-symbols-outlined text-lg" [class]="act.color">{{ act.icon }}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-bold text-white">{{ act.title }}</h4>
+                <span class="text-[11px] text-slate-500 font-mono">{{ act.time }}</span>
+              </div>
+              <p class="text-xs font-mono text-blue-400 mt-0.5">{{ act.project }}</p>
+              <p class="text-xs text-slate-400 mt-1">{{ act.description }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Projects Table -->
+  <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08] mb-4">
+      <div>
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <span class="material-symbols-outlined text-blue-400 text-lg">folder_open</span>
+          Analyzed Legacy Projects
+        </h3>
+        <p class="text-xs text-slate-400 mt-0.5">Select a project to inspect source code, UML diagrams, architecture, and AI chat.</p>
+      </div>
+
+      <a routerLink="/projects" class="text-xs text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1 font-medium">
+        View all projects
+        <span class="material-symbols-outlined text-xs">arrow_forward</span>
+      </a>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-white/[0.08] text-slate-400 text-xs font-mono uppercase tracking-wider">
+            <th class="py-3 px-4">Project</th>
+            <th class="py-3 px-4">Language</th>
+            <th class="py-3 px-4">Files / LOC</th>
+            <th class="py-3 px-4">Architecture</th>
+            <th class="py-3 px-4">Status</th>
+            <th class="py-3 px-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/[0.04] text-xs">
+          @for (proj of projectService.projects(); track proj.id) {
+            <tr class="hover:bg-white/[0.02] transition-colors group">
+              <!-- Project Name & Repo -->
+              <td class="py-3.5 px-4">
+                <div class="font-semibold text-white group-hover:text-blue-400 transition-colors flex items-center gap-2">
+                  <span class="material-symbols-outlined text-slate-500 text-base">deployed_code</span>
+                  {{ proj.name }}
+                </div>
+                <span class="text-[11px] font-mono text-slate-500 block truncate max-w-xs mt-0.5">{{ proj.slug }}</span>
+              </td>
+
+              <!-- Language -->
+              <td class="py-3.5 px-4">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 font-medium text-slate-200">
+                  <span class="w-2 h-2 rounded-full" [style.background-color]="proj.languages[0]?.color || '#3B82F6'"></span>
+                  {{ proj.mainLanguage }}
+                </span>
+              </td>
+
+              <!-- Files / LOC -->
+              <td class="py-3.5 px-4 font-mono text-slate-300">
+                <span>{{ proj.fileCount | number }} files</span>
+                <span class="text-slate-500 block text-[11px]">{{ proj.linesOfCode | number }} LOC</span>
+              </td>
+
+              <!-- Architecture -->
+              <td class="py-3.5 px-4">
+                <app-badge variant="purple" size="md">{{ proj.architecture }}</app-badge>
+              </td>
+
+              <!-- Status -->
+              <td class="py-3.5 px-4">
+                @if (proj.status === 'COMPLETED') {
+                  <app-badge variant="success" [dot]="true">Completed</app-badge>
+                } @else if (proj.status === 'ANALYZING') {
+                  <app-badge variant="info" [dot]="true">Analyzing ({{ proj.progress }}%)</app-badge>
+                } @else if (proj.status === 'FAILED') {
+                  <app-badge variant="danger" [dot]="true">Failed</app-badge>
+                } @else {
+                  <app-badge variant="warning" [dot]="true">Pending</app-badge>
+                }
+              </td>
+
+              <!-- Actions -->
+              <td class="py-3.5 px-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <a 
+                    routerLink="/project-overview" 
+                    (click)="selectProject(proj)"
+                    class="px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 rounded-lg text-xs font-semibold transition"
+                  >
+                    Open Workspace
+                  </a>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
   </div>
 </div>

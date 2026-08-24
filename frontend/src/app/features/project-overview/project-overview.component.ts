@@ -1,40 +1,71 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { AuthService } from '../../core/auth/auth.service';
-import { ApiClientService } from '../../core/http/api-client.service';
-import { CardComponent } from '../../shared/components/card/card.component';
-import { ButtonComponent } from '../../shared/components/button/button.component';
-import { EditorComponent } from '../../shared/components/editor/editor.component';
-import { ChartComponent } from '../../shared/components/chart/chart.component';
-import { DiagramComponent } from '../../shared/components/diagram/diagram.component';
+import { RouterModule, Router } from '@angular/router';
+import { ProjectService } from '../../core/projects/project.service';
+import { ArchitectureService } from '../../core/architecture/architecture.service';
+import { NotificationService } from '../../core/notifications/notification.service';
+import { BadgeComponent } from '../../shared/components/badge/badge.component';
+import { CodeViewerComponent } from '../../shared/components/code-viewer/code-viewer.component';
+import { DependencyGraphComponent } from '../../shared/components/dependency-graph/dependency-graph.component';
+import { FileNode, DependencyGraphData } from '@codelens/shared';
 
 @Component({
   selector: 'app-project-overview',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, EditorComponent, ChartComponent, DiagramComponent],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    RouterModule, 
+    BadgeComponent, 
+    CodeViewerComponent, 
+    DependencyGraphComponent
+  ],
   templateUrl: './project-overview.component.html',
   styleUrls: ['./project-overview.component.css']
 })
-export class ProjectOverviewComponent {
-  private authService = inject(AuthService);
-  private apiClient = inject(ApiClientService);
-  private router = inject(Router);
+export class ProjectOverviewComponent implements OnInit {
+  projectService = inject(ProjectService);
+  architectureService = inject(ArchitectureService);
+  notificationService = inject(NotificationService);
+  router = inject(Router);
 
-  email = signal('');
-  password = signal('');
-  loading = signal(false);
+  activeTab = signal<'overview' | 'files' | 'dependencies' | 'metrics'>('overview');
+  fileTree = signal<FileNode[]>([]);
+  selectedFile = signal<FileNode | null>(null);
+  dependencyData = signal<DependencyGraphData>({ nodes: [], links: [] });
+  fileSearchQuery = signal<string>('');
 
-  // Mock Feature Data
-  title = 'Project overview';
-  codeSample = signal('// CodeLens AI analysis workspace\nfunction analyzeCodebase(repo: string) {\n  console.log("Analyzing " + repo);\n}');
-  diagramDef = signal('graph TD\n  A[Source Code] --> B(AST Parser)\n  B --> C{{Tree Sitter}}\n  C --> D[UML Generator]\n  C --> E[RAG Vector Store]');
+  ngOnInit() {
+    const files = this.projectService.getFileTree();
+    this.fileTree.set(files);
+    
+    // Default selected file: AuthController.java
+    if (files[0]?.children?.[0]?.children?.[0]) {
+      this.selectedFile.set(files[0].children[0].children[0]);
+    }
 
-  login() {
-    this.loading.set(true);
-    this.authService.login(this.email()).subscribe(() => {
-      this.loading.set(false);
-    });
+    this.dependencyData.set(this.projectService.getDependencyGraph());
+  }
+
+  selectFile(file: FileNode) {
+    if (file.type === 'file') {
+      this.selectedFile.set(file);
+      this.notificationService.info('File Opened', file.path);
+    }
+  }
+
+  askAiAboutCode(code: string) {
+    this.notificationService.info('Opening AI Assistant', 'Querying context for selected code...');
+    this.router.navigate(['/ai-chat']);
+  }
+
+  explainCode(code: string) {
+    this.notificationService.info('Generating Explanation', 'DeepSeek Coder is analyzing class AST...');
+    this.router.navigate(['/ai-chat']);
+  }
+
+  reanalyze() {
+    this.router.navigate(['/analysis-progress']);
   }
 }

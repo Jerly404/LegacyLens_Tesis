@@ -23,7 +23,15 @@ export const routes: Routes = [
         loadChildren: () => import('./features/upload/upload.routes').then(r => r.UPLOAD_ROUTES)
       },
       {
+        path: 'projects/upload',
+        loadChildren: () => import('./features/upload/upload.routes').then(r => r.UPLOAD_ROUTES)
+      },
+      {
         path: 'analysis-progress',
+        loadChildren: () => import('./features/analysis-progress/analysis-progress.routes').then(r => r.ANALYSIS_PROGRESS_ROUTES)
+      },
+      {
+        path: 'projects/:id/analysis',
         loadChildren: () => import('./features/analysis-progress/analysis-progress.routes').then(r => r.ANALYSIS_PROGRESS_ROUTES)
       },
       {
@@ -31,7 +39,15 @@ export const routes: Routes = [
         loadChildren: () => import('./features/project-overview/project-overview.routes').then(r => r.PROJECT_OVERVIEW_ROUTES)
       },
       {
+        path: 'projects/:id',
+        loadChildren: () => import('./features/project-overview/project-overview.routes').then(r => r.PROJECT_OVERVIEW_ROUTES)
+      },
+      {
         path: 'documentation',
+        loadChildren: () => import('./features/documentation/documentation.routes').then(r => r.DOCUMENTATION_ROUTES)
+      },
+      {
+        path: 'projects/:id/documentation',
         loadChildren: () => import('./features/documentation/documentation.routes').then(r => r.DOCUMENTATION_ROUTES)
       },
       {
@@ -39,7 +55,15 @@ export const routes: Routes = [
         loadChildren: () => import('./features/architecture/architecture.routes').then(r => r.ARCHITECTURE_ROUTES)
       },
       {
+        path: 'projects/:id/architecture',
+        loadChildren: () => import('./features/architecture/architecture.routes').then(r => r.ARCHITECTURE_ROUTES)
+      },
+      {
         path: 'uml',
+        loadChildren: () => import('./features/uml/uml.routes').then(r => r.UML_ROUTES)
+      },
+      {
+        path: 'projects/:id/diagrams',
         loadChildren: () => import('./features/uml/uml.routes').then(r => r.UML_ROUTES)
       },
       {
@@ -47,7 +71,15 @@ export const routes: Routes = [
         loadChildren: () => import('./features/ai-chat/ai-chat.routes').then(r => r.AI_CHAT_ROUTES)
       },
       {
+        path: 'projects/:id/chat',
+        loadChildren: () => import('./features/ai-chat/ai-chat.routes').then(r => r.AI_CHAT_ROUTES)
+      },
+      {
         path: 'reports',
+        loadChildren: () => import('./features/reports/reports.routes').then(r => r.REPORTS_ROUTES)
+      },
+      {
+        path: 'projects/:id/reports',
         loadChildren: () => import('./features/reports/reports.routes').then(r => r.REPORTS_ROUTES)
       },
       {

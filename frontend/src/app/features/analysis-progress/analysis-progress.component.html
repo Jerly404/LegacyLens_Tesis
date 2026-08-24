@@ -1,25 +1,144 @@
-<div class="space-y-6">
-  <div>
-    <h1 class="text-2xl font-bold tracking-tight">{ title }</h1>
-    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Enterprise workspace component for CodeLens AI SaaS.</p>
-  </div>
+<div class="max-w-5xl mx-auto space-y-8">
+  @if (progressData(); as data) {
+    <!-- Top Progress Card -->
+    <div class="bg-[#151821] border border-blue-500/30 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+      <!-- Glow background -->
+      <div class="absolute -top-24 -right-24 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <app-card title="Workspace Details" subtitle="Active metrics container">
-      <div class="space-y-4">
-        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-          This feature supports clean-code visual integrations including AST parsing tree outputs, structural analysis grids, and local execution pipelines.
-        </p>
-        <app-button variant="secondary">Refresh Metrics</app-button>
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/10">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-mono text-blue-400 mb-2">
+            <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+            LOCAL GPU INFERENCE PIPELINE
+          </div>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-white">
+            Analyzing <span class="text-blue-400">{{ projectService.selectedProject().name }}</span>
+          </h1>
+          <p class="text-xs text-slate-400 mt-1 font-mono">
+            Model: DeepSeek Coder 33B • GPU: RTX 3050 (7.2GB VRAM allocated)
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button 
+            (click)="restart()" 
+            class="px-3.5 py-2 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-medium rounded-xl border border-white/10 transition flex items-center gap-1.5"
+          >
+            <span class="material-symbols-outlined text-sm">replay</span>
+            Restart Scan
+          </button>
+
+          @if (data.progress >= 100) {
+            <button 
+              (click)="viewProject()" 
+              class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-blue-600/30 flex items-center gap-1.5 active:scale-[0.98]"
+            >
+              <span>Explore Codebase Workspace</span>
+              <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          }
+        </div>
       </div>
-    </app-card>
 
-    <app-card title="Syntax Preview" subtitle="Real-time rendering">
-      <app-monaco-editor [code]="codeSample()"></app-monaco-editor>
-    </app-card>
-  </div>
+      <!-- Main Progress Bar -->
+      <div class="py-6 space-y-3">
+        <div class="flex items-center justify-between text-sm">
+          <span class="font-bold text-white flex items-center gap-2">
+            <span class="material-symbols-outlined text-blue-400 text-lg">auto_awesome</span>
+            {{ data.currentStage }}
+          </span>
+          <span class="font-mono text-2xl font-extrabold text-blue-400">{{ data.progress }}%</span>
+        </div>
 
-  <div class="grid grid-cols-1 gap-6">
-    <app-diagram [definition]="diagramDef()"></app-diagram>
-  </div>
+        <div class="w-full h-3 bg-black/40 rounded-full overflow-hidden border border-white/10 p-0.5">
+          <div 
+            class="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full transition-all duration-300 shadow-glow-primary"
+            [style.width]="data.progress + '%'"
+          ></div>
+        </div>
+
+        <!-- Real-time metrics strip -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs font-mono">
+          <div class="bg-white/[0.03] p-3 rounded-xl border border-white/5">
+            <span class="text-slate-500 text-[10px] block uppercase">Files Processed</span>
+            <span class="font-bold text-slate-200 mt-0.5 block">{{ data.filesProcessed | number }} / {{ data.totalFiles | number }}</span>
+          </div>
+          <div class="bg-white/[0.03] p-3 rounded-xl border border-white/5">
+            <span class="text-slate-500 text-[10px] block uppercase">Time Remaining</span>
+            <span class="font-bold text-blue-400 mt-0.5 block">{{ data.estimatedRemainingTime }}</span>
+          </div>
+          <div class="bg-white/[0.03] p-3 rounded-xl border border-white/5">
+            <span class="text-slate-500 text-[10px] block uppercase">Processing Speed</span>
+            <span class="font-bold text-emerald-400 mt-0.5 block">{{ data.processingSpeed }}</span>
+          </div>
+          <div class="bg-white/[0.03] p-3 rounded-xl border border-white/5">
+            <span class="text-slate-500 text-[10px] block uppercase">Worker Status</span>
+            <span class="font-bold text-purple-400 mt-0.5 block">{{ data.status }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline Stages & Live Log Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Stages List -->
+      <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl space-y-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2 pb-3 border-b border-white/[0.08]">
+          <span class="material-symbols-outlined text-blue-400 text-lg">timeline</span>
+          Analysis Pipeline Stages
+        </h3>
+
+        <div class="space-y-3">
+          @for (stage of data.stages; track stage.id) {
+            <div 
+              class="p-3.5 rounded-xl border transition-all flex items-start gap-3.5"
+              [class]="stage.status === 'completed' ? 'bg-emerald-500/5 border-emerald-500/20' : (stage.status === 'in_progress' ? 'bg-blue-500/10 border-blue-500/30 shadow-glow-primary/10' : 'bg-white/[0.02] border-white/5 opacity-60')"
+            >
+              <div class="mt-0.5">
+                @if (stage.status === 'completed') {
+                  <span class="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500 text-emerald-400 flex items-center justify-center text-xs font-bold">✓</span>
+                } @else if (stage.status === 'in_progress') {
+                  <span class="w-6 h-6 rounded-full bg-blue-500/20 border border-blue-400 text-blue-400 flex items-center justify-center text-xs animate-spin">⟳</span>
+                } @else {
+                  <span class="w-6 h-6 rounded-full bg-white/5 border border-white/10 text-slate-500 flex items-center justify-center text-xs">○</span>
+                }
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-xs font-bold text-white truncate">{{ stage.name }}</h4>
+                  <span class="text-[10px] font-mono" [class]="stage.status === 'completed' ? 'text-emerald-400' : 'text-blue-400'">{{ stage.progress }}%</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5">{{ stage.description }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Live Terminal Execution Log -->
+      <div class="bg-[#0A0C12] border border-white/[0.08] rounded-2xl p-6 shadow-xl flex flex-col font-mono text-xs">
+        <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3 text-slate-400">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></span>
+            <span class="text-[11px] ml-2 text-slate-300">stdout :: local_worker.log</span>
+          </div>
+          <span class="text-[10px] text-emerald-400 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+            Live Stream
+          </span>
+        </div>
+
+        <div class="flex-1 overflow-y-auto max-h-80 space-y-1.5 text-slate-300 select-text pr-2">
+          @for (log of data.logs; track log) {
+            <p class="leading-relaxed hover:bg-white/5 px-1 py-0.5 rounded transition">
+              <span class="text-slate-500">&gt;</span> {{ log }}
+            </p>
+          }
+        </div>
+      </div>
+    </div>
+  }
 </div>

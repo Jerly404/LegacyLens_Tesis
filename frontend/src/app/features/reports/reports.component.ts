@@ -1,40 +1,52 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { AuthService } from '../../core/auth/auth.service';
-import { ApiClientService } from '../../core/http/api-client.service';
-import { CardComponent } from '../../shared/components/card/card.component';
-import { ButtonComponent } from '../../shared/components/button/button.component';
-import { EditorComponent } from '../../shared/components/editor/editor.component';
-import { ChartComponent } from '../../shared/components/chart/chart.component';
-import { DiagramComponent } from '../../shared/components/diagram/diagram.component';
+import { ReportService } from '../../core/reports/report.service';
+import { ProjectService } from '../../core/projects/project.service';
+import { NotificationService } from '../../core/notifications/notification.service';
+import { Report, ReportType } from '@codelens/shared';
 
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, EditorComponent, ChartComponent, DiagramComponent],
+  imports: [CommonModule],
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.css']
 })
-export class ReportsComponent {
-  private authService = inject(AuthService);
-  private apiClient = inject(ApiClientService);
-  private router = inject(Router);
+export class ReportsComponent implements OnInit {
+  reportService = inject(ReportService);
+  projectService = inject(ProjectService);
+  notificationService = inject(NotificationService);
 
-  email = signal('');
-  password = signal('');
-  loading = signal(false);
+  activeType = signal<ReportType>('EXECUTIVE');
+  currentReport = signal<Report | null>(null);
+  isExporting = signal<boolean>(false);
 
-  // Mock Feature Data
-  title = 'Reports';
-  codeSample = signal('// CodeLens AI analysis workspace\nfunction analyzeCodebase(repo: string) {\n  console.log("Analyzing " + repo);\n}');
-  diagramDef = signal('graph TD\n  A[Source Code] --> B(AST Parser)\n  B --> C{{Tree Sitter}}\n  C --> D[UML Generator]\n  C --> E[RAG Vector Store]');
+  ngOnInit() {
+    this.loadReport(this.activeType());
+  }
 
-  login() {
-    this.loading.set(true);
-    this.authService.login(this.email()).subscribe(() => {
-      this.loading.set(false);
+  loadReport(type: ReportType) {
+    this.activeType.set(type);
+    this.reportService.getReport(type).subscribe(rep => {
+      this.currentReport.set(rep);
+    });
+  }
+
+  exportReport(format: 'pdf' | 'markdown' | 'docx' | 'json') {
+    this.isExporting.set(true);
+    this.reportService.exportReport(this.activeType(), format).subscribe({
+      next: ({ filename, blobUrl }) => {
+        this.isExporting.set(false);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        a.click();
+        this.notificationService.success('Report Exported', `Downloaded ${filename}`);
+      },
+      error: () => {
+        this.isExporting.set(false);
+        this.notificationService.error('Export Failed', 'Could not generate report document.');
+      }
     });
   }
 }

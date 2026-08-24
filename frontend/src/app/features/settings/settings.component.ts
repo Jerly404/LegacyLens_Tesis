@@ -1,40 +1,52 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { AuthService } from '../../core/auth/auth.service';
-import { ApiClientService } from '../../core/http/api-client.service';
-import { CardComponent } from '../../shared/components/card/card.component';
-import { ButtonComponent } from '../../shared/components/button/button.component';
-import { EditorComponent } from '../../shared/components/editor/editor.component';
-import { ChartComponent } from '../../shared/components/chart/chart.component';
-import { DiagramComponent } from '../../shared/components/diagram/diagram.component';
+import { SettingsService } from '../../core/settings/settings.service';
+import { ThemeService } from '../../core/theme/theme.service';
+import { NotificationService } from '../../core/notifications/notification.service';
+import { BadgeComponent } from '../../shared/components/badge/badge.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, EditorComponent, ChartComponent, DiagramComponent],
+  imports: [CommonModule, FormsModule, BadgeComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.css']
 })
 export class SettingsComponent {
-  private authService = inject(AuthService);
-  private apiClient = inject(ApiClientService);
-  private router = inject(Router);
+  settingsService = inject(SettingsService);
+  themeService = inject(ThemeService);
+  notificationService = inject(NotificationService);
 
-  email = signal('');
-  password = signal('');
-  loading = signal(false);
+  serverUrl = signal<string>('http://localhost:11434');
+  autoSave = signal<boolean>(true);
+  notificationsEnabled = signal<boolean>(true);
+  isTesting = signal<boolean>(false);
+  pingResult = signal<string | null>(null);
 
-  // Mock Feature Data
-  title = 'Settings';
-  codeSample = signal('// CodeLens AI analysis workspace\nfunction analyzeCodebase(repo: string) {\n  console.log("Analyzing " + repo);\n}');
-  diagramDef = signal('graph TD\n  A[Source Code] --> B(AST Parser)\n  B --> C{{Tree Sitter}}\n  C --> D[UML Generator]\n  C --> E[RAG Vector Store]');
+  selectModel(id: string) {
+    this.settingsService.selectModel(id);
+    const m = this.settingsService.models().find(model => model.id === id);
+    this.notificationService.success('Active Model Changed', `Switched default inference engine to ${m?.name}`);
+  }
 
-  login() {
-    this.loading.set(true);
-    this.authService.login(this.email()).subscribe(() => {
-      this.loading.set(false);
+  testConnection() {
+    this.isTesting.set(true);
+    this.pingResult.set(null);
+
+    this.settingsService.pingServer().subscribe(res => {
+      this.isTesting.set(false);
+      this.pingResult.set(`Connected successfully (${res.latencyMs}ms latency)`);
+      this.notificationService.success('AI Server Connected', `Ollama endpoint reachable at ${this.serverUrl()}`);
     });
+  }
+
+  savePreferences() {
+    this.settingsService.updateSettings({
+      serverUrl: this.serverUrl(),
+      autoSave: this.autoSave(),
+      notificationsEnabled: this.notificationsEnabled()
+    });
+    this.notificationService.success('Preferences Saved', 'Your workspace preferences were updated.');
   }
 }

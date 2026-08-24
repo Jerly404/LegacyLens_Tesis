@@ -1,35 +1,180 @@
-<form (submit)="login(); $event.preventDefault()" class="space-y-5">
-  <div>
-    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
-    <div class="relative">
-      <span class="material-icons absolute left-4 top-3 text-slate-500">mail</span>
-      <input 
-        type="email" 
-        [(ngModel)]="email" 
-        name="email"
-        placeholder="developer@codelens.ai" 
-        required
-        class="w-full pl-12 pr-4 py-3 bg-slate-950/50 border border-slate-800 rounded-xl text-white outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition"
-      >
+<div class="min-h-screen bg-[#0F1117] flex items-stretch">
+  <!-- Left Branding & AI Code Visualization Panel -->
+  <div class="hidden lg:flex lg:w-1/2 bg-[#0A0C12] border-r border-white/[0.08] p-12 flex-col justify-between relative overflow-hidden">
+    <!-- Ambient glow -->
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Header Logo -->
+    <div class="flex items-center gap-3 z-10">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/25">
+        <span class="material-symbols-outlined text-2xl">deployed_code</span>
+      </div>
+      <div>
+        <span class="font-extrabold text-xl tracking-tight text-white">LegacyAI</span>
+        <span class="block text-[10px] font-mono text-blue-400">ENTERPRISE REVERSE-ENGINEERING</span>
+      </div>
+    </div>
+
+    <!-- Central Hero Value Statement & Mock Terminal -->
+    <div class="my-auto z-10 max-w-lg space-y-6">
+      <div class="space-y-3">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-mono text-blue-400">
+          <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+          LOCAL LLM INFERENCE • OFFLINE & AIR-GAPPED
+        </div>
+        <h1 class="text-4xl font-extrabold tracking-tight text-white leading-tight">
+          Understand.<br>
+          <span class="gradient-text-blue-purple">Analyze.</span><br>
+          Document.
+        </h1>
+        <p class="text-base text-slate-400 leading-relaxed">
+          Autonomous AI platform that ingests unknown, multi-million LOC legacy repositories, recovers hidden software architecture, and generates developer-grade UML and documentation.
+        </p>
+      </div>
+
+      <!-- Code Intelligence Simulation Card -->
+      <div class="bg-[#151821]/90 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur font-mono text-xs space-y-3">
+        <div class="flex items-center justify-between text-slate-500 border-b border-white/5 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></span>
+            <span class="text-[11px] text-slate-400 ml-2">deepseek-coder-33b :: AST_Recovery</span>
+          </div>
+          <span class="text-[11px] text-emerald-400">● 42 files/sec</span>
+        </div>
+        <div class="space-y-1 text-slate-300">
+          <p class="text-slate-500">// Detecting architectural layer boundaries...</p>
+          <p><span class="text-purple-400">class</span> <span class="text-blue-400">TransactionService</span> <span class="text-rose-400">implements</span> <span class="text-yellow-300">ITransactionService</span> &#123;</p>
+          <p class="pl-4 text-emerald-400">&#64;Transactional(isolation = Isolation.SERIALIZABLE)</p>
+          <p class="pl-4"><span class="text-purple-400">public</span> <span class="text-blue-400">TransferResult</span> processTransfer(...) &#123;</p>
+          <p class="pl-8 text-amber-400">// AI Identified: High coupling with Oracle PL/SQL DAO</p>
+          <p class="pl-4">&#125;</p>
+          <p>&#125;</p>
+        </div>
+        <div class="pt-2 border-t border-white/5 flex items-center justify-between text-[11px]">
+          <span class="text-slate-400">Architecture Match:</span>
+          <span class="text-blue-400 font-semibold">94% N-Tier Layered</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Left Footer -->
+    <div class="flex items-center justify-between text-xs text-slate-500 z-10">
+      <span>© 2026 LegacyAI Enterprise Suite</span>
+      <span>Designed for Software Architects & CTOs</span>
     </div>
   </div>
 
-  <div>
-    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Password</label>
-    <div class="relative">
-      <span class="material-icons absolute left-4 top-3 text-slate-500">lock</span>
-      <input 
-        type="password" 
-        [(ngModel)]="password" 
-        name="password"
-        placeholder="••••••••" 
-        required
-        class="w-full pl-12 pr-4 py-3 bg-slate-950/50 border border-slate-800 rounded-xl text-white outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition"
-      >
+  <!-- Right Login Card Panel -->
+  <div class="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-16 bg-[#0F1117]">
+    <div class="max-w-md w-full space-y-8">
+      <!-- Mobile Brand header -->
+      <div class="lg:hidden flex items-center gap-3 mb-6">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white">
+          <span class="material-symbols-outlined text-xl">deployed_code</span>
+        </div>
+        <span class="font-bold text-xl text-white">LegacyAI</span>
+      </div>
+
+      <div>
+        <h2 class="text-2xl font-bold tracking-tight text-white">Welcome back</h2>
+        <p class="text-sm text-slate-400 mt-1">Sign in to your enterprise analysis workspace</p>
+      </div>
+
+      <!-- Quick Demo Access Badges -->
+      <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-4 space-y-2">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-2">Instant Demo Roles:</span>
+        <div class="grid grid-cols-3 gap-2">
+          <button 
+            (click)="demoLogin('ADMIN', 'architect@legacyai.io')" 
+            class="px-3 py-2 bg-white/5 hover:bg-blue-600/20 hover:border-blue-500/40 border border-white/10 rounded-xl text-xs font-medium text-slate-200 transition text-center"
+          >
+            <span class="block font-bold text-blue-400">Architect</span>
+            <span class="text-[10px] text-slate-400">Full Access</span>
+          </button>
+          <button 
+            (click)="demoLogin('DEVELOPER', 'developer@legacyai.io')" 
+            class="px-3 py-2 bg-white/5 hover:bg-purple-600/20 hover:border-purple-500/40 border border-white/10 rounded-xl text-xs font-medium text-slate-200 transition text-center"
+          >
+            <span class="block font-bold text-purple-400">Developer</span>
+            <span class="text-[10px] text-slate-400">Code & Chat</span>
+          </button>
+          <button 
+            (click)="demoLogin('VIEWER', 'manager@legacyai.io')" 
+            class="px-3 py-2 bg-white/5 hover:bg-emerald-600/20 hover:border-emerald-500/40 border border-white/10 rounded-xl text-xs font-medium text-slate-200 transition text-center"
+          >
+            <span class="block font-bold text-emerald-400">Manager</span>
+            <span class="text-[10px] text-slate-400">Reports Only</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form (ngSubmit)="login()" class="space-y-4">
+        <div class="space-y-1.5">
+          <label class="text-xs font-medium text-slate-300">Work Email</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3.5 top-3 text-slate-500 text-lg">mail</span>
+            <input 
+              type="email" 
+              name="email"
+              [(ngModel)]="email"
+              required 
+              class="w-full bg-[#151821] border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+              placeholder="architect@company.com"
+            />
+          </div>
+        </div>
+
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-medium text-slate-300">Password</label>
+            <a href="javascript:void(0)" class="text-xs text-blue-400 hover:underline">Forgot password?</a>
+          </div>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3.5 top-3 text-slate-500 text-lg">lock</span>
+            <input 
+              type="password" 
+              name="password"
+              [(ngModel)]="password"
+              required 
+              class="w-full bg-[#151821] border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+              placeholder="••••••••••••"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-1">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input 
+              type="checkbox" 
+              name="remember"
+              [(ngModel)]="rememberMe"
+              class="w-4 h-4 rounded bg-[#151821] border-white/20 text-blue-600 focus:ring-blue-500 focus:ring-offset-[#0F1117]"
+            />
+            <span class="text-xs text-slate-300">Remember this device</span>
+          </label>
+        </div>
+
+        <button 
+          type="submit" 
+          [disabled]="loading()"
+          class="w-full mt-2 py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/25 active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          @if (loading()) {
+            <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Signing in...</span>
+          } @else {
+            <span>Sign In</span>
+            <span class="material-symbols-outlined text-base">arrow_forward</span>
+          }
+        </button>
+      </form>
     </div>
   </div>
-
-  <app-button type="submit" [disabled]="loading()" class="w-full">
-    {{ loading() ? 'Signing In...' : 'Sign In' }}
-  </app-button>
-</form>
+</div>

@@ -1,40 +1,43 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { AuthService } from '../../core/auth/auth.service';
-import { ApiClientService } from '../../core/http/api-client.service';
-import { CardComponent } from '../../shared/components/card/card.component';
-import { ButtonComponent } from '../../shared/components/button/button.component';
-import { EditorComponent } from '../../shared/components/editor/editor.component';
-import { ChartComponent } from '../../shared/components/chart/chart.component';
-import { DiagramComponent } from '../../shared/components/diagram/diagram.component';
+import { DiagramService } from '../../core/diagrams/diagram.service';
+import { ProjectService } from '../../core/projects/project.service';
+import { NotificationService } from '../../core/notifications/notification.service';
+import { DiagramViewerComponent } from '../../shared/components/diagram-viewer/diagram-viewer.component';
+import { UMLDiagram, UMLType } from '@codelens/shared';
 
 @Component({
   selector: 'app-uml',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, EditorComponent, ChartComponent, DiagramComponent],
+  imports: [CommonModule, DiagramViewerComponent],
   templateUrl: './uml.component.html',
   styleUrls: ['./uml.component.css']
 })
-export class UmlComponent {
-  private authService = inject(AuthService);
-  private apiClient = inject(ApiClientService);
-  private router = inject(Router);
+export class UmlComponent implements OnInit {
+  diagramService = inject(DiagramService);
+  projectService = inject(ProjectService);
+  notificationService = inject(NotificationService);
 
-  email = signal('');
-  password = signal('');
-  loading = signal(false);
+  activeType = signal<UMLType>('class');
+  currentDiagram = signal<UMLDiagram | null>(null);
+  isRegenerating = signal<boolean>(false);
 
-  // Mock Feature Data
-  title = 'Uml';
-  codeSample = signal('// CodeLens AI analysis workspace\nfunction analyzeCodebase(repo: string) {\n  console.log("Analyzing " + repo);\n}');
-  diagramDef = signal('graph TD\n  A[Source Code] --> B(AST Parser)\n  B --> C{{Tree Sitter}}\n  C --> D[UML Generator]\n  C --> E[RAG Vector Store]');
+  ngOnInit() {
+    this.loadDiagram(this.activeType());
+  }
 
-  login() {
-    this.loading.set(true);
-    this.authService.login(this.email()).subscribe(() => {
-      this.loading.set(false);
+  loadDiagram(type: UMLType) {
+    this.activeType.set(type);
+    this.diagramService.getDiagram(type).subscribe(diag => {
+      this.currentDiagram.set(diag);
     });
+  }
+
+  regenerate() {
+    this.isRegenerating.set(true);
+    setTimeout(() => {
+      this.isRegenerating.set(false);
+      this.notificationService.success('UML Diagram Regenerated', `Updated ${this.activeType().toUpperCase()} diagram.`);
+    }, 600);
   }
 }

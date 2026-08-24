@@ -29,7 +29,7 @@ export class AuthService {
 
   async update(id: string, dto: UpdateAuthDto): Promise<AuthEntity> {
     await this.findOne(id);
-    return this.repository.update(id, dto);
+    return this.repository.update(id, dto as any);
   }
 
   async remove(id: string): Promise<boolean> {

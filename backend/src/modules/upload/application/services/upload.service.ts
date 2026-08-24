@@ -29,7 +29,7 @@ export class UploadService {
 
   async update(id: string, dto: UpdateUploadDto): Promise<UploadEntity> {
     await this.findOne(id);
-    return this.repository.update(id, dto);
+    return this.repository.update(id, dto as any);
   }
 
   async remove(id: string): Promise<boolean> {

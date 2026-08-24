@@ -1,77 +1,347 @@
-<div class="min-h-screen flex bg-slate-50 dark:bg-dark-bg text-slate-900 dark:text-slate-100 transition-colors duration-300">
-  <!-- Sidebar -->
+<div class="min-h-screen flex bg-[#0F1117] text-white font-sans overflow-hidden">
+  <!-- Desktop Sidebar -->
   <aside 
-    [class.w-64]="sidebarOpen" 
-    [class.w-20]="!sidebarOpen"
-    class="bg-white dark:bg-dark-card border-r border-slate-200 dark:border-dark-border flex flex-col justify-between transition-all duration-300 ease-in-out z-20"
+    [class.w-64]="sidebarOpen()" 
+    [class.w-20]="!sidebarOpen()"
+    class="hidden md:flex flex-col justify-between bg-[#11131B] border-r border-white/[0.08] transition-all duration-300 ease-in-out z-30 select-none shrink-0"
   >
     <div>
       <!-- Brand Logo -->
-      <div class="h-16 flex items-center px-6 border-b border-slate-200 dark:border-dark-border">
-        <span class="material-icons text-brand-500 text-3xl">insights</span>
-        <span class="ml-3 font-semibold text-lg tracking-wider text-slate-800 dark:text-white transition-opacity duration-200" [class.opacity-0]="!sidebarOpen">CodeLens AI</span>
+      <div class="h-16 flex items-center px-5 border-b border-white/[0.08] justify-between">
+        <a routerLink="/dashboard" class="flex items-center gap-3 overflow-hidden group">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform shrink-0">
+            <span class="material-symbols-outlined text-xl">deployed_code</span>
+          </div>
+          @if (sidebarOpen()) {
+            <div class="flex flex-col">
+              <span class="font-extrabold text-base tracking-tight gradient-text-blue-purple leading-tight">LegacyAI</span>
+              <span class="text-[10px] text-slate-400 font-mono tracking-wider">ENTERPRISE SAAS</span>
+            </div>
+          }
+        </a>
       </div>
 
       <!-- Navigation Links -->
-      <nav class="p-4 space-y-1">
-        <a routerLink="/dashboard" routerLinkActive="bg-brand-500/10 text-brand-500 font-semibold" class="flex items-center px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition duration-150">
-          <span class="material-icons">dashboard</span>
-          <span class="ml-4 transition-opacity duration-200" [class.opacity-0]="!sidebarOpen">Dashboard</span>
+      <nav class="p-3 space-y-1">
+        <a 
+          routerLink="/dashboard" 
+          routerLinkActive="bg-blue-600/15 text-blue-400 font-semibold border-l-2 border-blue-500 shadow-sm" 
+          class="flex items-center px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.05] transition duration-150 group"
+          title="Dashboard"
+        >
+          <span class="material-symbols-outlined text-xl group-hover:text-blue-400 transition-colors">dashboard</span>
+          @if (sidebarOpen()) {
+            <span class="ml-3 text-sm">Dashboard</span>
+          }
         </a>
-        <a routerLink="/projects" routerLinkActive="bg-brand-500/10 text-brand-500 font-semibold" class="flex items-center px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition duration-150">
-          <span class="material-icons">folder</span>
-          <span class="ml-4 transition-opacity duration-200" [class.opacity-0]="!sidebarOpen">Projects</span>
+
+        <a 
+          routerLink="/projects" 
+          routerLinkActive="bg-blue-600/15 text-blue-400 font-semibold border-l-2 border-blue-500 shadow-sm" 
+          class="flex items-center px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.05] transition duration-150 group"
+          title="Projects"
+        >
+          <span class="material-symbols-outlined text-xl group-hover:text-blue-400 transition-colors">folder_open</span>
+          @if (sidebarOpen()) {
+            <span class="ml-3 text-sm">Projects</span>
+          }
         </a>
-        <a routerLink="/upload" routerLinkActive="bg-brand-500/10 text-brand-500 font-semibold" class="flex items-center px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition duration-150">
-          <span class="material-icons">cloud_upload</span>
-          <span class="ml-4 transition-opacity duration-200" [class.opacity-0]="!sidebarOpen">Upload Code</span>
+
+        <a 
+          routerLink="/analysis-progress" 
+          routerLinkActive="bg-blue-600/15 text-blue-400 font-semibold border-l-2 border-blue-500 shadow-sm" 
+          class="flex items-center px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.05] transition duration-150 group"
+          title="Analysis Pipeline"
+        >
+          <span class="material-symbols-outlined text-xl group-hover:text-blue-400 transition-colors">analytics</span>
+          @if (sidebarOpen()) {
+            <span class="ml-3 text-sm">Analysis Pipeline</span>
+            <span class="ml-auto w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+          }
         </a>
-        <a routerLink="/ai-chat" routerLinkActive="bg-brand-500/10 text-brand-500 font-semibold" class="flex items-center px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition duration-150">
-          <span class="material-icons">chat</span>
-          <span class="ml-4 transition-opacity duration-200" [class.opacity-0]="!sidebarOpen">AI Chat</span>
+
+        <a 
+          routerLink="/documentation" 
+          routerLinkActive="bg-blue-600/15 text-blue-400 font-semibold border-l-2 border-blue-500 shadow-sm" 
+          class="flex items-center px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.05] transition duration-150 group"
+          title="Documentation"
+        >
+          <span class="material-symbols-outlined text-xl group-hover:text-blue-400 transition-colors">description</span>
+          @if (sidebarOpen()) {
+            <span class="ml-3 text-sm">Documentation</span>
+          }
         </a>
-        <a routerLink="/settings" routerLinkActive="bg-brand-500/10 text-brand-500 font-semibold" class="flex items-center px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition duration-150">
-          <span class="material-icons">settings</span>
-          <span class="ml-4 transition-opacity duration-200" [class.opacity-0]="!sidebarOpen">Settings</span>
+
+        <a 
+          routerLink="/architecture" 
+          routerLinkActive="bg-blue-600/15 text-blue-400 font-semibold border-l-2 border-blue-500 shadow-sm" 
+          class="flex items-center px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.05] transition duration-150 group"
+          title="Architecture"
+        >
+          <span class="material-symbols-outlined text-xl group-hover:text-blue-400 transition-colors">account_tree</span>
+          @if (sidebarOpen()) {
+            <span class="ml-3 text-sm">Architecture</span>
+          }
+        </a>
+
+        <a 
+          routerLink="/uml" 
+          routerLinkActive="bg-blue-600/15 text-blue-400 font-semibold border-l-2 border-blue-500 shadow-sm" 
+          class="flex items-center px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.05] transition duration-150 group"
+          title="UML Diagrams"
+        >
+          <span class="material-symbols-outlined text-xl group-hover:text-blue-400 transition-colors">schema</span>
+          @if (sidebarOpen()) {
+            <span class="ml-3 text-sm">UML Diagrams</span>
+          }
+        </a>
+
+        <a 
+          routerLink="/ai-chat" 
+          routerLinkActive="bg-blue-600/15 text-blue-400 font-semibold border-l-2 border-blue-500 shadow-sm" 
+          class="flex items-center px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.05] transition duration-150 group"
+          title="AI Code Assistant"
+        >
+          <span class="material-symbols-outlined text-xl text-purple-400 group-hover:scale-110 transition-transform">psychology</span>
+          @if (sidebarOpen()) {
+            <span class="ml-3 text-sm font-medium">AI Code Chat</span>
+            <span class="ml-auto text-[10px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded font-mono">RAG</span>
+          }
+        </a>
+
+        <a 
+          routerLink="/reports" 
+          routerLinkActive="bg-blue-600/15 text-blue-400 font-semibold border-l-2 border-blue-500 shadow-sm" 
+          class="flex items-center px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.05] transition duration-150 group"
+          title="Reports & Audit"
+        >
+          <span class="material-symbols-outlined text-xl group-hover:text-blue-400 transition-colors">summarize</span>
+          @if (sidebarOpen()) {
+            <span class="ml-3 text-sm">Reports</span>
+          }
+        </a>
+
+        <div class="pt-3 pb-2">
+          <div class="h-px bg-white/[0.08] mx-2"></div>
+        </div>
+
+        <a 
+          routerLink="/settings" 
+          routerLinkActive="bg-blue-600/15 text-blue-400 font-semibold border-l-2 border-blue-500 shadow-sm" 
+          class="flex items-center px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.05] transition duration-150 group"
+          title="Settings"
+        >
+          <span class="material-symbols-outlined text-xl group-hover:text-blue-400 transition-colors">settings</span>
+          @if (sidebarOpen()) {
+            <span class="ml-3 text-sm">Settings</span>
+          }
         </a>
       </nav>
     </div>
 
     <!-- User Profile Footer -->
-    <div class="p-4 border-t border-slate-200 dark:border-dark-border flex items-center justify-between">
-      <div class="flex items-center">
-        <span class="material-icons text-3xl text-slate-400">account_circle</span>
-        <div class="ml-3 overflow-hidden transition-all duration-200" [class.w-0]="!sidebarOpen">
-          <p class="text-xs font-semibold truncate">{{ authService.currentUser()?.name }}</p>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">{{ authService.currentUser()?.role }}</p>
+    <div class="p-3 border-t border-white/[0.08] bg-[#0E1017]">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center min-w-0">
+          <img 
+            [src]="authService.currentUser()?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'" 
+            class="w-9 h-9 rounded-xl object-cover border border-white/10 shrink-0" 
+            alt="User avatar"
+          />
+          @if (sidebarOpen()) {
+            <div class="ml-2.5 overflow-hidden">
+              <p class="text-xs font-semibold text-white truncate">{{ authService.currentUser()?.name }}</p>
+              <span class="text-[10px] font-mono text-blue-400 bg-blue-500/10 px-1.5 py-0.2 rounded border border-blue-500/20">{{ authService.currentUser()?.role }}</span>
+            </div>
+          }
         </div>
+        @if (sidebarOpen()) {
+          <button 
+            (click)="authService.logout()" 
+            title="Log out" 
+            class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition"
+          >
+            <span class="material-symbols-outlined text-base">logout</span>
+          </button>
+        }
       </div>
-      <button (click)="authService.logout()" class="material-icons text-red-500 hover:text-red-600 transition" [class.hidden]="!sidebarOpen">logout</button>
     </div>
   </aside>
 
-  <!-- Content Wrapper -->
-  <div class="flex-1 flex flex-col overflow-hidden">
-    <!-- Header -->
-    <header class="h-16 bg-white dark:bg-dark-card border-b border-slate-200 dark:border-dark-border flex items-center justify-between px-6 z-10 shadow-sm">
-      <div class="flex items-center">
-        <button (click)="toggleSidebar()" class="material-icons text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-xl">menu</button>
+  <!-- Mobile Drawer Backdrop -->
+  @if (mobileDrawerOpen()) {
+    <div 
+      (click)="toggleMobileDrawer()"
+      class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden"
+    ></div>
+  }
+
+  <!-- Mobile Drawer -->
+  <aside 
+    [class.translate-x-0]="mobileDrawerOpen()"
+    [class.-translate-x-full]="!mobileDrawerOpen()"
+    class="fixed inset-y-0 left-0 w-64 bg-[#11131B] border-r border-white/[0.08] flex flex-col justify-between z-50 transition-transform duration-300 ease-in-out md:hidden"
+  >
+    <div>
+      <div class="h-16 flex items-center justify-between px-5 border-b border-white/[0.08]">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white">
+            <span class="material-symbols-outlined text-lg">deployed_code</span>
+          </div>
+          <span class="font-bold text-base gradient-text-blue-purple">LegacyAI</span>
+        </div>
+        <button (click)="toggleMobileDrawer()" class="text-slate-400 hover:text-white p-1">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="flex items-center space-x-3">
+      <nav class="p-4 space-y-1">
+        <a (click)="toggleMobileDrawer()" routerLink="/dashboard" class="flex items-center px-4 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5">
+          <span class="material-symbols-outlined mr-3">dashboard</span> Dashboard
+        </a>
+        <a (click)="toggleMobileDrawer()" routerLink="/projects" class="flex items-center px-4 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5">
+          <span class="material-symbols-outlined mr-3">folder_open</span> Projects
+        </a>
+        <a (click)="toggleMobileDrawer()" routerLink="/analysis-progress" class="flex items-center px-4 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5">
+          <span class="material-symbols-outlined mr-3">analytics</span> Analysis
+        </a>
+        <a (click)="toggleMobileDrawer()" routerLink="/documentation" class="flex items-center px-4 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5">
+          <span class="material-symbols-outlined mr-3">description</span> Documentation
+        </a>
+        <a (click)="toggleMobileDrawer()" routerLink="/architecture" class="flex items-center px-4 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5">
+          <span class="material-symbols-outlined mr-3">account_tree</span> Architecture
+        </a>
+        <a (click)="toggleMobileDrawer()" routerLink="/uml" class="flex items-center px-4 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5">
+          <span class="material-symbols-outlined mr-3">schema</span> UML Diagrams
+        </a>
+        <a (click)="toggleMobileDrawer()" routerLink="/ai-chat" class="flex items-center px-4 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5">
+          <span class="material-symbols-outlined mr-3 text-purple-400">psychology</span> AI Code Chat
+        </a>
+        <a (click)="toggleMobileDrawer()" routerLink="/reports" class="flex items-center px-4 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5">
+          <span class="material-symbols-outlined mr-3">summarize</span> Reports
+        </a>
+        <a (click)="toggleMobileDrawer()" routerLink="/settings" class="flex items-center px-4 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5">
+          <span class="material-symbols-outlined mr-3">settings</span> Settings
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-white/[0.08] flex items-center justify-between">
+      <span class="text-xs text-slate-400">{{ authService.currentUser()?.email }}</span>
+      <button (click)="authService.logout()" class="text-rose-400 text-xs font-semibold">Logout</button>
+    </div>
+  </aside>
+
+  <!-- Main Application Wrapper -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <!-- Topbar -->
+    <header class="h-16 bg-[#11131B] border-b border-white/[0.08] flex items-center justify-between px-4 lg:px-8 z-20 shrink-0">
+      <div class="flex items-center gap-3 min-w-0">
+        <!-- Sidebar collapse toggle -->
+        <button 
+          (click)="toggleSidebar()" 
+          class="hidden md:flex p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition"
+          title="Toggle Sidebar"
+        >
+          <span class="material-symbols-outlined text-xl">menu</span>
+        </button>
+
+        <button 
+          (click)="toggleMobileDrawer()" 
+          class="md:hidden p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition"
+        >
+          <span class="material-symbols-outlined text-xl">menu</span>
+        </button>
+
+        <!-- Project Selector Dropdown -->
+        <div class="flex items-center gap-2 bg-[#151821] border border-white/10 rounded-xl px-3 py-1.5 min-w-[200px] max-w-[320px]">
+          <span class="material-symbols-outlined text-blue-400 text-base shrink-0">folder</span>
+          <select 
+            [value]="projectService.selectedProject().id"
+            (change)="switchProject($event)"
+            class="bg-transparent text-xs font-semibold text-white focus:outline-none w-full cursor-pointer truncate"
+          >
+            @for (p of projectService.projects(); track p.id) {
+              <option [value]="p.id" class="bg-[#151821] text-white py-1">{{ p.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- Topbar Right Cluster -->
+      <div class="flex items-center gap-3">
+        <!-- AI System Status Pill -->
+        <div class="hidden lg:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-medium text-emerald-400">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>AI Server: Online</span>
+          <span class="text-slate-500">•</span>
+          <span class="text-slate-300 font-mono text-[11px]">DeepSeek Coder 33B</span>
+          <span class="text-slate-500">•</span>
+          <span class="text-slate-400 font-mono text-[11px]">RTX 3050 (7.2GB)</span>
+        </div>
+
+        <!-- Quick Upload Action -->
+        <a 
+          routerLink="/upload" 
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-xl transition shadow-md shadow-blue-600/20"
+        >
+          <span class="material-symbols-outlined text-sm">upload_file</span>
+          <span class="hidden sm:inline">Upload Code</span>
+        </a>
+
+        <!-- Notifications Bell -->
+        <div class="relative">
+          <button 
+            (click)="toggleNotifications()" 
+            class="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition relative"
+            title="Notifications"
+          >
+            <span class="material-symbols-outlined text-xl">notifications</span>
+            @if (notificationService.unreadCount() > 0) {
+              <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full ring-2 ring-[#11131B]"></span>
+            }
+          </button>
+
+          <!-- Notifications Dropdown -->
+          @if (notificationsOpen()) {
+            <div class="absolute right-0 mt-2 w-80 bg-[#151821] border border-white/10 rounded-2xl shadow-2xl p-4 z-50 animate-fade-in">
+              <div class="flex items-center justify-between pb-2 border-b border-white/10 mb-3">
+                <span class="text-xs font-bold text-white uppercase tracking-wider">Notifications</span>
+                <button (click)="notificationService.markAllAsRead()" class="text-[11px] text-blue-400 hover:underline">Mark all read</button>
+              </div>
+
+              <div class="space-y-2 max-h-64 overflow-y-auto">
+                @for (item of notificationService.notifications(); track item.id) {
+                  <div class="p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] transition text-xs border border-white/5">
+                    <div class="flex items-center justify-between">
+                      <span class="font-semibold text-white truncate">{{ item.title }}</span>
+                      <span class="text-[10px] text-slate-500">{{ item.timestamp }}</span>
+                    </div>
+                    <p class="text-slate-400 mt-1 line-clamp-2">{{ item.message }}</p>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Theme Toggle -->
         <button 
           (click)="themeService.toggleTheme()" 
-          class="material-icons text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-xl"
+          class="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition"
+          title="Toggle Theme"
         >
-          {{ themeService.isDarkMode() ? 'light_mode' : 'dark_mode' }}
+          <span class="material-symbols-outlined text-xl">{{ themeService.isDarkMode() ? 'light_mode' : 'dark_mode' }}</span>
         </button>
       </div>
     </header>
 
-    <!-- Main Content Panel -->
-    <main class="flex-1 overflow-auto p-6 md:p-8">
+    <!-- Main Scrollable Content Area -->
+    <main class="flex-1 overflow-y-auto bg-[#0F1117] p-4 lg:p-8">
       <router-outlet></router-outlet>
     </main>
   </div>
 </div>
+
+<!-- Global Toasts -->
+<app-toast></app-toast>

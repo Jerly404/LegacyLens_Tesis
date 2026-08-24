@@ -3,38 +3,49 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
-import { ApiClientService } from '../../core/http/api-client.service';
-import { CardComponent } from '../../shared/components/card/card.component';
-import { ButtonComponent } from '../../shared/components/button/button.component';
-import { EditorComponent } from '../../shared/components/editor/editor.component';
-import { ChartComponent } from '../../shared/components/chart/chart.component';
-import { DiagramComponent } from '../../shared/components/diagram/diagram.component';
+import { NotificationService } from '../../core/notifications/notification.service';
+import { UserRole } from '@codelens/shared';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, EditorComponent, ChartComponent, DiagramComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  private authService = inject(AuthService);
-  private apiClient = inject(ApiClientService);
-  private router = inject(Router);
+  authService = inject(AuthService);
+  notificationService = inject(NotificationService);
+  router = inject(Router);
 
-  email = signal('');
-  password = signal('');
-  loading = signal(false);
-
-  // Mock Feature Data
-  title = 'Login';
-  codeSample = signal('// CodeLens AI analysis workspace\nfunction analyzeCodebase(repo: string) {\n  console.log("Analyzing " + repo);\n}');
-  diagramDef = signal('graph TD\n  A[Source Code] --> B(AST Parser)\n  B --> C{{Tree Sitter}}\n  C --> D[UML Generator]\n  C --> E[RAG Vector Store]');
+  email = signal<string>('architect@legacyai.io');
+  password = signal<string>('••••••••••••');
+  rememberMe = signal<boolean>(true);
+  loading = signal<boolean>(false);
 
   login() {
     this.loading.set(true);
-    this.authService.login(this.email()).subscribe(() => {
-      this.loading.set(false);
+    this.authService.login(this.email(), this.password(), this.rememberMe()).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.notificationService.success('Welcome back', `Logged in as ${this.email()}`);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.notificationService.error('Login Failed', 'Please check your credentials.');
+      }
+    });
+  }
+
+  demoLogin(role: UserRole, email: string) {
+    this.email.set(email);
+    this.password.set('password123');
+    this.loading.set(true);
+    this.authService.login(email, 'password123', true, role).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.notificationService.success('Demo Session Started', `Signed in as ${role}`);
+      }
     });
   }
 }
