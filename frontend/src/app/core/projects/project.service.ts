@@ -7,217 +7,14 @@ import { delay } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class ProjectService {
-  private initialProjects: Project[] = [
-    {
-      id: 'proj-banking-core',
-      name: 'Legacy Banking Transaction Core',
-      slug: 'legacy-banking-api',
-      description: 'Core transaction settlement engine and account balance ledger with legacy SOAP interfaces and heavy Oracle PL/SQL dependencies.',
-      repositoryUrl: 'https://github.com/enterprise-fin/banking-transaction-core.git',
-      mainLanguage: 'Java',
-      framework: 'Spring Boot 2.1 & Hibernate 5',
-      branch: 'main',
-      languages: [
-        { name: 'Java', percentage: 68, color: '#f89820', loc: 167144 },
-        { name: 'PL/SQL', percentage: 18, color: '#e34c26', loc: 44244 },
-        { name: 'XML / WSDL', percentage: 9, color: '#0060ac', loc: 22122 },
-        { name: 'Shell', percentage: 5, color: '#89e051', loc: 12290 }
-      ],
-      fileCount: 1842,
-      linesOfCode: 245800,
-      architecture: 'Layered Architecture',
-      confidence: 94,
-      status: 'COMPLETED',
-      progress: 100,
-      lastAnalyzedAt: '2026-08-25T08:30:00Z',
-      createdAt: '2026-08-10T10:00:00Z',
-      updatedAt: '2026-08-25T08:30:00Z',
-      healthScore: 68
-    },
-    {
-      id: 'proj-health-hl7',
-      name: 'Healthcare Patient Records & HL7 Gateway',
-      slug: 'healthcare-hl7-api',
-      description: 'Electronic Health Record (EHR) sync server with custom HL7 parser, WCF SOAP services, and MS SQL Server stored procedures.',
-      repositoryUrl: 'https://github.com/medtech/ehr-hl7-gateway.git',
-      mainLanguage: 'C#',
-      framework: '.NET Framework 4.8 / WCF / Entity Framework 6',
-      branch: 'release/2.4',
-      languages: [
-        { name: 'C#', percentage: 72, color: '#178600', loc: 136224 },
-        { name: 'T-SQL', percentage: 16, color: '#e38c00', loc: 30272 },
-        { name: 'XML / HL7', percentage: 12, color: '#555555', loc: 22704 }
-      ],
-      fileCount: 1450,
-      linesOfCode: 189200,
-      architecture: 'Layered Architecture',
-      confidence: 91,
-      status: 'COMPLETED',
-      progress: 100,
-      lastAnalyzedAt: '2026-08-24T18:40:00Z',
-      createdAt: '2026-08-05T08:15:00Z',
-      updatedAt: '2026-08-24T18:40:00Z',
-      healthScore: 62
-    },
-    {
-      id: 'proj-ecommerce-mono',
-      name: 'E-Commerce Monolith & Order Engine',
-      slug: 'ecommerce-system',
-      description: 'Legacy PHP web store with tightly coupled checkout pipeline, MySQL raw queries, and outdated payment webhooks.',
-      repositoryUrl: 'https://github.com/retail-corp/ecommerce-monolith.git',
-      mainLanguage: 'PHP',
-      framework: 'Laravel 5.8 / Blade / Raw MySQL',
-      branch: 'master',
-      languages: [
-        { name: 'PHP', percentage: 58, color: '#4F5D95', loc: 68672 },
-        { name: 'JavaScript', percentage: 22, color: '#F7DF1E', loc: 26048 },
-        { name: 'Blade / HTML', percentage: 12, color: '#E34F26', loc: 14208 },
-        { name: 'SQL', percentage: 8, color: '#336791', loc: 9472 }
-      ],
-      fileCount: 920,
-      linesOfCode: 118400,
-      architecture: 'Monolithic MVC',
-      confidence: 89,
-      status: 'COMPLETED',
-      progress: 100,
-      lastAnalyzedAt: '2026-08-23T09:15:00Z',
-      createdAt: '2026-08-12T11:20:00Z',
-      updatedAt: '2026-08-23T09:15:00Z',
-      healthScore: 54
-    },
-    {
-      id: 'proj-scada-cpp',
-      name: 'Industrial SCADA & Telemetry Engine',
-      slug: 'scada-telemetry-engine',
-      description: 'Legacy C++ telemetry aggregator communicating over Modbus TCP, raw sockets, and POSIX multithreading queues.',
-      repositoryUrl: 'https://github.com/industrial/scada-telemetry.git',
-      mainLanguage: 'C++',
-      framework: 'C++14 / Boost / CMake / Qt 5',
-      branch: 'main',
-      languages: [
-        { name: 'C++', percentage: 76, color: '#f34b7d', loc: 92400 },
-        { name: 'C', percentage: 16, color: '#555555', loc: 19440 },
-        { name: 'CMake / Shell', percentage: 8, color: '#DA3434', loc: 9720 }
-      ],
-      fileCount: 680,
-      linesOfCode: 121560,
-      architecture: 'Event-Driven Pipeline',
-      confidence: 87,
-      status: 'COMPLETED',
-      progress: 100,
-      lastAnalyzedAt: '2026-08-24T14:00:00Z',
-      createdAt: '2026-08-14T09:00:00Z',
-      updatedAt: '2026-08-24T14:00:00Z',
-      healthScore: 71
-    },
-    {
-      id: 'proj-python-etl',
-      name: 'Financial Ledger ETL & Reconciliation',
-      slug: 'python-ledger-etl',
-      description: 'Distributed batch processor written in Python/Django with Celery workers, Pandas data frames, and PostgreSQL bulk copy.',
-      repositoryUrl: 'https://github.com/fintech/ledger-etl-pipeline.git',
-      mainLanguage: 'Python',
-      framework: 'Django 3.2 / Celery 5 / Pandas',
-      branch: 'develop',
-      languages: [
-        { name: 'Python', percentage: 82, color: '#3572A5', loc: 64780 },
-        { name: 'SQL', percentage: 12, color: '#336791', loc: 9480 },
-        { name: 'Docker / YAML', percentage: 6, color: '#384d54', loc: 4740 }
-      ],
-      fileCount: 510,
-      linesOfCode: 79000,
-      architecture: 'Pipes & Filters Architecture',
-      confidence: 93,
-      status: 'COMPLETED',
-      progress: 100,
-      lastAnalyzedAt: '2026-08-25T07:15:00Z',
-      createdAt: '2026-08-16T12:00:00Z',
-      updatedAt: '2026-08-25T07:15:00Z',
-      healthScore: 84
-    },
-    {
-      id: 'proj-cobol-core',
-      name: 'Mainframe Core Account Ledger',
-      slug: 'mainframe-cobol-ledger',
-      description: 'Mission-critical mainframe batch suite processing overnight general ledger postings and CICS transaction copybooks.',
-      repositoryUrl: 'https://github.com/enterprise-bank/mainframe-cobol-core.git',
-      mainLanguage: 'COBOL',
-      framework: 'COBOL-85 / CICS / DB2 SQL',
-      branch: 'prod/v8',
-      languages: [
-        { name: 'COBOL', percentage: 78, color: '#005CA5', loc: 312000 },
-        { name: 'JCL', percentage: 14, color: '#4d5b6a', loc: 56000 },
-        { name: 'DB2 SQL', percentage: 8, color: '#e34c26', loc: 32000 }
-      ],
-      fileCount: 2240,
-      linesOfCode: 400000,
-      architecture: 'Monolithic Mainframe Batch',
-      confidence: 96,
-      status: 'COMPLETED',
-      progress: 100,
-      lastAnalyzedAt: '2026-08-24T19:00:00Z',
-      createdAt: '2026-08-01T08:00:00Z',
-      updatedAt: '2026-08-24T19:00:00Z',
-      healthScore: 48
-    },
-    {
-      id: 'proj-inventory-api',
-      name: 'Cloud Inventory API & Sync Service',
-      slug: 'inventory-system',
-      description: 'Modernized logistics microservice with CQRS events, Redis cache layers, and OpenAPI 3.0 interfaces.',
-      repositoryUrl: 'https://github.com/logistics-inc/inventory-sync-service.git',
-      mainLanguage: 'TypeScript',
-      framework: 'NestJS / Express / Prisma / PostgreSQL',
-      branch: 'main',
-      languages: [
-        { name: 'TypeScript', percentage: 84, color: '#3178C6', loc: 49476 },
-        { name: 'SQL', percentage: 10, color: '#336791', loc: 5890 },
-        { name: 'Docker / YAML', percentage: 6, color: '#384d54', loc: 3534 }
-      ],
-      fileCount: 420,
-      linesOfCode: 58900,
-      architecture: 'Clean Architecture',
-      confidence: 96,
-      status: 'COMPLETED',
-      progress: 100,
-      lastAnalyzedAt: '2026-08-25T06:00:00Z',
-      createdAt: '2026-08-18T16:00:00Z',
-      updatedAt: '2026-08-25T06:00:00Z',
-      healthScore: 88
-    },
-    {
-      id: 'proj-payment-gate',
-      name: 'Payment Processing Gateway & Ledger',
-      slug: 'payment-gateway',
-      description: 'Distributed payment router supporting multiple acquirers, fraud checks, and idempotency guarantees.',
-      repositoryUrl: 'https://github.com/fintech/payment-gateway-v2.git',
-      mainLanguage: 'Go',
-      framework: 'Go 1.22 / gRPC / Gorilla / Kafka',
-      branch: 'develop',
-      languages: [
-        { name: 'Go', percentage: 89, color: '#00ADD8', loc: 41118 },
-        { name: 'Protobuf', percentage: 7, color: '#555555', loc: 3234 },
-        { name: 'SQL', percentage: 4, color: '#336791', loc: 1848 }
-      ],
-      fileCount: 380,
-      linesOfCode: 46200,
-      architecture: 'Hexagonal Architecture',
-      confidence: 92,
-      status: 'ANALYZING',
-      progress: 78,
-      lastAnalyzedAt: '2026-08-25T09:30:00Z',
-      createdAt: '2026-08-25T09:00:00Z',
-      updatedAt: '2026-08-25T09:30:00Z',
-      healthScore: 91
-    }
-  ];
+  private initialProjects: Project[] = [];
 
   private getSavedProjects(): Project[] {
     const saved = localStorage.getItem('legacyai_projects');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           return parsed;
         }
       } catch (e) {
@@ -350,21 +147,25 @@ export class ProjectService {
     return of(true).pipe(delay(100));
   }
 
+  clearAllProjects(): Observable<boolean> {
+    this.projectsSignal.set([]);
+    this.persistProjects([]);
+    return of(true).pipe(delay(50));
+  }
+
   clearDemoProjects(): Observable<boolean> {
-    const userUploaded = this.projectsSignal().filter(p => !p.id.startsWith('proj-banking') && !p.id.startsWith('proj-health') && !p.id.startsWith('proj-ecommerce') && !p.id.startsWith('proj-scada') && !p.id.startsWith('proj-python') && !p.id.startsWith('proj-cobol') && !p.id.startsWith('proj-inventory') && !p.id.startsWith('proj-payment'));
-    this.projectsSignal.set(userUploaded);
-    this.persistProjects(userUploaded);
-    if (userUploaded.length > 0) {
-      this.selectedProjectSignal.set(userUploaded[0]);
-    }
-    return of(true).pipe(delay(100));
+    this.projectsSignal.set([]);
+    this.persistProjects([]);
+    return of(true).pipe(delay(50));
   }
 
   resetDemoProjects(): Observable<boolean> {
     this.projectsSignal.set(this.initialProjects);
     this.persistProjects(this.initialProjects);
-    this.selectedProjectSignal.set(this.initialProjects[0]);
-    return of(true).pipe(delay(100));
+    if (this.initialProjects.length > 0) {
+      this.selectedProjectSignal.set(this.initialProjects[0]);
+    }
+    return of(true).pipe(delay(50));
   }
 
   getFileTree(projectId?: string): FileNode[] {

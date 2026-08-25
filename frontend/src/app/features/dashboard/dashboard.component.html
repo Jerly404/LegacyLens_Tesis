@@ -7,20 +7,30 @@
         AI SAAS WORKSPACE
       </div>
       <h1 class="text-3xl font-extrabold tracking-tight text-white">
-        Welcome back, <span class="gradient-text-blue-purple">{{ authService.currentUser()?.name }}</span>
+        Bienvenido, <span class="gradient-text-blue-purple">{{ authService.currentUser()?.name }}</span>
       </h1>
       <p class="text-sm text-slate-400 mt-1">
-        Overview of reverse-engineered legacy codebases, local AI health, and automated technical documentation.
+        Panel de ingeniería inversa asistida por IA local, arquitectura AST y documentación técnica automatizada.
       </p>
     </div>
 
     <div class="flex items-center gap-3">
+      @if (projectService.projects().length > 0) {
+        <button 
+          (click)="clearWorkspace()"
+          class="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-semibold rounded-xl transition"
+        >
+          <span class="material-symbols-outlined text-base">delete_sweep</span>
+          <span>Limpiar Todo</span>
+        </button>
+      }
+
       <a 
         routerLink="/upload" 
         class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-sm font-semibold rounded-xl transition shadow-lg shadow-blue-600/20 active:scale-[0.98]"
       >
         <span class="material-symbols-outlined text-lg">upload_file</span>
-        <span>Upload Project</span>
+        <span>Subir Repositorio</span>
       </a>
     </div>
   </div>
@@ -28,53 +38,53 @@
   <!-- 5 KPI Statistics Cards -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
     <app-stat-card 
-      label="Projects Analyzed" 
-      [value]="projectService.projects().length" 
-      change="+2 this week" 
+      label="Proyectos Analizados" 
+      [value]="totalProjects()" 
+      change="+1 activo" 
       trend="up" 
       icon="folder" 
       iconColor="blue"
-      subtext="Enterprise codebases"
+      subtext="Espacios de trabajo"
     ></app-stat-card>
 
     <app-stat-card 
-      label="Files Analyzed" 
-      value="5,012" 
-      change="+1.8k AST" 
+      label="Archivos Analizados" 
+      [value]="totalFiles()" 
+      change="100% AST" 
       trend="up" 
       icon="code" 
       iconColor="purple"
-      subtext="Indexed source files"
+      subtext="Fuentes indexados"
     ></app-stat-card>
 
     <app-stat-card 
-      label="Docs Generated" 
-      value="48 Pages" 
-      change="100% Ready" 
+      label="Documentación" 
+      [value]="totalDocs()" 
+      change="100% Listo" 
       trend="up" 
       icon="description" 
       iconColor="emerald"
-      subtext="OpenAPI & Architecture"
+      subtext="OpenAPI y Schemas"
     ></app-stat-card>
 
     <app-stat-card 
-      label="Architecture Detected" 
-      value="94% Conf." 
-      change="N-Tier Layered" 
+      label="Confianza de Arquitectura" 
+      [value]="avgConfidence()" 
+      change="Layered / Clean" 
       trend="neutral" 
       icon="account_tree" 
       iconColor="amber"
-      subtext="Pattern matching score"
+      subtext="Clasificación por IA"
     ></app-stat-card>
 
     <app-stat-card 
-      label="Avg. Processing Time" 
-      value="01:42 min" 
-      change="42 files/s" 
+      label="Tiempo de Inferencia" 
+      [value]="avgTime()" 
+      change="GPU RTX 3050" 
       trend="up" 
       icon="speed" 
       iconColor="cyan"
-      subtext="Local GPU inference"
+      subtext="Aceleración CUDA"
     ></app-stat-card>
   </div>
 
@@ -89,7 +99,7 @@
         <div class="flex items-center justify-between pb-4 border-b border-white/10">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-blue-400 text-xl">psychology</span>
-            <span class="text-xs font-bold uppercase tracking-widest text-slate-300">Local AI Engine</span>
+            <span class="text-xs font-bold uppercase tracking-widest text-slate-300">Motor de IA Local</span>
           </div>
           <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -99,40 +109,35 @@
 
         <div class="mt-4 space-y-3.5">
           <div class="flex items-center justify-between text-xs">
-            <span class="text-slate-400">Active Model</span>
-            <span class="font-mono font-bold text-white bg-white/5 px-2 py-0.5 rounded border border-white/10">
+            <span class="text-slate-400">Modelo Activo</span>
+            <span class="font-mono text-purple-400 font-bold bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
               {{ settingsService.systemHealth().activeModel }}
             </span>
           </div>
 
           <div class="flex items-center justify-between text-xs">
-            <span class="text-slate-400">Hardware Accelerator</span>
-            <span class="font-semibold text-slate-200 flex items-center gap-1">
-              <span class="material-symbols-outlined text-sm text-blue-400">memory</span>
-              {{ settingsService.systemHealth().gpuName }}
-            </span>
+            <span class="text-slate-400">Acelerador</span>
+            <span class="font-mono text-slate-200">{{ settingsService.systemHealth().gpuName }}</span>
           </div>
 
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="text-slate-400">VRAM Allocation</span>
-              <span class="font-mono text-blue-400 font-semibold">{{ settingsService.systemHealth().vramUsedGB }} GB / {{ settingsService.systemHealth().vramTotalGB }} GB</span>
+          <!-- VRAM Bar -->
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs font-mono">
+              <span class="text-slate-400">Asignación VRAM</span>
+              <span class="text-blue-400 font-bold">{{ settingsService.systemHealth().vramUsedGB }} GB / {{ settingsService.systemHealth().vramTotalGB }} GB</span>
             </div>
-            <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
-              <div 
-                class="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
-                [style.width]="(settingsService.systemHealth().vramUsedGB / settingsService.systemHealth().vramTotalGB * 100) + '%'"
-              ></div>
+            <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500" style="width: 85%"></div>
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-2 pt-1 text-xs">
+          <div class="grid grid-cols-2 gap-2 pt-2 text-xs">
             <div class="bg-white/5 p-2 rounded-xl border border-white/5">
-              <span class="text-[11px] text-slate-400 block">Workload</span>
+              <span class="text-[11px] text-slate-400 block">Carga GPU</span>
               <span class="font-semibold text-emerald-400 mt-0.5 block">{{ settingsService.systemHealth().currentWorkload }}</span>
             </div>
             <div class="bg-white/5 p-2 rounded-xl border border-white/5">
-              <span class="text-[11px] text-slate-400 block">Core Temp</span>
+              <span class="text-[11px] text-slate-400 block">Temperatura</span>
               <span class="font-semibold text-slate-200 mt-0.5 block">{{ settingsService.systemHealth().gpuTemperature }}°C</span>
             </div>
           </div>
@@ -142,36 +147,45 @@
       <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
         <span class="text-[11px] text-slate-400 font-mono">Ollama: 11434</span>
         <a routerLink="/settings" class="text-xs text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1">
-          Configure AI
+          Configurar IA
           <span class="material-symbols-outlined text-xs">chevron_right</span>
         </a>
       </div>
     </div>
 
     <!-- Recent Activity Timeline (2 Cols) -->
-    <div class="lg:col-span-2 bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl">
-      <div class="flex items-center justify-between pb-4 border-b border-white/[0.08] mb-4">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <span class="material-symbols-outlined text-blue-400 text-lg">history</span>
-          Recent Activity Timeline
-        </h3>
-        <span class="text-xs text-slate-400">Live AI reverse-engineering stream</span>
-      </div>
+    <div class="lg:col-span-2 bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-4 border-b border-white/[0.08] mb-4">
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <span class="material-symbols-outlined text-blue-400 text-lg">history</span>
+            Línea de Actividad Reciente
+          </h3>
+          <span class="text-xs text-slate-400">Eventos de ingeniería inversa</span>
+        </div>
 
-      <div class="space-y-4">
-        @for (act of recentActivities(); track act.id) {
-          <div class="flex items-start gap-3.5 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] transition border border-white/5">
-            <div class="mt-0.5 p-2 rounded-xl bg-white/5 border border-white/10 shrink-0">
-              <span class="material-symbols-outlined text-lg" [class]="act.color">{{ act.icon }}</span>
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center justify-between">
-                <h4 class="text-xs font-bold text-white">{{ act.title }}</h4>
-                <span class="text-[11px] text-slate-500 font-mono">{{ act.time }}</span>
+        @if (recentActivities().length > 0) {
+          <div class="space-y-3">
+            @for (act of recentActivities(); track act.id) {
+              <div class="flex items-start gap-3.5 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] transition border border-white/5">
+                <div class="mt-0.5 p-2 rounded-xl bg-white/5 border border-white/10 shrink-0">
+                  <span class="material-symbols-outlined text-lg" [class]="act.color">{{ act.icon }}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <h4 class="text-xs font-bold text-white">{{ act.title }}</h4>
+                    <span class="text-[11px] text-slate-500 font-mono">{{ act.time }}</span>
+                  </div>
+                  <p class="text-xs font-mono text-blue-400 mt-0.5">{{ act.project }}</p>
+                  <p class="text-xs text-slate-400 mt-1">{{ act.description }}</p>
+                </div>
               </div>
-              <p class="text-xs font-mono text-blue-400 mt-0.5">{{ act.project }}</p>
-              <p class="text-xs text-slate-400 mt-1">{{ act.description }}</p>
-            </div>
+            }
+          </div>
+        } @else {
+          <div class="py-12 text-center text-slate-500 space-y-2">
+            <span class="material-symbols-outlined text-3xl opacity-40">hourglass_empty</span>
+            <p class="text-xs">No hay actividad reciente. Sube un proyecto para iniciar el análisis con agentes de IA.</p>
           </div>
         }
       </div>
@@ -184,90 +198,97 @@
       <div>
         <h3 class="text-base font-bold text-white flex items-center gap-2">
           <span class="material-symbols-outlined text-blue-400 text-lg">folder_open</span>
-          Analyzed Legacy Projects
+          Proyectos de Código Analizados
         </h3>
-        <p class="text-xs text-slate-400 mt-0.5">Select a project to inspect source code, UML diagrams, architecture, and AI chat.</p>
+        <p class="text-xs text-slate-400 mt-0.5">Selecciona un proyecto para inspeccionar AST, diagramas de arquitectura y chat de código.</p>
       </div>
 
       <a routerLink="/projects" class="text-xs text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1 font-medium">
-        View all projects
+        Ver todos los proyectos
         <span class="material-symbols-outlined text-xs">arrow_forward</span>
       </a>
     </div>
 
-    <!-- Table -->
-    <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse">
-        <thead>
-          <tr class="border-b border-white/[0.08] text-slate-400 text-xs font-mono uppercase tracking-wider">
-            <th class="py-3 px-4">Project</th>
-            <th class="py-3 px-4">Language</th>
-            <th class="py-3 px-4">Files / LOC</th>
-            <th class="py-3 px-4">Architecture</th>
-            <th class="py-3 px-4">Status</th>
-            <th class="py-3 px-4 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-white/[0.04] text-xs">
-          @for (proj of projectService.projects(); track proj.id) {
-            <tr class="hover:bg-white/[0.02] transition-colors group">
-              <!-- Project Name & Repo -->
-              <td class="py-3.5 px-4">
-                <div class="font-semibold text-white group-hover:text-blue-400 transition-colors flex items-center gap-2">
-                  <span class="material-symbols-outlined text-slate-500 text-base">deployed_code</span>
-                  {{ proj.name }}
-                </div>
-                <span class="text-[11px] font-mono text-slate-500 block truncate max-w-xs mt-0.5">{{ proj.slug }}</span>
-              </td>
-
-              <!-- Language -->
-              <td class="py-3.5 px-4">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 font-medium text-slate-200">
-                  <span class="w-2 h-2 rounded-full" [style.background-color]="proj.languages[0]?.color || '#3B82F6'"></span>
-                  {{ proj.mainLanguage }}
-                </span>
-              </td>
-
-              <!-- Files / LOC -->
-              <td class="py-3.5 px-4 font-mono text-slate-300">
-                <span>{{ proj.fileCount | number }} files</span>
-                <span class="text-slate-500 block text-[11px]">{{ proj.linesOfCode | number }} LOC</span>
-              </td>
-
-              <!-- Architecture -->
-              <td class="py-3.5 px-4">
-                <app-badge variant="purple" size="md">{{ proj.architecture }}</app-badge>
-              </td>
-
-              <!-- Status -->
-              <td class="py-3.5 px-4">
-                @if (proj.status === 'COMPLETED') {
-                  <app-badge variant="success" [dot]="true">Completed</app-badge>
-                } @else if (proj.status === 'ANALYZING') {
-                  <app-badge variant="info" [dot]="true">Analyzing ({{ proj.progress }}%)</app-badge>
-                } @else if (proj.status === 'FAILED') {
-                  <app-badge variant="danger" [dot]="true">Failed</app-badge>
-                } @else {
-                  <app-badge variant="warning" [dot]="true">Pending</app-badge>
-                }
-              </td>
-
-              <!-- Actions -->
-              <td class="py-3.5 px-4 text-right">
-                <div class="flex items-center justify-end gap-2">
-                  <a 
-                    routerLink="/project-overview" 
-                    (click)="selectProject(proj)"
-                    class="px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 rounded-lg text-xs font-semibold transition"
-                  >
-                    Open Workspace
-                  </a>
-                </div>
-              </td>
+    @if (projectService.projects().length > 0) {
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-white/[0.08] text-slate-400 text-xs font-mono uppercase tracking-wider">
+              <th class="py-3 px-4">Proyecto</th>
+              <th class="py-3 px-4">Lenguaje</th>
+              <th class="py-3 px-4">Archivos / LOC</th>
+              <th class="py-3 px-4">Arquitectura</th>
+              <th class="py-3 px-4">Estado</th>
+              <th class="py-3 px-4 text-right">Acciones</th>
             </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody class="divide-y divide-white/[0.04] text-xs">
+            @for (proj of projectService.projects(); track proj.id) {
+              <tr class="hover:bg-white/[0.02] transition-colors group">
+                <td class="py-3.5 px-4">
+                  <div class="font-semibold text-white group-hover:text-blue-400 transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-slate-500 text-base">deployed_code</span>
+                    {{ proj.name }}
+                  </div>
+                  <span class="text-[11px] font-mono text-slate-500 block truncate max-w-xs mt-0.5">{{ proj.slug }}</span>
+                </td>
+
+                <td class="py-3.5 px-4">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 font-medium text-slate-200">
+                    <span class="w-2 h-2 rounded-full" [style.background-color]="proj.languages[0]?.color || '#3B82F6'"></span>
+                    {{ proj.mainLanguage }}
+                  </span>
+                </td>
+
+                <td class="py-3.5 px-4 font-mono text-slate-300">
+                  <span>{{ proj.fileCount | number }} archivos</span>
+                  <span class="text-slate-500 block text-[11px]">{{ proj.linesOfCode | number }} LOC</span>
+                </td>
+
+                <td class="py-3.5 px-4">
+                  <app-badge variant="purple" size="md">{{ proj.architecture }}</app-badge>
+                </td>
+
+                <td class="py-3.5 px-4">
+                  @if (proj.status === 'COMPLETED') {
+                    <app-badge variant="success" [dot]="true">Completado</app-badge>
+                  } @else if (proj.status === 'ANALYZING') {
+                    <app-badge variant="info" [dot]="true">Analizando ({{ proj.progress }}%)</app-badge>
+                  } @else if (proj.status === 'FAILED') {
+                    <app-badge variant="danger" [dot]="true">Fallido</app-badge>
+                  } @else {
+                    <app-badge variant="warning" [dot]="true">Pendiente</app-badge>
+                  }
+                </td>
+
+                <td class="py-3.5 px-4 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <a 
+                      routerLink="/project-overview" 
+                      (click)="selectProject(proj)"
+                      class="px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 rounded-lg text-xs font-semibold transition"
+                    >
+                      Abrir Espacio
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="py-12 text-center space-y-3">
+        <div class="inline-flex p-3 rounded-full bg-white/5 text-slate-500">
+          <span class="material-symbols-outlined text-3xl">folder_off</span>
+        </div>
+        <p class="text-sm font-semibold text-slate-300">No hay proyectos indexados en este momento</p>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto">Sube un archivo ZIP o introduce una URL de repositorio Git para iniciar la ingeniería inversa.</p>
+        <a routerLink="/upload" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition">
+          <span class="material-symbols-outlined text-sm">upload_file</span>
+          Subir Proyecto
+        </a>
+      </div>
+    }
   </div>
 </div>

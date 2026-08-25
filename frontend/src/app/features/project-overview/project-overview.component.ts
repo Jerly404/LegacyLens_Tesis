@@ -6,7 +6,6 @@ import { ProjectService } from '../../core/projects/project.service';
 import { ArchitectureService } from '../../core/architecture/architecture.service';
 import { NotificationService } from '../../core/notifications/notification.service';
 import { TranslationService } from '../../core/i18n/translation.service';
-import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { CodeViewerComponent } from '../../shared/components/code-viewer/code-viewer.component';
 import { DependencyGraphComponent } from '../../shared/components/dependency-graph/dependency-graph.component';
@@ -21,8 +20,7 @@ import { FileNode, DependencyGraphData } from '@codelens/shared';
     RouterModule, 
     BadgeComponent, 
     CodeViewerComponent, 
-    DependencyGraphComponent,
-    TranslatePipe
+    DependencyGraphComponent
   ],
   templateUrl: './project-overview.component.html',
   styleUrls: ['./project-overview.component.css']
