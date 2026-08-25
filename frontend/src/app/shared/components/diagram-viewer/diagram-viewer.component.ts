@@ -1,5 +1,6 @@
 import { Component, input, signal, ElementRef, viewChild, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ProjectService } from '../../../core/projects/project.service';
 
 @Component({
@@ -72,11 +73,13 @@ export class DiagramViewerComponent {
   title = input<string>('Architecture Diagram');
   
   private projectService = inject(ProjectService);
+  private sanitizer = inject(DomSanitizer);
   diagramContainer = viewChild<ElementRef<HTMLDivElement>>('diagramContainer');
 
   zoomLevel = signal<number>(100);
   isFullscreen = signal<boolean>(false);
-  svgContent = signal<string>('');
+  rawSvg = signal<string>('');
+  svgContent = signal<SafeHtml>('');
 
   constructor() {
     effect(() => {
@@ -95,23 +98,27 @@ export class DiagramViewerComponent {
   }
 
   private generateRichSvgDiagram(title: string, def: string) {
+    let svg = '';
     if (title.includes('database') || title.includes('erd') || def.includes('erDiagram')) {
-      this.svgContent.set(this.renderDatabaseErdSvg());
+      svg = this.renderDatabaseErdSvg();
     } else if (title.includes('sequence') || def.includes('sequenceDiagram')) {
-      this.svgContent.set(this.renderSequenceSvg());
+      svg = this.renderSequenceSvg();
     } else if (title.includes('c4') || def.includes('EnterpriseBoundary')) {
-      this.svgContent.set(this.renderC4ContainerSvg());
+      svg = this.renderC4ContainerSvg();
     } else if (title.includes('class') || def.includes('classDiagram')) {
-      this.svgContent.set(this.renderClassDiagramSvg());
+      svg = this.renderClassDiagramSvg();
     } else if (title.includes('deployment') || title.includes('docker')) {
-      this.svgContent.set(this.renderDeploymentSvg());
+      svg = this.renderDeploymentSvg();
     } else if (title.includes('flow') || def.includes('flowchart')) {
-      this.svgContent.set(this.renderProcessFlowSvg());
+      svg = this.renderProcessFlowSvg();
     } else if (title.includes('component') || title.includes('boundary')) {
-      this.svgContent.set(this.renderComponentBoundarySvg());
+      svg = this.renderComponentBoundarySvg();
     } else {
-      this.svgContent.set(this.renderFullstackArchitectureSvg());
+      svg = this.renderFullstackArchitectureSvg();
     }
+
+    this.rawSvg.set(svg);
+    this.svgContent.set(this.sanitizer.bypassSecurityTrustHtml(svg));
   }
 
   // 1. FULLSTACK ARCHITECTURE SVG
@@ -703,7 +710,7 @@ export class DiagramViewerComponent {
   }
 
   exportSvg() {
-    const blob = new Blob([this.svgContent()], { type: 'image/svg+xml' });
+    const blob = new Blob([this.rawSvg()], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
