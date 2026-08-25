@@ -1,5 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { DocumentationSection } from '@codelens/shared';
+import { ProjectService } from '../projects/project.service';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
@@ -7,213 +8,200 @@ import { delay } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class DocumentationService {
-  private initialDocs: DocumentationSection[] = [
-    {
-      id: 'doc-overview',
-      projectId: 'proj-banking-core',
-      title: 'System Overview & Executive Purpose',
-      slug: 'overview',
-      category: 'Overview',
-      lastUpdated: '2026-08-24 15:30',
-      generatedByAI: true,
-      content: `# Legacy Banking Transaction Core — System Overview
+  private projectService = inject(ProjectService);
+
+  private generateDocsForProject(): DocumentationSection[] {
+    const proj = this.projectService.selectedProject();
+    const name = proj.name || 'Enterprise System';
+    const lang = proj.mainLanguage || 'Java';
+    const framework = proj.framework || 'Spring Boot';
+    const arch = proj.architecture || 'Layered Architecture';
+
+    return [
+      {
+        id: 'doc-overview',
+        projectId: proj.id,
+        title: 'System Overview & Executive Purpose',
+        slug: 'overview',
+        category: 'Overview',
+        lastUpdated: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        generatedByAI: true,
+        content: `# ${name} — System Overview
 
 ## 1. Executive Summary
-The **Legacy Banking Transaction Core** is an enterprise-grade financial ledger engine originally deployed in 2017. It manages customer account states, currency ledgers, double-entry transactional settlements, and inter-bank clearing interfaces.
+The **${name}** is an enterprise-grade service engineered in **${lang}** utilizing **${framework}**. The system implements a **${arch}** to handle core transaction routing, business workflows, and persistence reconciliation.
 
 ## 2. Core Capabilities
-- **Account Ledgering**: Multi-currency account balance reconciliation with ACID transactional consistency.
-- **Transaction Settlement**: Real-time fund transfers, scheduled recurring payments, and reverse reconciliations.
-- **Legacy Interoperability**: Integrates with legacy mainframe via IBM MQ message queues and legacy SOAP web services.
-- **Compliance & Audit Trail**: Immutable logging of all debit/credit operations with forensic trace identifiers.
+- **Domain Business Engine**: Encapsulates core processing logic with transactional consistency guarantees.
+- **REST & Integration APIs**: Exposes high-throughput API endpoints for client consumers and web applications.
+- **Persistence & ORM Tier**: Manages relational entities and data mapping.
+- **Audit & Traceability**: Forensic logging of all state mutations with unique request trace identifiers.
 
 ## 3. High-Level Technology Stack
-- **Runtime**: Java 11 (LTS) on Spring Boot 2.1.8.RELEASE
-- **Persistence**: Spring Data JPA, Hibernate 5.4, Oracle 19c Enterprise Database
-- **Messaging**: IBM MQ 9.2 (JMS Client)
-- **Security**: Spring Security 5.1 with customized JWT bearer filters and LDAP bridge
+- **Language / Runtime**: ${lang} (${framework})
+- **Architecture Pattern**: ${arch}
+- **Database**: Relational Database Engine (PostgreSQL / SQL)
+- **Local AI Verification**: Qwen 2.5 Coder 7B (Ollama Local GPU)
 `
-    },
-    {
-      id: 'doc-architecture',
-      projectId: 'proj-banking-core',
-      title: 'Software Architecture & Component Boundaries',
-      slug: 'architecture',
-      category: 'Architecture',
-      lastUpdated: '2026-08-24 15:32',
-      generatedByAI: true,
-      content: `# System Architecture & Component Boundaries
+      },
+      {
+        id: 'doc-architecture',
+        projectId: proj.id,
+        title: 'Software Architecture & Component Boundaries',
+        slug: 'architecture',
+        category: 'Architecture',
+        lastUpdated: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        generatedByAI: true,
+        content: `# System Architecture & Component Boundaries
 
-## 1. Architectural Style: Layered (N-Tier)
-The system adopts an N-Tier architecture organized into horizontal layers with strict top-to-bottom dependency flow.
+## 1. Architectural Style: ${arch}
+The codebase is structured into clear horizontal layers with strict dependency flow:
 
 \`\`\`
 ┌────────────────────────────────────────────────────────┐
-│  Presentation Layer: Spring REST Controllers & DTOs    │
+│  Presentation Layer: REST Controllers & HTTP Handlers  │
 └───────────────────────────┬────────────────────────────┘
                             │ (invokes)
 ┌───────────────────────────▼────────────────────────────┐
-│  Application Service Layer: Transaction & Auth Services │
+│  Application Service Layer: Domain Services & Logic    │
 └───────────────────────────┬────────────────────────────┘
                             │ (queries / persists)
 ┌───────────────────────────▼────────────────────────────┐
-│  Persistence Layer: Spring Data JPA & Oracle DAOs      │
+│  Persistence Layer: Data Access Repositories & DAOs    │
 └───────────────────────────┬────────────────────────────┘
-                            │ (JDBC)
+                            │ (SQL / ORM)
 ┌───────────────────────────▼────────────────────────────┐
-│  Database Layer: Oracle 19c (FINCORE Schema)           │
+│  Database Layer: Relational Schema Cluster             │
 └────────────────────────────────────────────────────────┘
 \`\`\`
 
 ## 2. Layer Responsibilities
-- **Presentation Layer (\`src/controllers\`)\**: Handles HTTP protocol concerns, deserializes request bodies into validated DTOs, and translates domain exceptions into standard HTTP error responses.
-- **Service Layer (\`src/services\`)\**: Encapsulates business logic, coordinates database transactions via \`@Transactional\`, and validates domain rules.
-- **Persistence Layer (\`src/repositories\`)\**: Encapsulates database queries via JPA and custom DAO implementations.
+- **Presentation Layer**: Deserializes incoming HTTP payloads into validated DTOs and handles response formatting.
+- **Service Layer**: Coordinates business transactions via declarative \`@Transactional\` boundaries.
+- **Repository Layer**: Encapsulates database queries via JPA / ORM abstractions.
 `
-    },
-    {
-      id: 'doc-api',
-      projectId: 'proj-banking-core',
-      title: 'REST API & Endpoints Specification',
-      slug: 'api-specification',
-      category: 'API',
-      lastUpdated: '2026-08-24 15:35',
-      generatedByAI: true,
-      content: `# REST API & Endpoints Specification
+      },
+      {
+        id: 'doc-api',
+        projectId: proj.id,
+        title: 'REST API & Endpoints Specification',
+        slug: 'api-specification',
+        category: 'API',
+        lastUpdated: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        generatedByAI: true,
+        content: `# REST API & Endpoints Specification
 
 ### Base URL: \`/api/v1\`
 
-## 1. Authentication
-### \`POST /api/v1/auth/login\`
-Authenticates user credentials and returns JWT bearer token.
+## 1. Checkout & Transaction Processing
+### \`POST /api/v1/orders/checkout\`
+Creates and validates a new transaction with total calculation.
 
 **Request Body:**
 \`\`\`json
 {
-  "username": "johndoe",
-  "password": "secretPassword123"
+  "customerId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "items": [
+    { "productId": "d8e3a2b1-1234-5678-9abc-def012345678", "quantity": 2, "unitPrice": 49.99 }
+  ]
 }
 \`\`\`
 
 **Response \`200 OK\`:**
 \`\`\`json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "username": "johndoe",
-  "status": "ACTIVE"
+  "id": "e7b1a2c3-9876-5432-10fe-dcba98765432",
+  "totalAmount": 99.98,
+  "status": "PROCESSING"
 }
 \`\`\`
 
 ---
 
-## 2. Account Inquiries
-### \`GET /api/v1/accounts/{accountNumber}\`
-Retrieves account metadata, status, and associated holder ID.
-
-**Headers:** \`Authorization: Bearer <token>\`
+## 2. Order Inquiries
+### \`GET /api/v1/orders/{orderId}\`
+Retrieves order status, item details, and total amount.
 
 ---
 
-## 3. Funds Transfer
-### \`POST /api/v1/transactions/transfer\`
-Executes an immediate balance transfer between two accounts with ledger locking.
-
-**Request Body:**
-\`\`\`json
-{
-  "sourceAccount": "ACC-00192834",
-  "targetAccount": "ACC-00481920",
-  "amount": 1500.00,
-  "currency": "USD",
-  "memo": "Vendor Invoice #4812"
-}
-\`\`\`
+## 3. Customer History
+### \`GET /api/v1/orders/customer/{customerId}\`
+Retrieves all historical transactions for a customer.
 `
-    },
-    {
-      id: 'doc-database',
-      projectId: 'proj-banking-core',
-      title: 'Database Models & Schema Dictionary',
-      slug: 'database-models',
-      category: 'Database',
-      lastUpdated: '2026-08-24 15:38',
-      generatedByAI: true,
-      content: `# Database Schema & Entity Dictionary
+      },
+      {
+        id: 'doc-database',
+        projectId: proj.id,
+        title: 'Database Models & Schema Dictionary',
+        slug: 'database-models',
+        category: 'Database',
+        lastUpdated: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        generatedByAI: true,
+        content: `# Database Models & Schema Dictionary
 
-## 1. Core Tables
-### \`USERS\`
+## 1. Entity: \`orders\`
+Represents the root transaction aggregate.
+
 | Column | Type | Constraints | Description |
 |---|---|---|---|
-| \`USER_ID\` | VARCHAR2(36) | PRIMARY KEY | UUID identifier |
-| \`USERNAME\` | VARCHAR2(64) | UNIQUE, NOT NULL | Login username |
-| \`PASSWORD_HASH\` | VARCHAR2(128) | NOT NULL | Legacy salted SHA-1 hash |
-| \`IS_ACTIVE\` | NUMBER(1) | DEFAULT 1 | 1=Active, 0=Disabled |
+| \`id\` | UUID | PRIMARY KEY | Unique order identifier |
+| \`customer_id\` | UUID | NOT NULL | Customer reference |
+| \`total_amount\` | DECIMAL(12,2) | NOT NULL | Total monetary amount |
+| \`status\` | VARCHAR(32) | NOT NULL | State (\`PROCESSING\`, \`COMPLETED\`) |
+| \`created_at\` | TIMESTAMP | NOT NULL | Order creation timestamp |
 
-### \`ACCOUNTS\`
+## 2. Entity: \`order_items\`
+Child entity capturing purchased line items.
+
 | Column | Type | Constraints | Description |
 |---|---|---|---|
-| \`ACCOUNT_NUMBER\` | VARCHAR2(20) | PRIMARY KEY | Formatted account number |
-| \`USER_ID\` | VARCHAR2(36) | FOREIGN KEY (\`USERS\`) | Account owner |
-| \`BALANCE\` | NUMBER(18,2) | NOT NULL | Available balance in base currency |
-| \`CURRENCY\` | VARCHAR2(3) | NOT NULL | ISO 4217 Currency code |
-| \`STATUS\` | VARCHAR2(16) | NOT NULL | ACTIVE, FROZEN, CLOSED |
+| \`id\` | UUID | PRIMARY KEY | Line item primary key |
+| \`order_id\` | UUID | FOREIGN KEY | References \`orders(id)\` |
+| \`product_id\` | UUID | NOT NULL | Product reference |
+| \`quantity\` | INTEGER | NOT NULL | Quantity units |
+| \`unit_price\` | DECIMAL(10,2) | NOT NULL | Unit price per item |
 `
-    },
-    {
-      id: 'doc-modules',
-      projectId: 'proj-banking-core',
-      title: 'Core Business Modules & Logic Flows',
-      slug: 'core-modules',
-      category: 'Modules',
-      lastUpdated: '2026-08-24 15:40',
-      generatedByAI: true,
-      content: `# Core Business Modules & Logic Flows
+      },
+      {
+        id: 'doc-deployment',
+        projectId: proj.id,
+        title: 'Deployment & Container Infrastructure',
+        slug: 'deployment',
+        category: 'Deployment',
+        lastUpdated: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        generatedByAI: true,
+        content: `# Deployment & Container Infrastructure
 
-## 1. Double-Entry Transfer Pipeline
-The \`TransactionService.processTransfer\` method enforces financial integrity through the following sequence:
-
-1. **Pessimistic Locking**: Queries the source account row with \`SELECT ... FOR UPDATE\` to prevent race conditions during concurrent withdrawal attempts.
-2. **Balance Check**: Ensures \`sourceAccount.balance >= requestedAmount + fee\`.
-3. **Fraud Engine Verification**: Calls external scoring service via HTTP REST endpoint (\`FraudEngineClient\`).
-4. **Ledger Posting**: Generates two ledger entries:
-   - Debit \`sourceAccount\`
-   - Credit \`targetAccount\`
-5. **Event Emission**: Dispatches JMS message to IBM MQ topic \`FINCORE.TX.PROCESSED\` for downstream downstream reporting.
-`
-    },
-    {
-      id: 'doc-deployment',
-      projectId: 'proj-banking-core',
-      title: 'Deployment & Container Infrastructure',
-      slug: 'deployment-devops',
-      category: 'Deployment',
-      lastUpdated: '2026-08-24 15:42',
-      generatedByAI: true,
-      content: `# Deployment & Container Infrastructure
-
-## 1. Container Build
-The project builds as an executable Spring Boot JAR packaged inside an OpenJDK 11 Alpine container image.
+## 1. Container Configuration
+Packaged as a lightweight container image for local and cloud orchestration:
 
 \`\`\`dockerfile
 FROM eclipse-temurin:11-jre-alpine
-VOLUME /tmp
-COPY target/banking-transaction-core-2.4.1-RELEASE.jar app.jar
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+WORKDIR /app
+COPY target/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
 \`\`\`
 
-## 2. Environment Configuration
-- \`SPRING_PROFILES_ACTIVE\`: \`prod\` | \`staging\` | \`dev\`
-- \`ORACLE_JDBC_URL\`: Connection string to Oracle 19c RAC cluster
-- \`IBM_MQ_HOST\`: Hostname for message broker
+## 2. Local AI Reverse Engineering Daemon
+- **Inference Engine**: Ollama Daemon (\`http://localhost:11434\`)
+- **Active Model**: Qwen 2.5 Coder 7B
+- **Hardware Acceleration**: NVIDIA GeForce RTX 3050 (4GB VRAM)
 `
-    }
-  ];
+      }
+    ];
+  }
 
-  private docsSignal = signal<DocumentationSection[]>(this.initialDocs);
+  private docsSignal = signal<DocumentationSection[]>([]);
   docs = this.docsSignal.asReadonly();
 
-  getAll(projectId = 'proj-banking-core'): Observable<DocumentationSection[]> {
-    return of(this.docsSignal()).pipe(delay(150));
+  constructor() {
+    this.docsSignal.set(this.generateDocsForProject());
+  }
+
+  getAll(projectId?: string): Observable<DocumentationSection[]> {
+    this.docsSignal.set(this.generateDocsForProject());
+    return of(this.docsSignal()).pipe(delay(80));
   }
 
   updateDoc(id: string, newContent: string) {
@@ -231,10 +219,10 @@ ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
     const updated = {
       ...found,
       lastUpdated: 'Just now (AI Regenerated)',
-      content: found.content + `\n\n> *Note: AI DeepSeek Coder re-verified this specification against latest AST index on ${new Date().toLocaleDateString()}.*`
+      content: found.content + `\n\n> *Note: AI Multi-Agent team re-verified this specification against latest AST index using Qwen 2.5 Coder on ${new Date().toLocaleDateString()}.*`
     };
 
     this.docsSignal.update(list => list.map(d => d.id === id ? updated : d));
-    return of(updated).pipe(delay(500));
+    return of(updated).pipe(delay(300));
   }
 }

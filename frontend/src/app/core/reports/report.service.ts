@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Report, ReportType } from '@codelens/shared';
+import { ProjectService } from '../projects/project.service';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
@@ -7,135 +8,137 @@ import { delay } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class ReportService {
-  private mockReports: Record<ReportType, Report> = {
-    EXECUTIVE: {
-      id: 'rep-exec-1',
-      projectId: 'proj-banking-core',
-      title: 'Executive Architecture & Risk Summary',
-      type: 'EXECUTIVE',
-      generatedAt: '2026-08-24 16:00',
-      summary: 'Executive-level assessment of code maintainability, security compliance, architectural debt, and migration effort for Legacy Banking Core.',
-      sections: [
-        {
-          title: 'Executive Overview',
-          content: 'The application contains 245,800 lines of Java and PL/SQL code. While functional and actively processing transactions, the codebase exhibits critical maintenance and security liabilities: outdated cryptographic algorithms, high coupling in core services, and lack of automated regression tests for legacy database routines.'
-        },
-        {
-          title: 'Risk Profile Matrix',
-          content: '• **Security**: High risk due to legacy password hashing routines.\n• **Maintainability**: Medium-High risk due to 28% cyclic component coupling.\n• **Portability**: Low portability caused by direct Oracle PL/SQL dependencies.',
-          metrics: {
-            'Overall Health Score': '68/100',
-            'Technical Debt Ratio': '24.5%',
-            'Estimated Modernization Effort': '4-6 Sprints',
-            'Critical Vulnerabilities': 1
-          }
-        },
-        {
-          title: 'Strategic Recommendations',
-          content: '1. Immediately patch password hashing in \`AuthService.java\` to BCrypt (Est. 2 days).\n2. Isolate native PL/SQL stored procedures behind repository interfaces before cloud database migration.\n3. Implement automated contract tests for the 18 REST endpoints.'
-        }
-      ]
-    },
-    TECHNICAL: {
-      id: 'rep-tech-1',
-      projectId: 'proj-banking-core',
-      title: 'Deep Technical Codebase & AST Audit',
-      type: 'TECHNICAL',
-      generatedAt: '2026-08-24 16:05',
-      summary: 'Comprehensive analysis of abstract syntax trees, symbol dependencies, method complexity, and dead code candidates.',
-      sections: [
-        {
-          title: 'Codebase Metrics & Complexity',
-          content: '• Total Files: 1,842\n• Total Lines of Code (LOC): 245,800\n• Average Cyclomatic Complexity: 14.2 per method\n• Highest Complexity Module: \`TransactionService.processTransfer\` (Cyclomatic complexity = 28)',
-          metrics: {
-            'Classes': 420,
-            'Methods': 1280,
-            'Unit Test Coverage': '34%',
-            'Duplicate Code Blocks': '6.4%'
-          }
-        },
-        {
-          title: 'Module Breakdown',
-          content: '• \`controllers\` (18 classes): High adherence to REST conventions, but lacks OpenAPI annotations.\n• \`services\` (26 classes): Heavy business logic, high coupling to persistence.\n• \`repositories\` (34 interfaces): Good JPA coverage, but mixed with raw JDBC.'
-        }
-      ]
-    },
-    ARCHITECTURE: {
-      id: 'rep-arch-1',
-      projectId: 'proj-banking-core',
-      title: 'Architectural Style & Boundary Verification',
-      type: 'ARCHITECTURE',
-      generatedAt: '2026-08-24 16:10',
-      summary: 'Verification of horizontal and vertical boundaries against Clean / Hexagonal / Layered reference models.',
-      sections: [
-        {
-          title: 'Detected Architecture: Layered (94% Confidence)',
-          content: 'The system strictly maintains horizontal layers (Controllers -> Services -> Repositories). However, architectural degradation was detected in 3 service classes where controllers and native DB connections bypass abstraction layers.'
-        }
-      ]
-    },
-    METRICS: {
-      id: 'rep-met-1',
-      projectId: 'proj-banking-core',
-      title: 'Code Quality, Test Coverage & Tech Stack Breakdown',
-      type: 'METRICS',
-      generatedAt: '2026-08-24 16:15',
-      summary: 'Statistical metrics for language distribution, comment ratios, test coverage, and cyclomatic indices.',
-      sections: [
-        {
-          title: 'Language Breakdown',
-          content: '• Java: 68% (167,144 LOC)\n• PL/SQL: 18% (44,244 LOC)\n• XML / WSDL: 9% (22,122 LOC)\n• Shell Scripts: 5% (12,290 LOC)'
-        }
-      ]
-    },
-    REFACTORING: {
-      id: 'rep-ref-1',
-      projectId: 'proj-banking-core',
-      title: 'AI Modernization & Refactoring Action Plan',
-      type: 'REFACTORING',
-      generatedAt: '2026-08-24 16:20',
-      summary: 'Step-by-step roadmap to eliminate architectural debt, modernize Java version, and extract microservices.',
-      sections: [
-        {
-          title: 'Phase 1: Security & Compliance Patching',
-          content: 'Upgrade password hashing in \`AuthService.java\` to BCrypt. Add rate limiting to \`AuthController.java\`.'
-        },
-        {
-          title: 'Phase 2: Database Decoupling',
-          content: 'Extract native PL/SQL stored procedures into domain service logic with Spring Data JpaRepository.'
-        },
-        {
-          title: 'Phase 3: Service Extraction',
-          content: 'Extract Transaction Engine into an autonomous microservice with gRPC and Kafka event stream.'
-        }
-      ]
-    }
-  };
+  private projectService = inject(ProjectService);
 
-  getReport(type: ReportType, projectId = 'proj-banking-core'): Observable<Report> {
-    const rep = this.mockReports[type] || this.mockReports.EXECUTIVE;
-    return of(rep).pipe(delay(250));
+  private generateReport(type: ReportType): Report {
+    const proj = this.projectService.selectedProject();
+    const name = proj.name || 'Enterprise System';
+    const lang = proj.mainLanguage || 'Java';
+    const framework = proj.framework || 'Spring Boot';
+    const arch = proj.architecture || 'Layered Architecture';
+    const loc = proj.linesOfCode || 6500;
+    const fileCount = proj.fileCount || 8;
+    const dateStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
+
+    const reports: Record<ReportType, Report> = {
+      EXECUTIVE: {
+        id: `rep-exec-${Date.now()}`,
+        projectId: proj.id,
+        title: 'Executive Architecture & Risk Summary',
+        type: 'EXECUTIVE',
+        generatedAt: dateStr,
+        summary: `Executive assessment of maintainability, architectural integrity, and security compliance for ${name}.`,
+        sections: [
+          {
+            title: 'Executive Overview',
+            content: `The application contains ${loc.toLocaleString()} lines of ${lang} code across ${fileCount} source files. The codebase demonstrates an established ${arch} with modular controllers, services, and persistence repositories.`
+          },
+          {
+            title: 'Risk Profile Matrix',
+            content: `• **Security**: Clean baseline with standard framework abstractions.\n• **Maintainability**: High modularity with low cyclic coupling.\n• **Portability**: Container-ready for Docker and Kubernetes deployment.`,
+            metrics: {
+              'Overall Health Score': `${proj.healthScore || 85}/100`,
+              'Technical Debt Ratio': '12.4%',
+              'Architecture Confidence': `${proj.confidence || 92}%`,
+              'Critical Vulnerabilities': 0
+            }
+          },
+          {
+            title: 'Strategic Recommendations',
+            content: `1. Maintain automated unit and integration tests across domain use cases.\n2. Containerize application using Alpine-based ${lang} runtime image.\n3. Integrate local AI static analysis pipeline into CI/CD workflows.`
+          }
+        ]
+      },
+      TECHNICAL: {
+        id: `rep-tech-${Date.now()}`,
+        projectId: proj.id,
+        title: 'Deep Technical Codebase & AST Audit',
+        type: 'TECHNICAL',
+        generatedAt: dateStr,
+        summary: `Comprehensive AST analysis, symbol mapping, and complexity indices for ${name}.`,
+        sections: [
+          {
+            title: 'Codebase Metrics & Complexity',
+            content: `• Total Files: ${fileCount}\n• Total Lines of Code (LOC): ${loc.toLocaleString()}\n• Primary Framework: ${framework}\n• Average Cyclomatic Complexity: 4.8 per method`,
+            metrics: {
+              'Files Indexed': fileCount,
+              'Lines of Code': loc,
+              'Architecture Style': arch,
+              'Duplicate Code Blocks': '1.8%'
+            }
+          },
+          {
+            title: 'Module Breakdown',
+            content: `• **Controllers**: Exposes RESTful endpoints with input validation.\n• **Services**: Business logic coordination with transactional boundaries.\n• **Repositories**: Encapsulates entity queries and persistence mappings.`
+          }
+        ]
+      },
+      ARCHITECTURE: {
+        id: `rep-arch-${Date.now()}`,
+        projectId: proj.id,
+        title: 'Architectural Style & Boundary Verification',
+        type: 'ARCHITECTURE',
+        generatedAt: dateStr,
+        summary: `Verification of layer decoupling and domain boundaries for ${name}.`,
+        sections: [
+          {
+            title: `Detected Architecture: ${arch} (${proj.confidence || 92}% Confidence)`,
+            content: `The system adheres to a ${arch} model. Request processing flows downward from presentation controllers to domain service aggregates and relational repositories without illegal back-references.`
+          }
+        ]
+      },
+      METRICS: {
+        id: `rep-met-${Date.now()}`,
+        projectId: proj.id,
+        title: 'Code Quality & Tech Stack Distribution',
+        type: 'METRICS',
+        generatedAt: dateStr,
+        summary: `Statistical metrics for language breakdown and codebase distribution.`,
+        sections: [
+          {
+            title: 'Technology Distribution',
+            content: proj.languages?.map(l => `• ${l.name}: ${l.percentage}% (${l.loc?.toLocaleString() || 0} LOC)`).join('\n') || `• ${lang}: 100% (${loc.toLocaleString()} LOC)`
+          }
+        ]
+      },
+      REFACTORING: {
+        id: `rep-ref-${Date.now()}`,
+        projectId: proj.id,
+        title: 'AI Modernization & Continuous Evolution Plan',
+        type: 'REFACTORING',
+        generatedAt: dateStr,
+        summary: `Step-by-step evolution roadmap prepared by the AI Multi-Agent team.`,
+        sections: [
+          {
+            title: 'Phase 1: Automated Contract & Regression Testing',
+            content: `Implement automated end-to-end integration tests for all REST controller endpoints using testcontainers.`
+          },
+          {
+            title: 'Phase 2: Containerization & Cloud Deployment',
+            content: `Package microservice into Docker image and configure environment variables for multi-stage deployments.`
+          }
+        ]
+      }
+    };
+
+    return reports[type];
   }
 
-  exportReport(type: ReportType, format: 'pdf' | 'markdown' | 'docx' | 'json'): Observable<{ filename: string; blobUrl: string }> {
-    const report = this.mockReports[type] || this.mockReports.EXECUTIVE;
-    let content = `# ${report.title}\n\nGenerated by LegacyAI on ${report.generatedAt}\n\n## Summary\n${report.summary}\n\n`;
-    
+  getReport(type: ReportType, projectId?: string): Observable<Report> {
+    return of(this.generateReport(type)).pipe(delay(100));
+  }
+
+  exportReport(type: ReportType, format: 'markdown' | 'pdf' | 'docx' | 'json'): Observable<{ filename: string; blobUrl: string }> {
+    const report = this.generateReport(type);
+    let content = `# ${report.title}\n\nTarget Project: ${this.projectService.selectedProject().name}\nGenerated: ${report.generatedAt}\n\n${report.summary}\n\n`;
     report.sections.forEach(s => {
-      content += `## ${s.title}\n${s.content}\n\n`;
-      if (s.metrics) {
-        content += `| Metric | Value |\n|---|---|\n`;
-        Object.entries(s.metrics).forEach(([k, v]) => {
-          content += `| ${k} | ${v} |\n`;
-        });
-        content += `\n`;
-      }
+      content += `## ${s.title}\n\n${s.content}\n\n`;
     });
 
-    const blob = new Blob([content], { type: format === 'json' ? 'application/json' : 'text/markdown' });
+    const mimeType = format === 'pdf' ? 'application/pdf' : (format === 'docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 'text/markdown');
+    const blob = new Blob([content], { type: mimeType });
     const blobUrl = URL.createObjectURL(blob);
-    const filename = `${report.projectId}-${report.type.toLowerCase()}-report.${format === 'markdown' ? 'md' : format}`;
-
-    return of({ filename, blobUrl }).pipe(delay(300));
+    const filename = `${report.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.${format === 'markdown' ? 'md' : format}`;
+    return of({ filename, blobUrl }).pipe(delay(200));
   }
 }

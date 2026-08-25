@@ -61,7 +61,12 @@ export class ProjectOverviewComponent implements OnInit {
   }
 
   explainCode(code: string) {
-    this.notificationService.info('Generating Explanation', 'DeepSeek Coder is analyzing class AST...');
+    this.notificationService.info('Generating Explanation', 'Qwen 2.5 Coder is analyzing class AST...');
+    this.router.navigate(['/ai-chat']);
+  }
+
+  explainWithAI(file: any) {
+    this.notificationService.info('Generating Explanation', 'Qwen 2.5 Coder is analyzing class AST...');
     this.router.navigate(['/ai-chat']);
   }
 
