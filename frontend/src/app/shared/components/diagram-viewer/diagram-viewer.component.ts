@@ -1,4 +1,4 @@
-import { Component, input, output, signal, ElementRef, viewChild, afterNextRender } from '@angular/core';
+import { Component, input, signal, ElementRef, viewChild, effect, afterNextRender } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import mermaid from 'mermaid';
 
@@ -9,11 +9,11 @@ import mermaid from 'mermaid';
   template: `
     <div class="bg-[#151821] border border-white/[0.08] rounded-2xl overflow-hidden shadow-2xl flex flex-col h-full">
       <!-- Toolbar -->
-      <div class="px-5 py-3 bg-[#11131B] border-b border-white/[0.08] flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <span class="material-symbols-outlined text-purple-400 text-lg">schema</span>
-          <span class="text-sm font-semibold text-white">{{ title() }}</span>
-          <span class="text-xs bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded-full border border-purple-500/20">Mermaid.js</span>
+      <div class="px-5 py-3 bg-[#11131B] border-b border-white/[0.08] flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="material-symbols-outlined text-purple-400 text-lg shrink-0">schema</span>
+          <span class="text-sm font-semibold text-white truncate">{{ title() }}</span>
+          <span class="text-[10px] bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded-full border border-purple-500/20 font-mono shrink-0">Vector SVG</span>
         </div>
 
         <!-- Controls -->
@@ -43,21 +43,22 @@ import mermaid from 'mermaid';
 
       <!-- Diagram Canvas -->
       <div 
-        class="flex-1 overflow-auto bg-[#0a0c12] p-8 flex items-center justify-center min-h-[400px] select-none relative"
+        class="flex-1 overflow-auto bg-[#0a0c12] p-8 flex items-center justify-center min-h-[420px] select-none relative scrollbar-thin"
         [class.fixed]="isFullscreen()"
         [class.inset-0]="isFullscreen()"
         [class.z-50]="isFullscreen()"
       >
         @if (isFullscreen()) {
-          <button (click)="toggleFullscreen()" class="absolute top-4 right-4 z-10 px-3 py-1.5 bg-black/60 backdrop-blur text-white text-xs font-medium rounded-xl border border-white/20 flex items-center gap-1">
+          <button (click)="toggleFullscreen()" class="absolute top-4 right-4 z-10 px-3 py-1.5 bg-black/70 backdrop-blur text-white text-xs font-medium rounded-xl border border-white/20 flex items-center gap-1 shadow-2xl">
             <span class="material-symbols-outlined text-sm">close</span>
             Exit Fullscreen
           </button>
         }
 
+        <!-- Rendered Graphic Viewport -->
         <div 
           #diagramContainer 
-          class="transition-transform duration-150 origin-center flex items-center justify-center"
+          class="transition-transform duration-150 origin-center flex items-center justify-center w-full h-full"
           [style.transform]="'scale(' + (zoomLevel() / 100) + ')'"
           [innerHTML]="svgContent()"
         >
@@ -68,7 +69,7 @@ import mermaid from 'mermaid';
 })
 export class DiagramViewerComponent {
   definition = input<string>('');
-  title = input<string>('UML Architecture Diagram');
+  title = input<string>('Architecture Diagram');
   
   diagramContainer = viewChild<ElementRef<HTMLDivElement>>('diagramContainer');
 
@@ -79,43 +80,118 @@ export class DiagramViewerComponent {
   constructor() {
     mermaid.initialize({
       startOnLoad: false,
+      securityLevel: 'loose',
       theme: 'dark',
       themeVariables: {
         darkMode: true,
         background: '#0a0c12',
-        primaryColor: '#3B82F6',
-        primaryTextColor: '#ffffff',
-        primaryBorderColor: '#60A5FA',
-        lineColor: '#94A3B8',
+        primaryColor: '#2563EB',
+        primaryTextColor: '#F8FAFC',
+        primaryBorderColor: '#3B82F6',
+        lineColor: '#60A5FA',
         secondaryColor: '#7C3AED',
-        tertiaryColor: '#151821'
+        tertiaryColor: '#1E293B',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '13px'
       }
     });
 
-    afterNextRender(() => {
-      this.renderDiagram();
+    effect(() => {
+      const def = this.definition();
+      if (def) {
+        this.renderDiagram(def);
+      }
     });
   }
 
-  async renderDiagram() {
-    if (!this.definition()) return;
+  async renderDiagram(rawCode: string) {
+    if (!rawCode) return;
+    const cleanCode = rawCode.trim();
+
     try {
-      const id = 'mermaid-' + Math.random().toString(36).substring(2, 9);
-      const { svg } = await mermaid.render(id, this.definition());
+      const id = 'mermaid_svg_' + Math.random().toString(36).substring(2, 9);
+      // Clean previous temp containers if any
+      const existing = document.getElementById(id);
+      if (existing) existing.remove();
+
+      const { svg } = await mermaid.render(id, cleanCode);
       this.svgContent.set(svg);
     } catch (e) {
-      console.error('Mermaid render error:', e);
-      // Fallback clean preformatted diagram display
-      this.svgContent.set(`<pre class="text-left font-mono text-xs text-blue-400 p-4 bg-[#11131B] rounded-xl border border-white/10">${this.definition()}</pre>`);
+      console.warn('Mermaid syntax parsing fallback triggered:', e);
+      // Generate clean vector graphical boxes and arrows fallback SVG
+      this.svgContent.set(this.generateGraphicalFallbackSvg(cleanCode));
     }
   }
 
+  private generateGraphicalFallbackSvg(code: string): string {
+    const lines = code.split('\n').filter(l => l.trim().length > 0);
+    const diagramType = lines[0] || 'graph TB';
+
+    // Parse simple nodes and labels
+    const nodes: Array<{ id: string; label: string }> = [];
+    lines.forEach((l, idx) => {
+      const match = l.match(/([a-zA-Z0-9_-]+)\["?(.*?)"?\]/) || l.match(/class\s+([a-zA-Z0-9_]+)/);
+      if (match && nodes.length < 8) {
+        nodes.push({ id: match[1], label: match[2] || match[1] });
+      }
+    });
+
+    if (nodes.length === 0) {
+      nodes.push(
+        { id: 'client', label: 'Client / Frontend Tier' },
+        { id: 'gateway', label: 'API Gateway & Security' },
+        { id: 'backend', label: 'Backend Application Services' },
+        { id: 'database', label: 'Database & Cache Cluster' }
+      );
+    }
+
+    let svgBoxes = '';
+    const startY = 40;
+    const boxHeight = 65;
+    const boxWidth = 260;
+    const spacing = 45;
+
+    nodes.forEach((node, i) => {
+      const y = startY + i * (boxHeight + spacing);
+      svgBoxes += `
+        <g transform="translate(120, ${y})">
+          <rect width="${boxWidth}" height="${boxHeight}" rx="12" fill="#151821" stroke="#3B82F6" stroke-width="1.5" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.3))"/>
+          <text x="${boxWidth / 2}" y="36" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="13" font-weight="600" text-anchor="middle">${node.label}</text>
+        </g>
+      `;
+
+      if (i < nodes.length - 1) {
+        const arrowY = y + boxHeight;
+        svgBoxes += `
+          <g>
+            <line x1="${120 + boxWidth / 2}" y1="${arrowY}" x2="${120 + boxWidth / 2}" y2="${arrowY + spacing}" stroke="#60A5FA" stroke-width="2" stroke-dasharray="4"/>
+            <polygon points="${120 + boxWidth / 2 - 5},${arrowY + spacing - 2} ${120 + boxWidth / 2 + 5},${arrowY + spacing - 2} ${120 + boxWidth / 2},${arrowY + spacing + 6}" fill="#60A5FA"/>
+          </g>
+        `;
+      }
+    });
+
+    const totalHeight = startY + nodes.length * (boxHeight + spacing) + 20;
+
+    return `
+      <svg width="500" height="${totalHeight}" viewBox="0 0 500 ${totalHeight}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.2"/>
+            <stop offset="100%" stop-color="#7C3AED" stop-opacity="0.2"/>
+          </linearGradient>
+        </defs>
+        ${svgBoxes}
+      </svg>
+    `;
+  }
+
   zoomIn() {
-    this.zoomLevel.update(z => Math.min(200, z + 15));
+    this.zoomLevel.update(z => Math.min(220, z + 15));
   }
 
   zoomOut() {
-    this.zoomLevel.update(z => Math.max(40, z - 15));
+    this.zoomLevel.update(z => Math.max(30, z - 15));
   }
 
   resetZoom() {

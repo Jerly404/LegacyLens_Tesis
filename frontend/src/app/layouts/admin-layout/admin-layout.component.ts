@@ -6,12 +6,14 @@ import { ThemeService } from '../../core/theme/theme.service';
 import { SettingsService } from '../../core/settings/settings.service';
 import { NotificationService } from '../../core/notifications/notification.service';
 import { ProjectService } from '../../core/projects/project.service';
+import { TranslationService } from '../../core/i18n/translation.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, ToastComponent],
+  imports: [CommonModule, RouterModule, ToastComponent, TranslatePipe],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.css']
 })
@@ -21,6 +23,7 @@ export class AdminLayoutComponent {
   settingsService = inject(SettingsService);
   notificationService = inject(NotificationService);
   projectService = inject(ProjectService);
+  translationService = inject(TranslationService);
   router = inject(Router);
 
   sidebarOpen = signal<boolean>(true);
@@ -42,6 +45,12 @@ export class AdminLayoutComponent {
 
   toggleUserMenu() {
     this.userMenuOpen.update(v => !v);
+  }
+
+  toggleLanguage() {
+    const newLang = this.translationService.isSpanish() ? 'en' : 'es';
+    this.translationService.setLanguage(newLang);
+    this.notificationService.info('Language Changed', newLang === 'es' ? 'Idioma cambiado a Español' : 'Language set to English');
   }
 
   switchProject(event: Event) {

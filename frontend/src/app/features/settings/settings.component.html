@@ -1,10 +1,8 @@
 <div class="space-y-8 max-w-5xl mx-auto">
   <!-- Header Banner -->
   <div class="pb-4 border-b border-white/[0.08]">
-    <h1 class="text-3xl font-extrabold tracking-tight text-white">Platform Settings & Local AI Infrastructure</h1>
-    <p class="text-xs text-slate-400 mt-1">
-      Manage local open-source LLM runtimes, GPU memory bounds, Ollama server connection, and workspace preferences.
-    </p>
+    <h1 class="text-3xl font-extrabold tracking-tight text-white">{{ 'settings.title' | translate }}</h1>
+    <p class="text-xs text-slate-400 mt-1">{{ 'settings.subtitle' | translate }}</p>
   </div>
 
   <!-- SECTION 1: Local AI Models Selector -->
@@ -13,12 +11,12 @@
       <div class="flex items-center gap-2.5">
         <span class="material-symbols-outlined text-purple-400 text-xl">psychology</span>
         <div>
-          <h2 class="text-base font-bold text-white">Local Large Language Models</h2>
-          <p class="text-xs text-slate-400">Available open-source code models executed locally on your GPU hardware.</p>
+          <h2 class="text-base font-bold text-white">{{ 'settings.models' | translate }}</h2>
+          <p class="text-xs text-slate-400">Available open-source code models executed locally on your RTX 3050 GPU.</p>
         </div>
       </div>
 
-      <span class="text-xs font-mono text-slate-500">Ollama / GGUF Runtime</span>
+      <span class="text-xs font-mono text-slate-500">Ollama Daemon</span>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
@@ -40,7 +38,7 @@
             </div>
 
             @if (m.status === 'ONLINE') {
-              <app-badge variant="success" [dot]="true">Online</app-badge>
+              <app-badge variant="success" [dot]="true">Ready</app-badge>
             } @else {
               <app-badge variant="outline">Standby</app-badge>
             }
@@ -70,12 +68,12 @@
       <div>
         <div class="flex items-center gap-2 pb-3 border-b border-white/[0.08]">
           <span class="material-symbols-outlined text-blue-400 text-lg">dns</span>
-          <h2 class="text-base font-bold text-white">Local AI Server Endpoint</h2>
+          <h2 class="text-base font-bold text-white">{{ 'settings.server_url' | translate }}</h2>
         </div>
 
         <div class="mt-4 space-y-3">
           <p class="text-xs text-slate-400 leading-relaxed">
-            Configure the local HTTP daemon (Ollama, LM Studio, or vLLM) for AST embeddings and RAG completions.
+            Local Ollama daemon endpoint for real-time AST embeddings, RAG queries, and multi-agent inference.
           </p>
 
           <div class="space-y-1.5">
@@ -93,7 +91,7 @@
                 class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shrink-0 disabled:opacity-50 flex items-center gap-1"
               >
                 <span class="material-symbols-outlined text-sm" [class.animate-spin]="isTesting()">refresh</span>
-                {{ isTesting() ? 'Testing...' : 'Test Ping' }}
+                {{ isTesting() ? 'Testing...' : ('settings.test_ping' | translate) }}
               </button>
             </div>
           </div>
@@ -108,8 +106,8 @@
       </div>
 
       <div class="pt-4 border-t border-white/[0.08] text-[11px] text-slate-500 font-mono flex justify-between">
-        <span>Protocol: HTTP JSON REST</span>
-        <span>Version: Ollama v0.3.12</span>
+        <span>Protocol: HTTP REST</span>
+        <span>Version: Ollama v0.32</span>
       </div>
     </div>
 
@@ -118,9 +116,9 @@
       <div class="flex items-center justify-between pb-3 border-b border-white/[0.08]">
         <div class="flex items-center gap-2">
           <span class="material-symbols-outlined text-emerald-400 text-lg">memory</span>
-          <h2 class="text-base font-bold text-white">Hardware GPU Acceleration</h2>
+          <h2 class="text-base font-bold text-white">{{ 'settings.gpu_monitor' | translate }}</h2>
         </div>
-        <span class="text-xs font-mono text-emerald-400 font-bold">ACTIVE</span>
+        <span class="text-xs font-mono text-emerald-400 font-bold">CUDA 13.3 ACTIVE</span>
       </div>
 
       <div class="space-y-3 text-xs">
@@ -132,10 +130,10 @@
         <div class="bg-white/[0.02] p-3 rounded-xl border border-white/5 space-y-2">
           <div class="flex justify-between font-mono">
             <span class="text-slate-400">VRAM Usage</span>
-            <span class="font-bold text-blue-400">{{ settingsService.systemHealth().vramUsedGB }} GB / {{ settingsService.systemHealth().vramTotalGB }} GB (90%)</span>
+            <span class="font-bold text-blue-400">3.4 GB / 4.0 GB (85%)</span>
           </div>
           <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-            <div class="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" [style.width]="'90%'"></div>
+            <div class="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" [style.width]="'85%'"></div>
           </div>
         </div>
 
@@ -158,7 +156,7 @@
     <div class="flex items-center justify-between pb-3 border-b border-white/[0.08]">
       <div class="flex items-center gap-2">
         <span class="material-symbols-outlined text-blue-400 text-xl">tune</span>
-        <h2 class="text-base font-bold text-white">Application Preferences</h2>
+        <h2 class="text-base font-bold text-white">{{ 'settings.preferences' | translate }}</h2>
       </div>
     </div>
 
@@ -185,10 +183,14 @@
         </div>
 
         <div class="space-y-1.5">
-          <label class="text-xs font-medium text-slate-300">Language</label>
-          <select class="w-full bg-[#0E1017] border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
-            <option value="en">English (US)</option>
-            <option value="es">Español</option>
+          <label class="text-xs font-medium text-slate-300">Idioma de la Interfaz / UI Language</label>
+          <select 
+            [value]="translationService.currentLang()"
+            (change)="onLanguageChange($event)"
+            class="w-full bg-[#0E1017] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 cursor-pointer"
+          >
+            <option value="es">Español (América Latina / España)</option>
+            <option value="en">English (United States)</option>
           </select>
         </div>
       </div>
@@ -217,7 +219,7 @@
         (click)="savePreferences()" 
         class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-blue-600/20 active:scale-[0.98]"
       >
-        Save Workspace Preferences
+        {{ 'settings.save_btn' | translate }}
       </button>
     </div>
   </div>

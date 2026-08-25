@@ -212,8 +212,44 @@ export class ProjectService {
     }
   ];
 
-  private projectsSignal = signal<Project[]>(this.initialProjects);
-  private selectedProjectSignal = signal<Project>(this.initialProjects[0]);
+  private getSavedProjects(): Project[] {
+    const saved = localStorage.getItem('legacyai_projects');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      } catch (e) {
+        console.error('Error parsing stored projects:', e);
+      }
+    }
+    return [];
+  }
+
+  private persistProjects(list: Project[]) {
+    localStorage.setItem('legacyai_projects', JSON.stringify(list));
+  }
+
+  private projectsSignal = signal<Project[]>(this.getSavedProjects());
+  private selectedProjectSignal = signal<Project>(this.getSavedProjects()[0] || {
+    id: 'proj-clean',
+    name: 'My Ingested Project',
+    slug: 'my-project',
+    description: 'Uploaded repository ready for AI reverse-engineering.',
+    mainLanguage: 'Auto-Detect',
+    framework: 'Multi-Tier',
+    languages: [{ name: 'Source', percentage: 100, color: '#3B82F6', loc: 1000 }],
+    fileCount: 0,
+    linesOfCode: 0,
+    architecture: 'Detecting...',
+    confidence: 100,
+    status: 'COMPLETED',
+    progress: 100,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    healthScore: 85
+  });
 
   projects = this.projectsSignal.asReadonly();
   selectedProject = this.selectedProjectSignal.asReadonly();
@@ -262,7 +298,11 @@ export class ProjectService {
       healthScore: 74
     };
 
-    this.projectsSignal.update(list => [newProject, ...list]);
+    this.projectsSignal.update(list => {
+      const updated = [newProject, ...list];
+      this.persistProjects(updated);
+      return updated;
+    });
     this.selectedProjectSignal.set(newProject);
     return of(newProject).pipe(delay(200));
   }
@@ -284,7 +324,11 @@ export class ProjectService {
   }
 
   deleteProject(id: string): Observable<boolean> {
-    this.projectsSignal.update(list => list.filter(p => p.id !== id));
+    this.projectsSignal.update(list => {
+      const updated = list.filter(p => p.id !== id);
+      this.persistProjects(updated);
+      return updated;
+    });
     if (this.selectedProjectSignal().id === id && this.projectsSignal().length > 0) {
       this.selectedProjectSignal.set(this.projectsSignal()[0]);
     }
@@ -294,6 +338,7 @@ export class ProjectService {
   clearDemoProjects(): Observable<boolean> {
     const userUploaded = this.projectsSignal().filter(p => !p.id.startsWith('proj-banking') && !p.id.startsWith('proj-health') && !p.id.startsWith('proj-ecommerce') && !p.id.startsWith('proj-scada') && !p.id.startsWith('proj-python') && !p.id.startsWith('proj-cobol') && !p.id.startsWith('proj-inventory') && !p.id.startsWith('proj-payment'));
     this.projectsSignal.set(userUploaded);
+    this.persistProjects(userUploaded);
     if (userUploaded.length > 0) {
       this.selectedProjectSignal.set(userUploaded[0]);
     }
@@ -302,6 +347,7 @@ export class ProjectService {
 
   resetDemoProjects(): Observable<boolean> {
     this.projectsSignal.set(this.initialProjects);
+    this.persistProjects(this.initialProjects);
     this.selectedProjectSignal.set(this.initialProjects[0]);
     return of(true).pipe(delay(100));
   }

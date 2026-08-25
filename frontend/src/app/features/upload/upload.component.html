@@ -1,446 +1,281 @@
-<div class="max-w-4xl mx-auto space-y-8">
-  <!-- Header -->
-  <div class="text-center space-y-2 pb-4">
-    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-mono border border-blue-500/20">
-      <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-      PIPELINE INGESTION WIZARD
-    </div>
-    <h1 class="text-3xl font-extrabold tracking-tight text-white">Upload Legacy Codebase</h1>
-    <p class="text-sm text-slate-400 max-w-lg mx-auto">
-      Ingest unknown legacy repositories to extract architecture, generate UML diagrams, and build an offline knowledge base.
-    </p>
+<div class="max-w-5xl mx-auto space-y-8">
+  <!-- Header Title -->
+  <div class="pb-4 border-b border-white/[0.08]">
+    <h1 class="text-3xl font-extrabold tracking-tight text-white">{{ 'upload.title' | translate }}</h1>
+    <p class="text-xs text-slate-400 mt-1">{{ 'upload.subtitle' | translate }}</p>
   </div>
 
-  <!-- Wizard Steps Stepper -->
-  <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-4 shadow-xl">
-    <div class="grid grid-cols-4 gap-2 text-center text-xs font-medium">
-      <!-- Step 1 -->
-      <div 
-        [class]="currentStep() >= 1 ? 'text-blue-400' : 'text-slate-500'"
-        class="flex flex-col sm:flex-row items-center justify-center gap-2 p-2 rounded-xl transition"
-        [class.bg-blue-600/10]="currentStep() === 1"
-      >
-        <span 
-          class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs"
-          [class]="currentStep() > 1 ? 'bg-emerald-500 text-white' : (currentStep() === 1 ? 'bg-blue-600 text-white' : 'bg-white/10 text-slate-400')"
-        >
-          {{ currentStep() > 1 ? '✓' : '1' }}
-        </span>
-        <span class="hidden sm:inline">1. Source</span>
-      </div>
-
-      <!-- Step 2 -->
-      <div 
-        [class]="currentStep() >= 2 ? 'text-blue-400' : 'text-slate-500'"
-        class="flex flex-col sm:flex-row items-center justify-center gap-2 p-2 rounded-xl transition"
-        [class.bg-blue-600/10]="currentStep() === 2"
-      >
-        <span 
-          class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs"
-          [class]="currentStep() > 2 ? 'bg-emerald-500 text-white' : (currentStep() === 2 ? 'bg-blue-600 text-white' : 'bg-white/10 text-slate-400')"
-        >
-          {{ currentStep() > 2 ? '✓' : '2' }}
-        </span>
-        <span class="hidden sm:inline">2. Config</span>
-      </div>
-
-      <!-- Step 3 -->
-      <div 
-        [class]="currentStep() >= 3 ? 'text-blue-400' : 'text-slate-500'"
-        class="flex flex-col sm:flex-row items-center justify-center gap-2 p-2 rounded-xl transition"
-        [class.bg-blue-600/10]="currentStep() === 3"
-      >
-        <span 
-          class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs"
-          [class]="currentStep() > 3 ? 'bg-emerald-500 text-white' : (currentStep() === 3 ? 'bg-blue-600 text-white' : 'bg-white/10 text-slate-400')"
-        >
-          {{ currentStep() > 3 ? '✓' : '3' }}
-        </span>
-        <span class="hidden sm:inline">3. AI Engine</span>
-      </div>
-
-      <!-- Step 4 -->
-      <div 
-        [class]="currentStep() === 4 ? 'text-blue-400' : 'text-slate-500'"
-        class="flex flex-col sm:flex-row items-center justify-center gap-2 p-2 rounded-xl transition"
-        [class.bg-blue-600/10]="currentStep() === 4"
-      >
-        <span 
-          class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs"
-          [class]="currentStep() === 4 ? 'bg-blue-600 text-white' : 'bg-white/10 text-slate-400'"
-        >
-          4
-        </span>
-        <span class="hidden sm:inline">4. Launch</span>
-      </div>
+  <!-- Wizard Steps Indicator -->
+  <div class="grid grid-cols-4 gap-3 bg-[#151821] p-2 rounded-2xl border border-white/[0.08] text-xs font-semibold text-center">
+    <div [class]="currentStep() >= 1 ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'text-slate-500'" class="p-2.5 rounded-xl transition">
+      {{ 'upload.step1' | translate }}
+    </div>
+    <div [class]="currentStep() >= 2 ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'text-slate-500'" class="p-2.5 rounded-xl transition">
+      {{ 'upload.step2' | translate }}
+    </div>
+    <div [class]="currentStep() >= 3 ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'text-slate-500'" class="p-2.5 rounded-xl transition">
+      {{ 'upload.step3' | translate }}
+    </div>
+    <div [class]="currentStep() >= 4 ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'text-slate-500'" class="p-2.5 rounded-xl transition">
+      {{ 'upload.step4' | translate }}
     </div>
   </div>
 
-  <!-- Wizard Content Container -->
-  <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 md:p-8 shadow-2xl space-y-6">
-    <!-- STEP 1: Select Source -->
-    @if (currentStep() === 1) {
-      <div class="space-y-6 animate-fade-in">
-        <div>
-          <h3 class="text-lg font-bold text-white">Select Ingestion Source</h3>
-          <p class="text-xs text-slate-400 mt-0.5">Choose how to provide your codebase to the local analysis worker.</p>
-        </div>
+  <!-- STEP 1: Repository Source Selection -->
+  @if (currentStep() === 1) {
+    <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 md:p-8 space-y-6 shadow-xl">
+      <div class="flex items-center gap-3 border-b border-white/[0.08] pb-4">
+        <button 
+          (click)="sourceType.set('git')"
+          [class]="sourceType() === 'git' ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-400'"
+          class="px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
+        >
+          <span class="material-symbols-outlined text-base">link</span>
+          Git Repository URL
+        </button>
+        <button 
+          (click)="sourceType.set('zip')"
+          [class]="sourceType() === 'zip' ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-400'"
+          class="px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
+        >
+          <span class="material-symbols-outlined text-base">archive</span>
+          ZIP / TAR Archive
+        </button>
+      </div>
 
-        <!-- Source Selector Tabs -->
-        <div class="grid grid-cols-3 gap-3">
-          <button 
-            (click)="sourceType.set('zip')"
-            [class]="sourceType() === 'zip' ? 'bg-blue-600/20 border-blue-500 text-white shadow-glow-primary/20' : 'bg-white/[0.02] border-white/10 text-slate-400 hover:text-white'"
-            class="p-4 rounded-2xl border flex flex-col items-center gap-2 text-center transition"
-          >
-            <span class="material-symbols-outlined text-2xl text-blue-400">folder_zip</span>
-            <span class="text-xs font-bold">Upload ZIP</span>
-            <span class="text-[10px] text-slate-400">Up to 500MB archive</span>
-          </button>
-
-          <button 
-            (click)="sourceType.set('git')"
-            [class]="sourceType() === 'git' ? 'bg-blue-600/20 border-blue-500 text-white shadow-glow-primary/20' : 'bg-white/[0.02] border-white/10 text-slate-400 hover:text-white'"
-            class="p-4 rounded-2xl border flex flex-col items-center gap-2 text-center transition"
-          >
-            <span class="material-symbols-outlined text-2xl text-purple-400">commit</span>
-            <span class="text-xs font-bold">Connect Git</span>
-            <span class="text-[10px] text-slate-400">GitHub / GitLab / Bitbucket</span>
-          </button>
-
-          <button 
-            (click)="sourceType.set('folder')"
-            [class]="sourceType() === 'folder' ? 'bg-blue-600/20 border-blue-500 text-white shadow-glow-primary/20' : 'bg-white/[0.02] border-white/10 text-slate-400 hover:text-white'"
-            class="p-4 rounded-2xl border flex flex-col items-center gap-2 text-center transition"
-          >
-            <span class="material-symbols-outlined text-2xl text-emerald-400">drive_folder_upload</span>
-            <span class="text-xs font-bold">Upload Folder</span>
-            <span class="text-[10px] text-slate-400">Local directory</span>
-          </button>
-        </div>
-
-        <!-- ZIP Drag & Drop Zone -->
-        @if (sourceType() === 'zip' || sourceType() === 'folder') {
-          <div 
-            (dragover)="onDragOver($event)"
-            (dragleave)="onDragLeave($event)"
-            (drop)="onDrop($event)"
-            [class.border-blue-500]="isDragging()"
-            [class.bg-blue-500/10]="isDragging()"
-            class="border-2 border-dashed border-white/20 hover:border-blue-500/50 rounded-2xl p-10 text-center transition-all bg-black/20 flex flex-col items-center justify-center cursor-pointer relative"
-          >
+      @if (sourceType() === 'git') {
+        <div class="space-y-4">
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-300">{{ 'upload.git_url' | translate }}</label>
             <input 
-              type="file" 
-              (change)="onFileSelected($event)" 
-              accept=".zip,.tar,.gz,.rar"
-              class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              type="text" 
+              [(ngModel)]="gitRepoUrl" 
+              placeholder="https://github.com/organization/repository.git"
+              class="w-full bg-[#0E1017] border border-white/10 rounded-xl px-4 py-3 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
             />
-            
-            <div class="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-3">
-              <span class="material-symbols-outlined text-3xl">upload_file</span>
-            </div>
-
-            <h4 class="text-sm font-bold text-white mb-1">Drag & Drop your project codebase</h4>
-            <p class="text-xs text-slate-400 mb-4">or click to browse from your filesystem (ZIP, TAR up to 500MB)</p>
-
-            @if (uploadedFile()) {
-              <div class="w-full max-w-sm bg-[#151821] border border-emerald-500/30 rounded-xl p-3 flex items-center gap-3 text-left">
-                <span class="material-symbols-outlined text-emerald-400 text-2xl">check_circle</span>
-                <div class="flex-1 min-w-0">
-                  <p class="text-xs font-semibold text-white truncate">{{ uploadedFile()?.name }}</p>
-                  <p class="text-[10px] text-slate-400">{{ (uploadedFile()?.size || 0) / 1024 / 1024 | number:'1.1-2' }} MB • Upload Complete</p>
-                </div>
-              </div>
-            }
-
-            @if (isUploading()) {
-              <div class="w-full max-w-sm mt-3 space-y-1">
-                <div class="flex justify-between text-[11px] text-slate-400">
-                  <span>Uploading archive...</span>
-                  <span>{{ uploadProgress() }}%</span>
-                </div>
-                <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                  <div class="h-full bg-blue-500 rounded-full transition-all" [style.width]="uploadProgress() + '%'"></div>
-                </div>
-              </div>
-            }
           </div>
-        } @else {
-          <!-- Git Connection Form -->
-          <div class="space-y-4 bg-black/20 p-6 rounded-2xl border border-white/5">
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="space-y-1.5">
-              <label class="text-xs font-medium text-slate-300">Git Repository URL</label>
+              <label class="text-xs font-semibold text-slate-300">{{ 'upload.branch' | translate }}</label>
               <input 
                 type="text" 
-                [(ngModel)]="gitRepoUrl"
-                class="w-full bg-[#151821] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
-                placeholder="https://github.com/org/legacy-repo.git"
+                [(ngModel)]="gitBranch" 
+                placeholder="main"
+                class="w-full bg-[#0E1017] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
               />
             </div>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-1.5">
-                <label class="text-xs font-medium text-slate-300">Target Branch</label>
-                <input 
-                  type="text" 
-                  [(ngModel)]="gitBranch"
-                  class="w-full bg-[#151821] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
-                  placeholder="main or master"
-                />
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-slate-300">Access Token (Private Repos - Optional)</label>
+              <input 
+                type="password" 
+                [(ngModel)]="gitToken" 
+                placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                class="w-full bg-[#0E1017] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+      } @else {
+        <!-- Drag & Drop Area -->
+        <div 
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)"
+          [class.border-blue-500]="isDragging()"
+          [class.bg-blue-600/5]="isDragging()"
+          class="border-2 border-dashed border-white/10 rounded-2xl p-10 text-center space-y-3 cursor-pointer hover:border-white/20 transition relative"
+        >
+          <input type="file" (change)="onFileSelected($event)" accept=".zip,.tar,.gz,.tgz" class="absolute inset-0 opacity-0 cursor-pointer" />
+          <span class="material-symbols-outlined text-4xl text-blue-400">cloud_upload</span>
+          <div>
+            <h3 class="text-sm font-bold text-white">{{ 'upload.drag_drop' | translate }}</h3>
+            <p class="text-xs text-slate-400 mt-1">{{ 'upload.or_browse' | translate }}</p>
+          </div>
+          @if (isUploading()) {
+            <div class="max-w-xs mx-auto space-y-1 pt-2">
+              <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div class="h-full bg-blue-500" [style.width]="uploadProgress() + '%'"></div>
               </div>
+              <span class="text-[10px] font-mono text-slate-400">{{ uploadProgress() }}% uploaded</span>
+            </div>
+          }
+        </div>
+      }
 
-              <div class="space-y-1.5">
-                <label class="text-xs font-medium text-slate-300">Personal Access Token (Optional)</label>
-                <input 
-                  type="password" 
-                  [(ngModel)]="gitToken"
-                  class="w-full bg-[#151821] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
-                  placeholder="ghp_••••••••••••"
-                />
+      <div class="pt-4 border-t border-white/[0.08] flex justify-end">
+        <button 
+          (click)="nextStep()" 
+          class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/20 flex items-center gap-1.5"
+        >
+          <span>Continuar a Detección</span>
+          <span class="material-symbols-outlined text-base">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- STEP 2: Automatic Stack & Technology Detection -->
+  @if (currentStep() === 2) {
+    <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 md:p-8 space-y-6 shadow-xl">
+      <div class="flex items-center justify-between border-b border-white/[0.08] pb-4">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <span class="material-symbols-outlined text-emerald-400">auto_fix_high</span>
+            Stack Tecnológico Detectado Automáticamente
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">El sistema inspeccionó los manifests de dependencias y árboles sintácticos.</p>
+        </div>
+
+        <button 
+          (click)="autoDetectStack()"
+          class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 text-xs rounded-xl border border-white/10 transition flex items-center gap-1"
+        >
+          <span class="material-symbols-outlined text-sm" [class.animate-spin]="isDetecting()">refresh</span>
+          Re-analizar
+        </button>
+      </div>
+
+      <!-- Detected Info Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+        <div class="bg-[#0E1017] p-4 rounded-xl border border-white/5 space-y-1">
+          <span class="text-slate-500 uppercase font-mono text-[10px]">Lenguaje Principal</span>
+          <span class="text-base font-bold text-white block">{{ detectedLanguage() }}</span>
+          <span class="text-emerald-400 font-mono text-[11px]">100% Detectado por AST</span>
+        </div>
+
+        <div class="bg-[#0E1017] p-4 rounded-xl border border-white/5 space-y-1">
+          <span class="text-slate-500 uppercase font-mono text-[10px]">Framework & Runtime</span>
+          <span class="text-sm font-bold text-blue-400 block truncate">{{ detectedFramework() }}</span>
+          <span class="text-slate-400 font-mono text-[11px]">Manifests reconocidos</span>
+        </div>
+
+        <div class="bg-[#0E1017] p-4 rounded-xl border border-white/5 space-y-1">
+          <span class="text-slate-500 uppercase font-mono text-[10px]">Patrón Arquitectónico Sugerido</span>
+          <span class="text-base font-bold text-purple-400 block">{{ detectedArchitecture() }}</span>
+          <span class="text-slate-400 font-mono text-[11px]">94% Confianza preliminar</span>
+        </div>
+      </div>
+
+      <!-- Language Breakdown -->
+      <div class="space-y-2">
+        <span class="text-xs font-semibold text-slate-300 block">Distribución de Código Fuente:</span>
+        <div class="flex h-3 rounded-full overflow-hidden bg-white/5">
+          @for (lang of detectedBreakdown(); track lang.name) {
+            <div [style.width]="lang.percentage + '%'" [style.background-color]="lang.color" [title]="lang.name + ' (' + lang.percentage + '%)'"></div>
+          }
+        </div>
+        <div class="flex flex-wrap gap-4 pt-1 text-xs font-mono text-slate-400">
+          @for (lang of detectedBreakdown(); track lang.name) {
+            <span class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full" [style.background-color]="lang.color"></span>
+              {{ lang.name }}: {{ lang.percentage }}%
+            </span>
+          }
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-white/[0.08] flex justify-between">
+        <button (click)="prevStep()" class="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold rounded-xl transition">
+          Atrás
+        </button>
+        <button (click)="nextStep()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/20 flex items-center gap-1.5">
+          <span>Configurar Agentes IA</span>
+          <span class="material-symbols-outlined text-base">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- STEP 3: AI Multi-Agent Team Orchestration -->
+  @if (currentStep() === 3) {
+    <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 md:p-8 space-y-6 shadow-xl">
+      <div class="border-b border-white/[0.08] pb-4">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-purple-400 text-xl">groups</span>
+          <h2 class="text-base font-bold text-white">Equipo Multi-Agente Virtual (AI Engineering Team)</h2>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">
+          Cada agente se especializa en una dimensión del software y es orquestado por el Master Orchestrator localmente sobre tu modelo Qwen 2.5 Coder.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        @for (agent of agentTeam(); track agent.id) {
+          <div 
+            (click)="toggleAgent(agent.id)"
+            [class]="agent.enabled ? 'bg-blue-600/10 border-blue-500/40' : 'bg-white/[0.02] border-white/5 opacity-50'"
+            class="p-4 rounded-xl border cursor-pointer transition flex items-start gap-3 select-none"
+          >
+            <div class="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+              <span class="material-symbols-outlined text-lg">{{ agent.icon }}</span>
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-bold text-white">{{ agent.name }}</h4>
+                <span [class]="agent.enabled ? 'text-emerald-400' : 'text-slate-500'" class="text-[10px] font-mono font-bold">
+                  {{ agent.enabled ? 'ACTIVO' : 'PAUSADO' }}
+                </span>
               </div>
+              <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">{{ agent.role }}</p>
+              <span class="text-[10px] font-mono text-purple-400 block mt-1.5">Motor: {{ agent.model }}</span>
             </div>
           </div>
         }
       </div>
-    }
 
-    <!-- STEP 2: Project Configuration -->
-    @if (currentStep() === 2) {
-      <div class="space-y-6 animate-fade-in">
-        <div>
-          <h3 class="text-lg font-bold text-white">Project Configuration</h3>
-          <p class="text-xs text-slate-400 mt-0.5">Specify codebase conventions and analysis scope.</p>
-        </div>
-
-        <div class="space-y-4">
-          <div class="space-y-1.5">
-            <label class="text-xs font-medium text-slate-300">Project Name</label>
-            <input 
-              type="text" 
-              [(ngModel)]="projectName"
-              class="w-full bg-[#151821] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-semibold"
-            />
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="space-y-1.5">
-              <label class="text-xs font-medium text-slate-300">Primary Programming Language</label>
-              <select 
-                [(ngModel)]="mainLanguage"
-                class="w-full bg-[#151821] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
-              >
-                <option value="Java">Java (Spring Boot / JEE)</option>
-                <option value="C#">C# (.NET Core / Framework)</option>
-                <option value="PHP">PHP (Laravel / Symfony / Legacy)</option>
-                <option value="TypeScript">TypeScript (Node.js / NestJS)</option>
-                <option value="Python">Python (Django / Flask / FastAPI)</option>
-                <option value="Go">Go (Golang)</option>
-                <option value="C++">C++ / C</option>
-              </select>
-            </div>
-
-            <div class="space-y-1.5">
-              <label class="text-xs font-medium text-slate-300">Framework / Architecture Context</label>
-              <input 
-                type="text" 
-                [(ngModel)]="framework"
-                class="w-full bg-[#151821] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
-                placeholder="e.g. Spring Boot 2.1, Hibernate, Oracle DB"
-              />
-            </div>
-          </div>
-
-          <div class="space-y-2 pt-2">
-            <label class="text-xs font-medium text-slate-300 block">Analysis Depth</label>
-            <div class="grid grid-cols-3 gap-3">
-              <div 
-                (click)="analysisDepth.set('quick')"
-                [class]="analysisDepth() === 'quick' ? 'bg-blue-600/20 border-blue-500 text-white' : 'bg-white/[0.02] border-white/10 text-slate-400'"
-                class="p-3 rounded-xl border cursor-pointer transition text-xs"
-              >
-                <span class="font-bold block text-white">Quick Scan</span>
-                <span class="text-[11px] text-slate-400 mt-1 block">AST metrics & language breakdown (~30s)</span>
-              </div>
-              <div 
-                (click)="analysisDepth.set('standard')"
-                [class]="analysisDepth() === 'standard' ? 'bg-blue-600/20 border-blue-500 text-white' : 'bg-white/[0.02] border-white/10 text-slate-400'"
-                class="p-3 rounded-xl border cursor-pointer transition text-xs"
-              >
-                <span class="font-bold block text-white">Standard</span>
-                <span class="text-[11px] text-slate-400 mt-1 block">Architecture, basic UML & docs (~1m)</span>
-              </div>
-              <div 
-                (click)="analysisDepth.set('deep')"
-                [class]="analysisDepth() === 'deep' ? 'bg-blue-600/20 border-blue-500 text-white shadow-glow-primary/20' : 'bg-white/[0.02] border-white/10 text-slate-400'"
-                class="p-3 rounded-xl border cursor-pointer transition text-xs"
-              >
-                <span class="font-bold block text-blue-400">Deep Reverse-Engineering</span>
-                <span class="text-[11px] text-slate-400 mt-1 block">Full RAG vectors, call graph, UML, audit (~2m)</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    }
-
-    <!-- STEP 3: AI Configuration -->
-    @if (currentStep() === 3) {
-      <div class="space-y-6 animate-fade-in">
-        <div>
-          <h3 class="text-lg font-bold text-white">Local AI Model & Pipeline Options</h3>
-          <p class="text-xs text-slate-400 mt-0.5">Configure offline model parameters and automated artifact generators.</p>
-        </div>
-
-        <div class="space-y-4">
-          <div class="space-y-1.5">
-            <label class="text-xs font-medium text-slate-300">Inference LLM (Local Execution)</label>
-            <select 
-              [(ngModel)]="selectedModel"
-              class="w-full bg-[#151821] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
-            >
-              @for (m of settingsService.models(); track m.id) {
-                <option [value]="m.id">{{ m.name }} ({{ m.parameters }}, {{ m.contextWindow }})</option>
-              }
-            </select>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-1.5">
-              <label class="text-xs font-medium text-slate-300">Context Window</label>
-              <select [(ngModel)]="contextWindow" class="w-full bg-[#151821] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
-                <option value="32k">32,768 tokens (Standard)</option>
-                <option value="64k">65,536 tokens (Extended)</option>
-                <option value="128k">131,072 tokens (Full Repo Index)</option>
-              </select>
-            </div>
-
-            <div class="space-y-1.5">
-              <label class="text-xs font-medium text-slate-300">Documentation Level</label>
-              <select [(ngModel)]="docLevel" class="w-full bg-[#151821] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
-                <option value="minimal">Minimal API Summaries</option>
-                <option value="standard">Standard Technical Documentation</option>
-                <option value="enterprise">Comprehensive Enterprise Audit</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="space-y-3 pt-2">
-            <label class="text-xs font-medium text-slate-300 block">Automated Artifact Pipeline Toggles</label>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label class="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/10 cursor-pointer">
-                <input type="checkbox" [(ngModel)]="detectArchitecture" class="w-4 h-4 rounded text-blue-600 bg-[#151821] border-white/20">
-                <div>
-                  <span class="text-xs font-bold text-white block">Architecture Style Recovery</span>
-                  <span class="text-[10px] text-slate-400">Match 7 enterprise architectural patterns</span>
-                </div>
-              </label>
-
-              <label class="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/10 cursor-pointer">
-                <input type="checkbox" [(ngModel)]="analyzeDependencies" class="w-4 h-4 rounded text-blue-600 bg-[#151821] border-white/20">
-                <div>
-                  <span class="text-xs font-bold text-white block">Call Graph Dependency Matrix</span>
-                  <span class="text-[10px] text-slate-400">Trace internal calls and DB interactions</span>
-                </div>
-              </label>
-
-              <label class="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/10 cursor-pointer">
-                <input type="checkbox" [(ngModel)]="generateUml" class="w-4 h-4 rounded text-blue-600 bg-[#151821] border-white/20">
-                <div>
-                  <span class="text-xs font-bold text-white block">Mermaid UML Generators</span>
-                  <span class="text-[10px] text-slate-400">Class, Sequence, Component & Flow</span>
-                </div>
-              </label>
-
-              <label class="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/10 cursor-pointer">
-                <input type="checkbox" [(ngModel)]="buildKnowledgeBase" class="w-4 h-4 rounded text-blue-600 bg-[#151821] border-white/20">
-                <div>
-                  <span class="text-xs font-bold text-white block">RAG Vector Store Embeddings</span>
-                  <span class="text-[10px] text-slate-400">Enable natural language codebase chat</span>
-                </div>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-    }
-
-    <!-- STEP 4: Review & Start -->
-    @if (currentStep() === 4) {
-      <div class="space-y-6 animate-fade-in">
-        <div>
-          <h3 class="text-lg font-bold text-white">Review & Launch Analysis</h3>
-          <p class="text-xs text-slate-400 mt-0.5">Confirm parameters before executing local LLM pipeline.</p>
-        </div>
-
-        <div class="bg-black/20 rounded-2xl p-6 border border-white/10 space-y-4 text-xs">
-          <div class="grid grid-cols-2 gap-4 pb-4 border-b border-white/10">
-            <div>
-              <span class="text-slate-400 block">Project Name</span>
-              <span class="font-bold text-white text-sm mt-0.5 block">{{ projectName() }}</span>
-            </div>
-            <div>
-              <span class="text-slate-400 block">Language & Framework</span>
-              <span class="font-bold text-white text-sm mt-0.5 block">{{ mainLanguage() }} ({{ framework() }})</span>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4 pb-4 border-b border-white/10">
-            <div>
-              <span class="text-slate-400 block">AI Engine</span>
-              <span class="font-mono text-blue-400 mt-0.5 block">DeepSeek Coder 33B (RTX 3050)</span>
-            </div>
-            <div>
-              <span class="text-slate-400 block">Analysis Depth</span>
-              <span class="font-semibold text-purple-400 mt-0.5 block">{{ analysisDepth() | uppercase }}</span>
-            </div>
-          </div>
-
-          <div>
-            <span class="text-slate-400 block mb-2">Enabled Artifact Generators:</span>
-            <div class="flex flex-wrap gap-2">
-              <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">✓ AST Parser</span>
-              <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">✓ Architecture Recovery</span>
-              <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">✓ Dependency Call Graph</span>
-              <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">✓ Mermaid UML Diagrams</span>
-              <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">✓ Vector RAG Store</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    }
-
-    <!-- Wizard Navigation Buttons -->
-    <div class="pt-4 border-t border-white/[0.08] flex items-center justify-between">
-      @if (currentStep() > 1) {
-        <button 
-          (click)="prevStep()" 
-          class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold rounded-xl border border-white/10 transition flex items-center gap-1.5"
-        >
-          <span class="material-symbols-outlined text-sm">arrow_back</span>
-          Previous
+      <div class="pt-4 border-t border-white/[0.08] flex justify-between">
+        <button (click)="prevStep()" class="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold rounded-xl transition">
+          Atrás
         </button>
-      } @else {
-        <div></div>
-      }
-
-      @if (currentStep() < 4) {
-        <button 
-          (click)="nextStep()" 
-          class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/25 flex items-center gap-1.5"
-        >
-          Next Step
-          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        <button (click)="nextStep()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/20 flex items-center gap-1.5">
+          <span>Revisar y Ejecutar</span>
+          <span class="material-symbols-outlined text-base">arrow_forward</span>
         </button>
-      } @else {
+      </div>
+    </div>
+  }
+
+  <!-- STEP 4: Review & Start Analysis -->
+  @if (currentStep() === 4) {
+    <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 md:p-8 space-y-6 shadow-xl">
+      <div class="border-b border-white/[0.08] pb-4">
+        <h2 class="text-base font-bold text-white">Confirmación de Lanzamiento del Análisis</h2>
+        <p class="text-xs text-slate-400 mt-0.5">El Orchestrator iniciará el pipeline de extracción y generará los diagramas y documentación.</p>
+      </div>
+
+      <div class="bg-[#0E1017] p-5 rounded-2xl border border-white/5 space-y-3 text-xs">
+        <div class="flex justify-between py-1 border-b border-white/5">
+          <span class="text-slate-400">Proyecto:</span>
+          <span class="font-bold text-white font-mono">{{ projectName() }}</span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-white/5">
+          <span class="text-slate-400">Stack Detectado:</span>
+          <span class="font-bold text-blue-400">{{ detectedLanguage() }} ({{ detectedFramework() }})</span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-white/5">
+          <span class="text-slate-400">Agentes Asignados:</span>
+          <span class="font-bold text-emerald-400 font-mono">7 Agentes Especializados Activos</span>
+        </div>
+        <div class="flex justify-between py-1">
+          <span class="text-slate-400">Motor de Inferencia:</span>
+          <span class="font-bold text-purple-400 font-mono">Qwen 2.5 Coder 7B (GPU RTX 3050 Local)</span>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-white/[0.08] flex justify-between">
+        <button (click)="prevStep()" class="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold rounded-xl transition">
+          Atrás
+        </button>
         <button 
           (click)="startAnalysis()" 
-          class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-xs font-bold rounded-xl transition shadow-xl shadow-blue-600/30 flex items-center gap-2 active:scale-[0.98]"
+          class="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-xs font-bold rounded-xl transition shadow-xl shadow-blue-600/30 flex items-center gap-2 active:scale-[0.98]"
         >
-          <span class="material-symbols-outlined text-base">play_arrow</span>
-          Start AI Analysis
+          <span class="material-symbols-outlined text-base">rocket_launch</span>
+          <span>{{ 'upload.start_btn' | translate }}</span>
         </button>
-      }
+      </div>
     </div>
-  </div>
+  }
 </div>
