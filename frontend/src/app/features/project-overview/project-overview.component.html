@@ -191,13 +191,13 @@
 
             <div class="text-xs text-slate-300 space-y-3 mt-3 leading-relaxed">
               <p>
-                <strong>Architecture Detected:</strong> The system implements a classic <strong>Layered Architecture</strong> with clear boundaries between REST Controllers and Persistence Repositories.
+                <strong>Architecture Detected:</strong> The system implements a clean <strong>{{ projectService.selectedProject().architecture }}</strong> with distinct boundaries between REST Controllers, Domain Services, and Data Repositories.
               </p>
               <p>
-                <strong>Critical Hotspot:</strong> High coupling is present between <code class="text-amber-400 font-mono bg-white/5 px-1 py-0.5 rounded">TransactionService.java</code> and Oracle stored procedures. Decoupling this logic is essential prior to containerized microservice extraction.
+                <strong>Critical Hotspot:</strong> Item total calculation and inventory synchronization loop in <code class="text-amber-400 font-mono bg-white/5 px-1 py-0.5 rounded">OrderService.processOrderCheckout()</code>. Ensure transactional locking under high concurrency.
               </p>
               <p>
-                <strong>Security Advisory:</strong> Authentication relies on unsalted SHA-1 cryptographic primitives. An immediate migration to BCrypt is strongly recommended.
+                <strong>Architecture Advisory:</strong> Direct entity mapping across controller responses. Encapsulating domain models in Data Transfer Objects (DTOs) is recommended for API contract stability.
               </p>
             </div>
           </div>

@@ -272,30 +272,34 @@ export class ProjectService {
 
   createProject(projectData: Partial<Project>): Observable<Project> {
     const lang = projectData.mainLanguage || 'Java';
+    const isMicro = (projectData.name || '').toLowerCase().includes('ecommerce') || (projectData.name || '').toLowerCase().includes('order') || (projectData.name || '').toLowerCase().includes('sample');
+    const fileCount = isMicro ? 8 : (projectData.fileCount || 8);
+    const loc = isMicro ? 450 : (projectData.linesOfCode || 450);
+
     const newProject: Project = {
       id: 'proj-' + Date.now().toString(36),
-      name: projectData.name || 'Untitled Legacy Project',
-      slug: (projectData.name || 'project').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      description: projectData.description || `Uploaded ${lang} repository for AI reverse engineering and documentation.`,
+      name: projectData.name || 'E-Commerce Order Management Microservice',
+      slug: (projectData.name || 'ecommerce-order-service').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      description: projectData.description || `Uploaded ${lang} microservice repository for AI reverse engineering and documentation.`,
       repositoryUrl: projectData.repositoryUrl,
       mainLanguage: lang,
-      framework: projectData.framework || `${lang} Custom Enterprise Architecture`,
+      framework: projectData.framework || `${lang} 11 / Spring Boot 2.7 & Spring Data JPA`,
       branch: projectData.branch || 'main',
       languages: [
-        { name: lang, percentage: 75, color: this.getLanguageColor(lang), loc: 38000 },
-        { name: 'SQL / DB', percentage: 15, color: '#10B981', loc: 7600 },
-        { name: 'Config', percentage: 10, color: '#A855F7', loc: 5000 }
+        { name: lang, percentage: 75, color: this.getLanguageColor(lang), loc: Math.round(loc * 0.75) },
+        { name: 'SQL / DB', percentage: 15, color: '#10B981', loc: Math.round(loc * 0.15) },
+        { name: 'XML / Config', percentage: 10, color: '#A855F7', loc: Math.round(loc * 0.10) }
       ],
-      fileCount: Math.floor(Math.random() * 800 + 250),
-      linesOfCode: Math.floor(Math.random() * 80000 + 35000),
-      architecture: 'Layered Architecture',
-      confidence: 89,
-      status: 'ANALYZING',
-      progress: 0,
+      fileCount,
+      linesOfCode: loc,
+      architecture: projectData.architecture || 'Layered Architecture',
+      confidence: 94,
+      status: 'COMPLETED',
+      progress: 100,
       lastAnalyzedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      healthScore: 74
+      healthScore: 88
     };
 
     this.projectsSignal.update(list => {
@@ -674,7 +678,7 @@ void ModbusTelemetryWorker::runLoop() {
       ];
     }
 
-    // Default Java Spring Boot File Tree
+    // Default File Tree (E-Commerce Order Management Microservice)
     return [
       {
         id: 'dir-src',
@@ -689,128 +693,50 @@ void ModbusTelemetryWorker::runLoop() {
             type: 'directory',
             children: [
               {
-                id: 'file-auth-controller',
-                name: 'AuthController.java',
-                path: 'src/controllers/AuthController.java',
+                id: 'file-order-ctrl',
+                name: 'OrderController.java',
+                path: 'src/controllers/OrderController.java',
                 type: 'file',
                 language: 'java',
-                lines: 142,
-                size: 4820,
-                complexity: 8,
-                dependencies: ['AuthService', 'TokenProvider', 'UserDTO'],
-                content: `package com.enterprise.banking.controllers;
+                lines: 36,
+                size: 1240,
+                complexity: 4,
+                dependencies: ['OrderService', 'Order', 'ResponseEntity'],
+                content: `package com.enterprise.ecommerce.controllers;
 
-import com.enterprise.banking.services.AuthService;
-import com.enterprise.banking.dto.LoginRequest;
-import com.enterprise.banking.dto.AuthResponse;
-import com.enterprise.banking.security.JwtTokenUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.enterprise.ecommerce.services.OrderService;
+import com.enterprise.ecommerce.models.Order;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-/**
- * Legacy Authentication Endpoint.
- * Coordinates credentials validation and generates session tokens.
- */
-@RestController
-@RequestMapping("/api/v1/auth")
-public class AuthController {
-
-    @Autowired
-    private AuthService authService;
-
-    @Autowired
-    private JwtTokenUtil tokenUtil;
-
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponse> authenticate(@RequestBody LoginRequest request) {
-        // Legacy credential verification against core LDAP & DB
-        boolean isValid = authService.validateCredentials(request.getUsername(), request.getPassword());
-        if (!isValid) {
-            return ResponseEntity.status(401).build();
-        }
-        
-        String token = tokenUtil.generateToken(request.getUsername(), authService.getPermissions(request.getUsername()));
-        return ResponseEntity.ok(new AuthResponse(token, request.getUsername(), "ACTIVE"));
-    }
-
-    @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refreshToken(@RequestHeader("Authorization") String bearerToken) {
-        String token = bearerToken.replace("Bearer ", "");
-        String renewed = tokenUtil.refreshToken(token);
-        return ResponseEntity.ok(new AuthResponse(renewed, tokenUtil.getUsername(renewed), "RENEWED"));
-    }
-}`
-              },
-              {
-                id: 'file-account-controller',
-                name: 'AccountController.java',
-                path: 'src/controllers/AccountController.java',
-                type: 'file',
-                language: 'java',
-                lines: 238,
-                size: 8940,
-                complexity: 14,
-                dependencies: ['AccountService', 'TransactionService', 'AuditLogger'],
-                content: `package com.enterprise.banking.controllers;
-
-import com.enterprise.banking.services.AccountService;
-import com.enterprise.banking.model.Account;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/accounts")
-public class AccountController {
+@RequestMapping("/api/v1/orders")
+public class OrderController {
 
-    @Autowired
-    private AccountService accountService;
+    private final OrderService orderService;
 
-    @GetMapping("/{accountNumber}")
-    public ResponseEntity<Account> getAccount(@PathVariable String accountNumber) {
-        Account account = accountService.findAccount(accountNumber);
-        if (account == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(account);
+    public OrderController(OrderService orderService) {
+        this.orderService = orderService;
     }
 
-    @GetMapping("/{accountNumber}/balance")
-    public ResponseEntity<BigDecimal> getBalance(@PathVariable String accountNumber) {
-        return ResponseEntity.ok(accountService.computeCurrentBalance(accountNumber));
+    @PostMapping("/checkout")
+    public ResponseEntity<Order> createOrder(@RequestBody Order request) {
+        Order created = orderService.processOrderCheckout(request);
+        return ResponseEntity.ok(created);
     }
-}`
-              },
-              {
-                id: 'file-transaction-controller',
-                name: 'TransactionController.java',
-                path: 'src/controllers/TransactionController.java',
-                type: 'file',
-                language: 'java',
-                lines: 195,
-                size: 7120,
-                complexity: 12,
-                dependencies: ['TransactionService', 'ComplianceValidator'],
-                content: `package com.enterprise.banking.controllers;
 
-import com.enterprise.banking.services.TransactionService;
-import com.enterprise.banking.dto.TransferRequest;
-import com.enterprise.banking.dto.TransferResult;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+    @GetMapping("/{orderId}")
+    public ResponseEntity<Order> getOrder(@PathVariable UUID orderId) {
+        return orderService.findOrderById(orderId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
-@RestController
-@RequestMapping("/api/v1/transactions")
-public class TransactionController {
-
-    @Autowired
-    private TransactionService txService;
-
-    @PostMapping("/transfer")
-    public TransferResult executeTransfer(@RequestBody TransferRequest request) {
-        return txService.processTransfer(request);
+    @GetMapping("/customer/{customerId}")
+    public ResponseEntity<List<Order>> getCustomerOrders(@PathVariable UUID customerId) {
+        return ResponseEntity.ok(orderService.getOrdersByCustomer(customerId));
     }
 }`
               }
@@ -823,81 +749,138 @@ public class TransactionController {
             type: 'directory',
             children: [
               {
-                id: 'file-auth-service',
-                name: 'AuthService.java',
-                path: 'src/services/AuthService.java',
+                id: 'file-order-srv',
+                name: 'OrderService.java',
+                path: 'src/services/OrderService.java',
                 type: 'file',
                 language: 'java',
-                lines: 312,
-                size: 11400,
-                complexity: 19,
-                dependencies: ['UserRepository', 'AuditLogRepository', 'PasswordEncoder'],
-                content: `package com.enterprise.banking.services;
+                lines: 42,
+                size: 1540,
+                complexity: 6,
+                dependencies: ['OrderRepository', 'Order', 'OrderItem', 'Transactional'],
+                content: `package com.enterprise.ecommerce.services;
 
-import com.enterprise.banking.repositories.UserRepository;
-import com.enterprise.banking.model.UserEntity;
+import com.enterprise.ecommerce.repositories.OrderRepository;
+import com.enterprise.ecommerce.models.Order;
+import com.enterprise.ecommerce.models.OrderItem;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
-public class AuthService {
-    private final UserRepository userRepository;
+public class OrderService {
 
-    public AuthService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    private final OrderRepository orderRepository;
+
+    public OrderService(OrderRepository orderRepository) {
+        this.orderRepository = orderRepository;
     }
 
-    @Transactional(readOnly = true)
-    public boolean validateCredentials(String username, String rawPassword) {
-        UserEntity user = userRepository.findByUsername(username);
-        if (user == null || !user.isActive()) {
-            return false;
+    @Transactional
+    public Order processOrderCheckout(Order order) {
+        BigDecimal total = BigDecimal.ZERO;
+        for (OrderItem item : order.getItems()) {
+            BigDecimal lineTotal = item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+            total = total.add(lineTotal);
         }
-        return legacyPasswordVerify(rawPassword, user.getPasswordHash());
+        order.setTotalAmount(total);
+        order.setStatus("PROCESSING");
+        
+        return orderRepository.save(order);
     }
 
-    private boolean legacyPasswordVerify(String raw, String hash) {
-        // High coupling: Legacy SHA-1 + salt validation routine
-        return hash != null && !hash.isEmpty();
+    public Optional<Order> findOrderById(UUID orderId) {
+        return orderRepository.findById(orderId);
+    }
+
+    public List<Order> getOrdersByCustomer(UUID customerId) {
+        return orderRepository.findByCustomerId(customerId);
     }
 }`
-              },
+              }
+            ]
+          },
+          {
+            id: 'dir-repositories',
+            name: 'repositories',
+            path: 'src/repositories',
+            type: 'directory',
+            children: [
               {
-                id: 'file-tx-service',
-                name: 'TransactionService.java',
-                path: 'src/services/TransactionService.java',
+                id: 'file-order-repo',
+                name: 'OrderRepository.java',
+                path: 'src/repositories/OrderRepository.java',
                 type: 'file',
                 language: 'java',
-                lines: 480,
-                size: 18200,
-                complexity: 28,
-                dependencies: ['AccountRepository', 'LedgerDAO', 'FraudEngineClient', 'NotificationQueue'],
-                content: `package com.enterprise.banking.services;
+                lines: 14,
+                size: 520,
+                complexity: 1,
+                dependencies: ['Order', 'JpaRepository'],
+                content: `package com.enterprise.ecommerce.repositories;
 
-import com.enterprise.banking.repositories.AccountRepository;
-import com.enterprise.banking.dto.TransferRequest;
-import com.enterprise.banking.dto.TransferResult;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Transactional;
+import com.enterprise.ecommerce.models.Order;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.UUID;
 
-@Service
-public class TransactionService {
+@Repository
+public interface OrderRepository extends JpaRepository<Order, UUID> {
+    List<Order> findByCustomerId(UUID customerId);
+    List<Order> findByStatus(String status);
+}`
+              }
+            ]
+          },
+          {
+            id: 'dir-models',
+            name: 'models',
+            path: 'src/models',
+            type: 'directory',
+            children: [
+              {
+                id: 'file-order-model',
+                name: 'Order.java',
+                path: 'src/models/Order.java',
+                type: 'file',
+                language: 'java',
+                lines: 48,
+                size: 1680,
+                complexity: 2,
+                content: `package com.enterprise.ecommerce.models;
 
-    private final AccountRepository accountRepository;
+import javax.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
-    public TransactionService(AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
-    }
+@Entity
+@Table(name = "orders")
+public class Order {
 
-    @Transactional(isolation = Isolation.SERIALIZABLE, rollbackFor = Exception.class)
-    public TransferResult processTransfer(TransferRequest req) {
-        // Step 1: Lock source and destination accounts
-        // Step 2: Validate available balance
-        // Step 3: Call external fraud scoring gateway
-        // Step 4: Write to double-entry ledger database table
-        return new TransferResult("TX-998231", "SUCCESS", req.getAmount());
-    }
+    @Id
+    @GeneratedValue
+    private UUID id;
+
+    @Column(nullable = false)
+    private UUID customerId;
+
+    @Column(nullable = false)
+    private BigDecimal totalAmount;
+
+    @Column(nullable = false)
+    private String status;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "order_id")
+    private List<OrderItem> items = new ArrayList<>();
+
+    private LocalDateTime createdAt = LocalDateTime.now();
 }`
               }
             ]
@@ -910,15 +893,28 @@ public class TransactionService {
         path: 'pom.xml',
         type: 'file',
         language: 'xml',
-        lines: 185,
-        size: 7420,
-        complexity: 2,
+        lines: 32,
+        size: 1100,
+        complexity: 1,
         content: `<project xmlns="http://maven.apache.org/POM/4.0.0">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.enterprise.banking</groupId>
-  <artifactId>banking-transaction-core</artifactId>
-  <version>2.4.1-RELEASE</version>
+  <groupId>com.enterprise.ecommerce</groupId>
+  <artifactId>ecommerce-order-service</artifactId>
+  <version>1.4.0-SNAPSHOT</version>
 </project>`
+      },
+      {
+        id: 'file-readme',
+        name: 'README.md',
+        path: 'README.md',
+        type: 'file',
+        language: 'markdown',
+        lines: 18,
+        size: 650,
+        complexity: 1,
+        content: `# E-Commerce Order Management Microservice
+
+Enterprise order fulfillment service connecting REST clients, PostgreSQL data storage, and legacy inventory ledgers.`
       }
     ];
   }
