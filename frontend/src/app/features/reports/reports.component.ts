@@ -1,5 +1,6 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { ReportService } from '../../core/reports/report.service';
 import { ProjectService } from '../../core/projects/project.service';
 import { NotificationService } from '../../core/notifications/notification.service';
@@ -8,7 +9,7 @@ import { Report, ReportType } from '@codelens/shared';
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.css']
 })

@@ -59,6 +59,15 @@
           <span class="material-symbols-outlined text-base">chat</span>
           {{ translationService.isSpanish() ? 'Chat de Código IA' : 'AI Code Chat' }}
         </a>
+
+        <button 
+          (click)="clearCurrentProject()" 
+          class="px-4 py-2 bg-red-600/15 hover:bg-red-600/25 text-red-300 border border-red-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"
+          title="Eliminar este proyecto y limpiar el espacio de trabajo"
+        >
+          <span class="material-symbols-outlined text-base">delete_sweep</span>
+          {{ translationService.isSpanish() ? 'Limpiar / Terminar Proyecto' : 'Finish / Clear Project' }}
+        </button>
       </div>
     </div>
   </div>

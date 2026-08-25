@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import { Project, FileNode, ProjectStatus, DependencyGraphData } from '@codelens/shared';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
@@ -29,27 +29,32 @@ export class ProjectService {
   }
 
   private projectsSignal = signal<Project[]>(this.getSavedProjects());
-  private selectedProjectSignal = signal<Project>(this.getSavedProjects()[0] || {
-    id: 'proj-clean',
-    name: 'My Ingested Project',
-    slug: 'my-project',
-    description: 'Uploaded repository ready for AI reverse-engineering.',
-    mainLanguage: 'Auto-Detect',
-    framework: 'Multi-Tier',
-    languages: [{ name: 'Source', percentage: 100, color: '#3B82F6', loc: 1000 }],
-    fileCount: 0,
-    linesOfCode: 0,
-    architecture: 'Detecting...',
-    confidence: 100,
-    status: 'COMPLETED',
-    progress: 100,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    healthScore: 85
-  });
+  private selectedProjectSignal = signal<Project | null>(this.getSavedProjects()[0] || null);
 
   projects = this.projectsSignal.asReadonly();
-  selectedProject = this.selectedProjectSignal.asReadonly();
+  selectedProjectSignalValue = this.selectedProjectSignal.asReadonly();
+  hasProjects = computed(() => this.projectsSignal().length > 0 && this.selectedProjectSignal() !== null);
+
+  selectedProject = computed<Project>(() => {
+    return this.selectedProjectSignal() || {
+      id: 'proj-empty',
+      name: 'No Active Project',
+      slug: 'no-project',
+      description: 'No active project loaded. Upload a project to begin.',
+      mainLanguage: 'None',
+      framework: 'None',
+      languages: [],
+      fileCount: 0,
+      linesOfCode: 0,
+      architecture: 'None',
+      confidence: 0,
+      status: 'IDLE' as any,
+      progress: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      healthScore: 0
+    };
+  });
 
   getAll(): Observable<Project[]> {
     return of(this.projectsSignal()).pipe(delay(100));
@@ -63,7 +68,7 @@ export class ProjectService {
     return of(project).pipe(delay(80));
   }
 
-  setSelectedProject(project: Project) {
+  setSelectedProject(project: Project | null) {
     this.selectedProjectSignal.set(project);
   }
 
@@ -153,15 +158,19 @@ export class ProjectService {
       this.persistProjects(updated);
       return updated;
     });
-    if (this.selectedProjectSignal().id === id && this.projectsSignal().length > 0) {
-      this.selectedProjectSignal.set(this.projectsSignal()[0]);
+    if (this.selectedProjectSignal()?.id === id) {
+      const remaining = this.projectsSignal();
+      this.selectedProjectSignal.set(remaining.length > 0 ? remaining[0] : null);
     }
     return of(true).pipe(delay(100));
   }
 
   clearAllProjects(): Observable<boolean> {
     this.projectsSignal.set([]);
+    this.selectedProjectSignal.set(null);
     this.persistProjects([]);
+    localStorage.removeItem('legacyai_projects');
+    localStorage.removeItem('legacyai_recent_activities');
     return of(true).pipe(delay(50));
   }
 

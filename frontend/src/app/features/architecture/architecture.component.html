@@ -1,5 +1,23 @@
 <div class="space-y-8 max-w-7xl mx-auto">
-  @if (architectureData(); as arch) {
+  @if (!projectService.hasProjects()) {
+    <div class="bg-[#151821] border border-white/[0.08] rounded-3xl p-12 text-center max-w-2xl mx-auto space-y-6 shadow-2xl my-12">
+      <div class="w-20 h-20 rounded-3xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center mx-auto text-4xl shadow-inner">
+        <span class="material-symbols-outlined text-4xl">layers</span>
+      </div>
+      <div class="space-y-2">
+        <h2 class="text-2xl font-extrabold text-white">No hay análisis de arquitectura</h2>
+        <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+          El espacio de trabajo está limpio. Sube un proyecto para que los agentes analicen el patrón de diseño, fronteras de capas y recomendaciones de modernización.
+        </p>
+      </div>
+      <div class="flex items-center justify-center gap-3">
+        <a routerLink="/upload" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-blue-600/25 flex items-center gap-2">
+          <span class="material-symbols-outlined text-base">upload_file</span>
+          Subir Nuevo Proyecto
+        </a>
+      </div>
+    </div>
+  } @else if (architectureData(); as arch) {
     <!-- Top Header & Primary Pattern Recovery Card -->
     <div class="bg-[#151821] border border-blue-500/30 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
       <!-- Ambient Glow -->

@@ -1,51 +1,71 @@
 <div class="space-y-6 max-w-7xl mx-auto">
-  <!-- Header Banner -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
-    <div>
-      <div class="flex items-center gap-2">
-        <h1 class="text-3xl font-extrabold tracking-tight text-white">Reverse-Engineered Architecture & UML</h1>
-        <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs font-mono font-bold">
-          {{ projectService.selectedProject().name }}
-        </span>
+  @if (!projectService.hasProjects()) {
+    <div class="bg-[#151821] border border-white/[0.08] rounded-3xl p-12 text-center max-w-2xl mx-auto space-y-6 shadow-2xl my-12">
+      <div class="w-20 h-20 rounded-3xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center mx-auto text-4xl shadow-inner">
+        <span class="material-symbols-outlined text-4xl">schema</span>
       </div>
-      <p class="text-xs text-slate-400 mt-1">
-        Interactive system architecture, database ERD, C4 container model, and class hierarchies extracted from source code.
-      </p>
+      <div class="space-y-2">
+        <h2 class="text-2xl font-extrabold text-white">No hay diagramas disponibles</h2>
+        <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+          El espacio de trabajo está completamente limpio. Sube un repositorio o archivo ZIP para generar automáticamente diagramas de arquitectura, ERD de base de datos y modelos C4.
+        </p>
+      </div>
+      <div class="flex items-center justify-center gap-3">
+        <a routerLink="/upload" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-blue-600/25 flex items-center gap-2">
+          <span class="material-symbols-outlined text-base">upload_file</span>
+          Subir Nuevo Proyecto
+        </a>
+      </div>
+    </div>
+  } @else {
+    <!-- Header Banner -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-3xl font-extrabold tracking-tight text-white">Arquitectura & Diagramas UML</h1>
+          <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs font-mono font-bold">
+            {{ projectService.selectedProject().name }}
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">
+          Topología interactiva de sistemas, esquemas relacionales ERD y modelos de clases extraídos del código fuente.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button 
+          (click)="regenerate()" 
+          [disabled]="isRegenerating()"
+          class="px-4 py-2 bg-purple-600/15 hover:bg-purple-600/25 text-purple-300 border border-purple-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
+        >
+          <span class="material-symbols-outlined text-base" [class.animate-spin]="isRegenerating()">auto_fix_high</span>
+          {{ isRegenerating() ? 'Regenerando...' : 'Regenerar Diagrama' }}
+        </button>
+      </div>
     </div>
 
-    <div class="flex items-center gap-3">
-      <button 
-        (click)="regenerate()" 
-        [disabled]="isRegenerating()"
-        class="px-4 py-2 bg-purple-600/15 hover:bg-purple-600/25 text-purple-300 border border-purple-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
-      >
-        <span class="material-symbols-outlined text-base" [class.animate-spin]="isRegenerating()">auto_fix_high</span>
-        {{ isRegenerating() ? 'Regenerating...' : 'Regenerate Diagram' }}
-      </button>
+    <!-- Tabs Selector (8 Complete Diagram Types) -->
+    <div class="flex items-center gap-2 overflow-x-auto bg-[#151821] p-1.5 rounded-2xl border border-white/[0.08] text-xs font-medium scrollbar-thin">
+      @for (tab of tabs; track tab.type) {
+        <button 
+          (click)="loadDiagram(tab.type)"
+          [class]="activeType() === tab.type ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30 font-bold' : 'text-slate-400 hover:text-white hover:bg-white/[0.03]'"
+          class="px-3.5 py-2 rounded-xl transition flex items-center gap-2 shrink-0"
+        >
+          <span class="material-symbols-outlined text-base">{{ tab.icon }}</span>
+          <span>{{ tab.label }}</span>
+        </button>
+      }
     </div>
-  </div>
 
-  <!-- Tabs Selector (8 Complete Diagram Types) -->
-  <div class="flex items-center gap-2 overflow-x-auto bg-[#151821] p-1.5 rounded-2xl border border-white/[0.08] text-xs font-medium scrollbar-thin">
-    @for (tab of tabs; track tab.type) {
-      <button 
-        (click)="loadDiagram(tab.type)"
-        [class]="activeType() === tab.type ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30 font-bold' : 'text-slate-400 hover:text-white hover:bg-white/[0.03]'"
-        class="px-3.5 py-2 rounded-xl transition flex items-center gap-2 shrink-0"
-      >
-        <span class="material-symbols-outlined text-base">{{ tab.icon }}</span>
-        <span>{{ tab.label }}</span>
-      </button>
+    <!-- Diagram Viewer Viewport -->
+    @if (currentDiagram(); as diag) {
+      <div class="h-[680px]">
+        <app-diagram-viewer
+          [definition]="diag.mermaidCode"
+          [title]="diag.title"
+        ></app-diagram-viewer>
+      </div>
     }
-  </div>
-
-  <!-- Diagram Viewer Viewport -->
-  @if (currentDiagram(); as diag) {
-    <div class="h-[680px]">
-      <app-diagram-viewer
-        [definition]="diag.mermaidCode"
-        [title]="diag.title"
-      ></app-diagram-viewer>
-    </div>
   }
 </div>

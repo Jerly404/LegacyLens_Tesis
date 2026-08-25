@@ -1,185 +1,205 @@
 <div class="space-y-6 max-w-7xl mx-auto">
-  <!-- Header Banner -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
-    <div>
+  @if (!projectService.hasProjects()) {
+    <div class="bg-[#151821] border border-white/[0.08] rounded-3xl p-12 text-center max-w-2xl mx-auto space-y-6 shadow-2xl my-12">
+      <div class="w-20 h-20 rounded-3xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mx-auto text-4xl shadow-inner">
+        <span class="material-symbols-outlined text-4xl">menu_book</span>
+      </div>
+      <div class="space-y-2">
+        <h2 class="text-2xl font-extrabold text-white">No hay documentación disponible</h2>
+        <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+          El espacio de trabajo está limpio. Sube un proyecto para generar automáticamente especificaciones OpenAPI, modelos de bases de datos y manuales de arquitectura.
+        </p>
+      </div>
+      <div class="flex items-center justify-center gap-3">
+        <a routerLink="/upload" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-blue-600/25 flex items-center gap-2">
+          <span class="material-symbols-outlined text-base">upload_file</span>
+          Subir Nuevo Proyecto
+        </a>
+      </div>
+    </div>
+  } @else {
+    <!-- Header Banner -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-3xl font-extrabold tracking-tight text-white">Documentación Técnica</h1>
+          <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs font-mono font-bold">
+            {{ projectService.selectedProject().name }}
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">
+          Especificaciones arquitectónicas, contratos de API REST y modelos relacionales compilados por Qwen 2.5 Coder (GPU Local).
+        </p>
+      </div>
+
       <div class="flex items-center gap-2">
-        <h1 class="text-3xl font-extrabold tracking-tight text-white">Documentación Técnica</h1>
-        <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs font-mono font-bold">
-          {{ projectService.selectedProject().name }}
-        </span>
-      </div>
-      <p class="text-xs text-slate-400 mt-1">
-        Especificaciones arquitectónicas, contratos de API REST y modelos relacionales compilados por Qwen 2.5 Coder (GPU Local).
-      </p>
-    </div>
+        <button 
+          (click)="regenerate()" 
+          [disabled]="isRegenerating()"
+          class="px-3.5 py-2 bg-purple-600/15 hover:bg-purple-600/25 text-purple-300 border border-purple-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
+        >
+          <span class="material-symbols-outlined text-sm" [class.animate-spin]="isRegenerating()">auto_fix_high</span>
+          {{ isRegenerating() ? 'Regenerando...' : 'Regenerar Sección' }}
+        </button>
 
-    <div class="flex items-center gap-2">
-      <button 
-        (click)="regenerate()" 
-        [disabled]="isRegenerating()"
-        class="px-3.5 py-2 bg-purple-600/15 hover:bg-purple-600/25 text-purple-300 border border-purple-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
-      >
-        <span class="material-symbols-outlined text-sm" [class.animate-spin]="isRegenerating()">auto_fix_high</span>
-        {{ isRegenerating() ? 'Regenerando...' : 'Regenerar Sección' }}
-      </button>
+        <button 
+          (click)="exportDoc('markdown')" 
+          class="px-3.5 py-2 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"
+        >
+          <span class="material-symbols-outlined text-sm">download</span>
+          Exportar MD
+        </button>
 
-      <button 
-        (click)="exportDoc('markdown')" 
-        class="px-3.5 py-2 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"
-      >
-        <span class="material-symbols-outlined text-sm">download</span>
-        Exportar MD
-      </button>
-
-      <button 
-        (click)="exportDoc('pdf')" 
-        class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/20 flex items-center gap-1.5"
-      >
-        <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
-        Exportar PDF
-      </button>
-    </div>
-  </div>
-
-  <!-- Main Split Layout -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[760px]">
-    <!-- Left Navigation Index -->
-    <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-5 shadow-xl flex flex-col h-full">
-      <div class="pb-3 border-b border-white/[0.08] mb-3 space-y-2">
-        <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-blue-400 text-base">menu_book</span>
-          Índice de Documentos
-        </span>
-
-        <input 
-          type="text" 
-          [(ngModel)]="searchQuery"
-          placeholder="Buscar especificaciones..." 
-          class="w-full bg-[#0E1017] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-        />
-      </div>
-
-      <!-- Sections List -->
-      <div class="flex-1 overflow-y-auto space-y-1.5 pr-1 scrollbar-thin">
-        @for (doc of filteredDocs(); track doc.id) {
-          <div 
-            (click)="selectDoc(doc)"
-            [class]="selectedDocId() === doc.id ? 'bg-blue-600/20 text-blue-400 border-blue-500 shadow-glow-primary/10' : 'bg-white/[0.02] border-white/5 text-slate-300 hover:bg-white/5'"
-            class="p-3 rounded-xl border cursor-pointer transition flex items-center justify-between"
-          >
-            <div class="min-w-0 pr-2">
-              <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 block">{{ doc.category }}</span>
-              <h4 class="text-xs font-bold text-white truncate mt-0.5">{{ doc.title }}</h4>
-            </div>
-            <span class="text-[10px] font-mono text-slate-500 shrink-0">{{ doc.lastUpdated }}</span>
-          </div>
-        }
+        <button 
+          (click)="exportDoc('pdf')" 
+          class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/20 flex items-center gap-1.5"
+        >
+          <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+          Exportar PDF
+        </button>
       </div>
     </div>
 
-    <!-- Right Preview & Editor Container -->
-    <div class="lg:col-span-2 bg-[#151821] border border-white/[0.08] rounded-2xl shadow-xl flex flex-col h-full overflow-hidden">
-      <!-- Document Preview Toolbar -->
-      <div class="px-6 py-3.5 bg-[#11131B] border-b border-white/[0.08] flex items-center justify-between gap-3 shrink-0">
-        <div class="min-w-0">
-          <span class="text-[10px] font-mono uppercase tracking-wider text-blue-400">{{ activeDoc().category }}</span>
-          <h2 class="text-sm font-bold text-white truncate">{{ activeDoc().title }}</h2>
+    <!-- Main Split Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[760px]">
+      <!-- Left Navigation Index -->
+      <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-5 shadow-xl flex flex-col h-full">
+        <div class="pb-3 border-b border-white/[0.08] mb-3 space-y-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-blue-400 text-base">menu_book</span>
+            Índice de Documentos
+          </span>
+
+          <input 
+            type="text" 
+            [(ngModel)]="searchQuery"
+            placeholder="Buscar especificaciones..." 
+            class="w-full bg-[#0E1017] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+          />
         </div>
 
-        <div class="flex items-center gap-2">
-          <button 
-            (click)="copyContent()" 
-            class="p-1.5 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition"
-            title="Copiar Markdown"
-          >
-            <span class="material-symbols-outlined text-sm">content_copy</span>
-          </button>
-
-          @if (isEditing()) {
-            <button 
-              (click)="cancelEdit()" 
-              class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold rounded-lg border border-white/10 transition"
+        <!-- Sections List -->
+        <div class="flex-1 overflow-y-auto space-y-1.5 pr-1 scrollbar-thin">
+          @for (doc of filteredDocs(); track doc.id) {
+            <div 
+              (click)="selectDoc(doc)"
+              [class]="selectedDocId() === doc.id ? 'bg-blue-600/20 text-blue-400 border-blue-500 shadow-glow-primary/10' : 'bg-white/[0.02] border-white/5 text-slate-300 hover:bg-white/5'"
+              class="p-3 rounded-xl border cursor-pointer transition flex items-center justify-between"
             >
-              Cancelar
-            </button>
-            <button 
-              (click)="toggleEdit()" 
-              class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition shadow-md shadow-emerald-600/20"
-            >
-              Guardar Cambios
-            </button>
-          } @else {
-            <button 
-              (click)="toggleEdit()" 
-              class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-semibold rounded-lg border border-white/10 transition flex items-center gap-1"
-            >
-              <span class="material-symbols-outlined text-sm">edit</span>
-              Editar
-            </button>
+              <div class="min-w-0 pr-2">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 block">{{ doc.category }}</span>
+                <h4 class="text-xs font-bold text-white truncate mt-0.5">{{ doc.title }}</h4>
+              </div>
+              <span class="text-[10px] font-mono text-slate-500 shrink-0">{{ doc.lastUpdated }}</span>
+            </div>
           }
         </div>
       </div>
 
-      <!-- Body / Editor Viewport -->
-      <div class="flex-1 overflow-y-auto p-6 md:p-8 bg-[#0D0F16] scrollbar-thin">
-        @if (isEditing()) {
-          <textarea 
-            [(ngModel)]="editedContent"
-            class="w-full h-full bg-transparent font-mono text-xs text-slate-200 focus:outline-none resize-none leading-relaxed"
-            placeholder="Editar markdown..."
-          ></textarea>
-        } @else {
-          <!-- Rich Rendered Documentation View -->
-          <div class="space-y-6 select-text text-xs text-slate-300 leading-relaxed font-sans">
-            <!-- Formatted HTML -->
-            <div [innerHTML]="renderedHtml()"></div>
+      <!-- Right Preview & Editor Container -->
+      <div class="lg:col-span-2 bg-[#151821] border border-white/[0.08] rounded-2xl shadow-xl flex flex-col h-full overflow-hidden">
+        <!-- Document Preview Toolbar -->
+        <div class="px-6 py-3.5 bg-[#11131B] border-b border-white/[0.08] flex items-center justify-between gap-3 shrink-0">
+          <div class="min-w-0">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-blue-400">{{ activeDoc().category }}</span>
+            <h2 class="text-sm font-bold text-white truncate">{{ activeDoc().title }}</h2>
+          </div>
 
-            <!-- Integrated Visual Vector Diagram for Architecture -->
-            @if (activeDoc().category === 'Architecture') {
-              <div class="mt-8 pt-6 border-t border-white/10 space-y-3">
-                <div class="flex items-center justify-between">
-                  <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                    <span class="material-symbols-outlined text-blue-400 text-base">account_tree</span>
-                    Topología Visual de Arquitectura en Capas
-                  </h3>
-                  <a routerLink="/uml" class="text-xs text-blue-400 hover:underline flex items-center gap-1 font-semibold">
-                    Abrir en Visor UML
-                    <span class="material-symbols-outlined text-xs">open_in_new</span>
-                  </a>
-                </div>
-                <div class="h-[480px] rounded-2xl overflow-hidden border border-white/10">
-                  <app-diagram-viewer
-                    [definition]="'architecture'"
-                    [title]="'Topología de Arquitectura — ' + projectService.selectedProject().name"
-                  ></app-diagram-viewer>
-                </div>
-              </div>
-            }
+          <div class="flex items-center gap-2">
+            <button 
+              (click)="copyContent()" 
+              class="p-1.5 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition"
+              title="Copiar Markdown"
+            >
+              <span class="material-symbols-outlined text-sm">content_copy</span>
+            </button>
 
-            <!-- Integrated Visual Vector Diagram for Database -->
-            @if (activeDoc().category === 'Database') {
-              <div class="mt-8 pt-6 border-t border-white/10 space-y-3">
-                <div class="flex items-center justify-between">
-                  <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                    <span class="material-symbols-outlined text-emerald-400 text-base">database</span>
-                    Esquema Relacional Visual (ERD)
-                  </h3>
-                  <a routerLink="/uml" class="text-xs text-blue-400 hover:underline flex items-center gap-1 font-semibold">
-                    Abrir en Visor UML
-                    <span class="material-symbols-outlined text-xs">open_in_new</span>
-                  </a>
-                </div>
-                <div class="h-[480px] rounded-2xl overflow-hidden border border-white/10">
-                  <app-diagram-viewer
-                    [definition]="'erDiagram'"
-                    [title]="'Esquema Relacional ERD — ' + projectService.selectedProject().name"
-                  ></app-diagram-viewer>
-                </div>
-              </div>
+            @if (isEditing()) {
+              <button 
+                (click)="cancelEdit()" 
+                class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold rounded-lg border border-white/10 transition"
+              >
+                Cancelar
+              </button>
+              <button 
+                (click)="toggleEdit()" 
+                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition shadow-md shadow-emerald-600/20"
+              >
+                Guardar Cambios
+              </button>
+            } @else {
+              <button 
+                (click)="toggleEdit()" 
+                class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-semibold rounded-lg border border-white/10 transition flex items-center gap-1"
+              >
+                <span class="material-symbols-outlined text-sm">edit</span>
+                Editar
+              </button>
             }
           </div>
-        }
+        </div>
+
+        <!-- Body / Editor Viewport -->
+        <div class="flex-1 overflow-y-auto p-6 md:p-8 bg-[#0D0F16] scrollbar-thin">
+          @if (isEditing()) {
+            <textarea 
+              [(ngModel)]="editedContent"
+              class="w-full h-full bg-transparent font-mono text-xs text-slate-200 focus:outline-none resize-none leading-relaxed"
+              placeholder="Editar markdown..."
+            ></textarea>
+          } @else {
+            <!-- Rich Rendered Documentation View -->
+            <div class="space-y-6 select-text text-xs text-slate-300 leading-relaxed font-sans">
+              <!-- Formatted HTML -->
+              <div [innerHTML]="renderedHtml()"></div>
+
+              <!-- Integrated Visual Vector Diagram for Architecture -->
+              @if (activeDoc().category === 'Architecture') {
+                <div class="mt-8 pt-6 border-t border-white/10 space-y-3">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                      <span class="material-symbols-outlined text-blue-400 text-base">account_tree</span>
+                      Topología Visual de Arquitectura en Capas
+                    </h3>
+                    <a routerLink="/uml" class="text-xs text-blue-400 hover:underline flex items-center gap-1 font-semibold">
+                      Abrir en Visor UML
+                      <span class="material-symbols-outlined text-xs">open_in_new</span>
+                    </a>
+                  </div>
+                  <div class="h-[480px] rounded-2xl overflow-hidden border border-white/10">
+                    <app-diagram-viewer
+                      [definition]="'architecture'"
+                      [title]="'Topología de Arquitectura — ' + projectService.selectedProject().name"
+                    ></app-diagram-viewer>
+                  </div>
+                </div>
+              }
+
+              <!-- Integrated Visual Vector Diagram for Database -->
+              @if (activeDoc().category === 'Database') {
+                <div class="mt-8 pt-6 border-t border-white/10 space-y-3">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                      <span class="material-symbols-outlined text-emerald-400 text-base">database</span>
+                      Esquema Relacional Visual (ERD)
+                    </h3>
+                    <a routerLink="/uml" class="text-xs text-blue-400 hover:underline flex items-center gap-1 font-semibold">
+                      Abrir en Visor UML
+                      <span class="material-symbols-outlined text-xs">open_in_new</span>
+                    </a>
+                  </div>
+                  <div class="h-[480px] rounded-2xl overflow-hidden border border-white/10">
+                    <app-diagram-viewer
+                      [definition]="'erDiagram'"
+                      [title]="'Esquema Relacional ERD — ' + projectService.selectedProject().name"
+                    ></app-diagram-viewer>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
       </div>
     </div>
-  </div>
+  }
 </div>

@@ -75,4 +75,11 @@ export class ProjectOverviewComponent implements OnInit {
   reanalyze() {
     this.router.navigate(['/analysis-progress']);
   }
+
+  clearCurrentProject() {
+    this.projectService.clearAllProjects().subscribe(() => {
+      this.notificationService.success('Espacio de Trabajo Limpio', 'Se han eliminado todos los datos, archivos y diagramas del proyecto anterior.');
+      this.router.navigate(['/upload']);
+    });
+  }
 }

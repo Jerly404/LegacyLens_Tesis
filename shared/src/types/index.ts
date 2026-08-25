@@ -52,7 +52,7 @@ export interface AnalysisStage {
 export interface AnalysisProgress {
   projectId: string;
   progress: number; // 0 to 100
-  status: 'PENDING' | 'ANALYZING' | 'COMPLETED' | 'FAILED';
+  status: 'PENDING' | 'ANALYZING' | 'COMPLETED' | 'FAILED' | 'IDLE';
   currentStage: string;
   stages: AnalysisStage[];
   filesProcessed: number;

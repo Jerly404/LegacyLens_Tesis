@@ -1,5 +1,23 @@
 <div class="max-w-5xl mx-auto space-y-8">
-  @if (progressData(); as data) {
+  @if (!projectService.hasProjects() || !progressData() || progressData()?.status === 'IDLE') {
+    <div class="bg-[#151821] border border-white/[0.08] rounded-3xl p-12 text-center max-w-2xl mx-auto space-y-6 shadow-2xl my-12">
+      <div class="w-20 h-20 rounded-3xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mx-auto text-4xl shadow-inner">
+        <span class="material-symbols-outlined text-4xl">hourglass_empty</span>
+      </div>
+      <div class="space-y-2">
+        <h2 class="text-2xl font-extrabold text-white">No hay análisis en ejecución</h2>
+        <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+          El pipeline de inferencia multi-agente está inactivo. Sube un repositorio para iniciar el escaneo con Qwen 2.5 Coder 7B en tu GPU local.
+        </p>
+      </div>
+      <div class="flex items-center justify-center gap-3">
+        <a routerLink="/upload" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-blue-600/25 flex items-center gap-2">
+          <span class="material-symbols-outlined text-base">upload_file</span>
+          Subir Nuevo Proyecto
+        </a>
+      </div>
+    </div>
+  } @else if (progressData(); as data) {
     <!-- Top Progress Card -->
     <div class="bg-[#151821] border border-blue-500/30 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
       <!-- Glow background -->

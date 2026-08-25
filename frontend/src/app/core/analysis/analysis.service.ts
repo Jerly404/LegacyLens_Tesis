@@ -18,27 +18,57 @@ export class AnalysisService {
     { id: 'stage-6', name: 'Security & Testing Advisor Agent', description: 'Auditing auth anti-patterns, test coverage gaps, and indexing vector store (RAG)' }
   ];
 
-  private analysisState = signal<AnalysisProgress>({
-    projectId: 'proj-active',
-    progress: 100,
-    status: 'COMPLETED',
-    currentStage: 'Multi-Agent Analysis Completed Successfully',
-    stages: this.stageDefinitions.map(s => ({ ...s, status: 'completed' as const, progress: 100 })),
-    filesProcessed: 34,
-    totalFiles: 34,
-    estimatedRemainingTime: '00:00',
-    processingSpeed: '28 files/sec',
-    logs: [
-      '[00:01] [Orchestrator] Multi-agent virtual team initialized on local Qwen 2.5 Coder 7B (RTX 3050).',
-      '[00:03] [Code Agent] Parsed AST syntax trees, classes, functions, and complexity metrics.',
-      '[00:06] [Architecture Agent] Detected Layered Architecture with clear service boundaries.',
-      '[00:09] [Dependency Agent] Traced module call hierarchy and package manifests.',
-      '[00:12] [Doc & UML Agent] Generated OpenAPI 3.0 contracts, Database ERD Schema, and C4 models.',
-      '[00:15] [Security Agent] Audited auth endpoints and indexed AST symbols into vector store (RAG).'
-    ]
-  });
+  private analysisState = signal<AnalysisProgress>(
+    this.projectService.hasProjects() 
+      ? {
+          projectId: 'proj-active',
+          progress: 100,
+          status: 'COMPLETED',
+          currentStage: 'Multi-Agent Analysis Completed Successfully',
+          stages: this.stageDefinitions.map(s => ({ ...s, status: 'completed' as const, progress: 100 })),
+          filesProcessed: 34,
+          totalFiles: 34,
+          estimatedRemainingTime: '00:00',
+          processingSpeed: '28 files/sec',
+          logs: [
+            '[00:01] [Orchestrator] Multi-agent virtual team initialized on local Qwen 2.5 Coder 7B (RTX 3050).',
+            '[00:03] [Code Agent] Parsed AST syntax trees, classes, functions, and complexity metrics.',
+            '[00:06] [Architecture Agent] Detected Layered Architecture with clear service boundaries.',
+            '[00:09] [Dependency Agent] Traced module call hierarchy and package manifests.',
+            '[00:12] [Doc & UML Agent] Generated OpenAPI 3.0 contracts, Database ERD Schema, and C4 models.',
+            '[00:15] [Security Agent] Audited auth endpoints and indexed AST symbols into vector store (RAG).'
+          ]
+        }
+      : {
+          projectId: '',
+          progress: 0,
+          status: 'IDLE',
+          currentStage: 'Esperando carga de nuevo proyecto...',
+          stages: this.stageDefinitions.map(s => ({ ...s, status: 'pending' as const, progress: 0 })),
+          filesProcessed: 0,
+          totalFiles: 0,
+          estimatedRemainingTime: '--:--',
+          processingSpeed: '0 files/sec',
+          logs: []
+        }
+  );
 
   currentAnalysis = this.analysisState.asReadonly();
+
+  clearAnalysis() {
+    this.analysisState.set({
+      projectId: '',
+      progress: 0,
+      status: 'IDLE',
+      currentStage: 'Esperando carga de nuevo proyecto...',
+      stages: this.stageDefinitions.map(s => ({ ...s, status: 'pending' as const, progress: 0 })),
+      filesProcessed: 0,
+      totalFiles: 0,
+      estimatedRemainingTime: '--:--',
+      processingSpeed: '0 files/sec',
+      logs: []
+    });
+  }
 
   getAnalysisProgress(projectId?: string): Observable<AnalysisProgress> {
     return new Observable<AnalysisProgress>(subscriber => {
