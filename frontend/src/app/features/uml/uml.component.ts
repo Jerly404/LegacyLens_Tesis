@@ -18,9 +18,20 @@ export class UmlComponent implements OnInit {
   projectService = inject(ProjectService);
   notificationService = inject(NotificationService);
 
-  activeType = signal<UMLType>('class');
+  activeType = signal<UMLType>('architecture');
   currentDiagram = signal<UMLDiagram | null>(null);
   isRegenerating = signal<boolean>(false);
+
+  tabs: Array<{ type: UMLType; label: string; icon: string }> = [
+    { type: 'architecture', label: 'Fullstack Architecture', icon: 'account_tree' },
+    { type: 'database', label: 'Database Schema (ERD)', icon: 'database' },
+    { type: 'c4', label: 'C4 Container Model', icon: 'grid_view' },
+    { type: 'class', label: 'Class Hierarchy', icon: 'class' },
+    { type: 'sequence', label: 'Sequence Flow', icon: 'swap_horiz' },
+    { type: 'component', label: 'Module Boundaries', icon: 'view_module' },
+    { type: 'deployment', label: 'Deployment & Docker', icon: 'dns' },
+    { type: 'flow', label: 'Business Process Flow', icon: 'alt_route' }
+  ];
 
   ngOnInit() {
     this.loadDiagram(this.activeType());
@@ -28,7 +39,7 @@ export class UmlComponent implements OnInit {
 
   loadDiagram(type: UMLType) {
     this.activeType.set(type);
-    this.diagramService.getDiagram(type).subscribe(diag => {
+    this.diagramService.getDiagram(type, this.projectService.selectedProject().id).subscribe(diag => {
       this.currentDiagram.set(diag);
     });
   }
@@ -36,8 +47,11 @@ export class UmlComponent implements OnInit {
   regenerate() {
     this.isRegenerating.set(true);
     setTimeout(() => {
-      this.isRegenerating.set(false);
-      this.notificationService.success('UML Diagram Regenerated', `Updated ${this.activeType().toUpperCase()} diagram.`);
+      this.diagramService.getDiagram(this.activeType(), this.projectService.selectedProject().id).subscribe(diag => {
+        this.currentDiagram.set(diag);
+        this.isRegenerating.set(false);
+        this.notificationService.success('Diagram Regenerated', `Updated ${this.activeType().toUpperCase()} diagram for ${this.projectService.selectedProject().name}`);
+      });
     }, 600);
   }
 }

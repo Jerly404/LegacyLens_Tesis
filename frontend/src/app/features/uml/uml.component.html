@@ -2,9 +2,14 @@
   <!-- Header Banner -->
   <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
     <div>
-      <h1 class="text-3xl font-extrabold tracking-tight text-white">Reverse-Engineered UML Diagrams</h1>
+      <div class="flex items-center gap-2">
+        <h1 class="text-3xl font-extrabold tracking-tight text-white">Reverse-Engineered Architecture & UML</h1>
+        <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs font-mono font-bold">
+          {{ projectService.selectedProject().name }}
+        </span>
+      </div>
       <p class="text-xs text-slate-400 mt-1">
-        Interactive Mermaid.js diagrams generated from abstract syntax tree parsing and call graph extraction.
+        Interactive system architecture, database ERD, C4 container model, and class hierarchies extracted from source code.
       </p>
     </div>
 
@@ -15,53 +20,28 @@
         class="px-4 py-2 bg-purple-600/15 hover:bg-purple-600/25 text-purple-300 border border-purple-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
       >
         <span class="material-symbols-outlined text-base" [class.animate-spin]="isRegenerating()">auto_fix_high</span>
-        {{ isRegenerating() ? 'Regenerating Diagram...' : 'Regenerate UML' }}
+        {{ isRegenerating() ? 'Regenerating...' : 'Regenerate Diagram' }}
       </button>
     </div>
   </div>
 
-  <!-- Tabs Selector -->
-  <div class="flex items-center gap-2 overflow-x-auto bg-[#151821] p-1.5 rounded-2xl border border-white/[0.08] text-xs font-medium">
-    <button 
-      (click)="loadDiagram('class')"
-      [class]="activeType() === 'class' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
-      class="px-4 py-2 rounded-xl transition flex items-center gap-2"
-    >
-      <span class="material-symbols-outlined text-base">class</span>
-      Class Diagram
-    </button>
-
-    <button 
-      (click)="loadDiagram('sequence')"
-      [class]="activeType() === 'sequence' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
-      class="px-4 py-2 rounded-xl transition flex items-center gap-2"
-    >
-      <span class="material-symbols-outlined text-base">swap_horiz</span>
-      Sequence Diagram
-    </button>
-
-    <button 
-      (click)="loadDiagram('component')"
-      [class]="activeType() === 'component' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
-      class="px-4 py-2 rounded-xl transition flex items-center gap-2"
-    >
-      <span class="material-symbols-outlined text-base">grid_view</span>
-      Component Diagram
-    </button>
-
-    <button 
-      (click)="loadDiagram('flow')"
-      [class]="activeType() === 'flow' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
-      class="px-4 py-2 rounded-xl transition flex items-center gap-2"
-    >
-      <span class="material-symbols-outlined text-base">alt_route</span>
-      Process Flow Diagram
-    </button>
+  <!-- Tabs Selector (8 Complete Diagram Types) -->
+  <div class="flex items-center gap-2 overflow-x-auto bg-[#151821] p-1.5 rounded-2xl border border-white/[0.08] text-xs font-medium scrollbar-thin">
+    @for (tab of tabs; track tab.type) {
+      <button 
+        (click)="loadDiagram(tab.type)"
+        [class]="activeType() === tab.type ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30 font-bold' : 'text-slate-400 hover:text-white hover:bg-white/[0.03]'"
+        class="px-3.5 py-2 rounded-xl transition flex items-center gap-2 shrink-0"
+      >
+        <span class="material-symbols-outlined text-base">{{ tab.icon }}</span>
+        <span>{{ tab.label }}</span>
+      </button>
+    }
   </div>
 
   <!-- Diagram Viewer Viewport -->
   @if (currentDiagram(); as diag) {
-    <div class="h-[650px]">
+    <div class="h-[680px]">
       <app-diagram-viewer
         [definition]="diag.mermaidCode"
         [title]="diag.title"

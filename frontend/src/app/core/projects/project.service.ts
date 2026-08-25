@@ -291,6 +291,21 @@ export class ProjectService {
     return of(true).pipe(delay(100));
   }
 
+  clearDemoProjects(): Observable<boolean> {
+    const userUploaded = this.projectsSignal().filter(p => !p.id.startsWith('proj-banking') && !p.id.startsWith('proj-health') && !p.id.startsWith('proj-ecommerce') && !p.id.startsWith('proj-scada') && !p.id.startsWith('proj-python') && !p.id.startsWith('proj-cobol') && !p.id.startsWith('proj-inventory') && !p.id.startsWith('proj-payment'));
+    this.projectsSignal.set(userUploaded);
+    if (userUploaded.length > 0) {
+      this.selectedProjectSignal.set(userUploaded[0]);
+    }
+    return of(true).pipe(delay(100));
+  }
+
+  resetDemoProjects(): Observable<boolean> {
+    this.projectsSignal.set(this.initialProjects);
+    this.selectedProjectSignal.set(this.initialProjects[0]);
+    return of(true).pipe(delay(100));
+  }
+
   getFileTree(projectId?: string): FileNode[] {
     const targetId = projectId || this.selectedProject().id;
 

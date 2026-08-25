@@ -140,7 +140,7 @@ export interface DocumentationSection {
   generatedByAI: boolean;
 }
 
-export type UMLType = 'class' | 'sequence' | 'component' | 'flow';
+export type UMLType = 'architecture' | 'database' | 'c4' | 'class' | 'sequence' | 'component' | 'flow' | 'deployment';
 
 export interface UMLDiagram {
   id: string;

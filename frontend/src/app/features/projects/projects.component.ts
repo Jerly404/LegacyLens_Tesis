@@ -48,4 +48,18 @@ export class ProjectsComponent {
       });
     }
   }
+
+  clearDemoProjects() {
+    if (confirm('Clear all demo project samples and keep only your uploaded repositories?')) {
+      this.projectService.clearDemoProjects().subscribe(() => {
+        this.notificationService.info('Workspace Cleaned', 'Removed demo samples.');
+      });
+    }
+  }
+
+  restoreDemos() {
+    this.projectService.resetDemoProjects().subscribe(() => {
+      this.notificationService.success('Demos Restored', 'Loaded sample enterprise codebases.');
+    });
+  }
 }
