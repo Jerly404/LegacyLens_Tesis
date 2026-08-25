@@ -16,10 +16,10 @@ import { CommonModule } from '@angular/common';
             <div class="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
               <span>{{ lineCount() }} lines</span>
               <span>•</span>
-              <span>{{ language() | uppercase }}</span>
+              <span class="font-bold text-slate-300">{{ language() | uppercase }}</span>
               @if (complexity()) {
                 <span>•</span>
-                <span class="text-amber-400">Cyclomatic Complexity: {{ complexity() }}</span>
+                <span class="text-amber-400 font-mono">Cyclomatic: {{ complexity() }}</span>
               }
             </div>
           </div>
@@ -56,12 +56,12 @@ import { CommonModule } from '@angular/common';
       <!-- Dependencies Bar -->
       @if (dependencies().length > 0) {
         <div class="px-5 py-2 bg-[#0F1117] border-b border-white/[0.05] flex items-center gap-2 overflow-x-auto text-xs">
-          <span class="text-slate-500 flex items-center gap-1">
+          <span class="text-slate-500 flex items-center gap-1 shrink-0">
             <span class="material-symbols-outlined text-xs">account_tree</span>
-            Dependencies:
+            Symbols / Dependencies:
           </span>
           @for (dep of dependencies(); track dep) {
-            <span class="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 font-mono text-[11px] border border-white/5">{{ dep }}</span>
+            <span class="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 font-mono text-[11px] border border-white/5 shrink-0">{{ dep }}</span>
           }
         </div>
       }
@@ -121,17 +121,46 @@ export class CodeViewerComponent {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
 
-    if (escaped.trim().startsWith('//') || escaped.trim().startsWith('*') || escaped.trim().startsWith('/*')) {
+    // Comments for all languages (//, #, --, *, /*)
+    if (
+      escaped.trim().startsWith('//') || 
+      escaped.trim().startsWith('#') || 
+      escaped.trim().startsWith('--') || 
+      escaped.trim().startsWith('*') || 
+      escaped.trim().startsWith('/*')
+    ) {
       return `<span class="code-token-comment">${escaped}</span>`;
     }
 
+    // Annotations & Decorators (@RestController, @shared_task, [Authorize], etc.)
     escaped = escaped.replace(/(@[A-Za-z0-9_]+)/g, '<span class="text-purple-400 font-semibold">$1</span>');
+    escaped = escaped.replace(/(\[[A-Za-z0-9_\(\)\s,=]+\])/g, '<span class="text-purple-400 font-semibold">$1</span>');
 
+    // C++ Preprocessor
+    escaped = escaped.replace(/(#include\s+&lt;.*?&gt;)/g, '<span class="text-amber-400 font-mono">$1</span>');
+    escaped = escaped.replace(/(#include\s+".*?")/g, '<span class="text-amber-400 font-mono">$1</span>');
+
+    // Comprehensive Keywords across Java, C#, Python, C++, COBOL, PHP, Go, SQL, TS
     const keywords = [
+      // Common OOP & Systems
       'public', 'private', 'protected', 'class', 'interface', 'enum', 'extends', 'implements',
       'import', 'package', 'return', 'if', 'else', 'for', 'while', 'try', 'catch', 'throw', 'throws',
-      'new', 'this', 'final', 'static', 'void', 'int', 'boolean', 'double', 'float', 'String', 'const',
-      'let', 'var', 'function', 'async', 'await', 'export', 'default', 'type', 'from', 'null', 'true', 'false'
+      'new', 'this', 'final', 'static', 'void', 'int', 'bool', 'boolean', 'double', 'float', 'string',
+      'const', 'let', 'var', 'function', 'async', 'await', 'export', 'default', 'type', 'from', 'null', 'true', 'false',
+      // C#
+      'using', 'namespace', 'Task', 'readonly', 'override', 'virtual', 'get', 'set',
+      // Python
+      'def', 'self', 'elif', 'with', 'as', 'raise', 'pass', 'lambda', 'yield', 'None',
+      // C++
+      'template', 'typename', 'nullptr', 'auto', 'struct', 'sizeof', 'std',
+      // Go
+      'func', 'chan', 'go', 'defer', 'select', 'fallthrough', 'make',
+      // COBOL
+      'IDENTIFICATION', 'DIVISION', 'PROGRAM-ID', 'ENVIRONMENT', 'DATA', 'FILE', 'SECTION',
+      'WORKING-STORAGE', 'PROCEDURE', 'PERFORM', 'UNTIL', 'READ', 'MOVE', 'ADD', 'TO', 'GOBACK',
+      'EXEC', 'SQL', 'END-EXEC', 'PIC', 'VALUE', 'ZERO', 'OPEN', 'CLOSE', 'INPUT', 'OUTPUT',
+      // SQL
+      'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'FROM', 'WHERE', 'JOIN', 'GROUP', 'BY', 'ORDER', 'HAVING'
     ];
     
     keywords.forEach(kw => {
@@ -139,8 +168,13 @@ export class CodeViewerComponent {
       escaped = escaped.replace(regex, '<span class="text-rose-400 font-medium">$1</span>');
     });
 
+    // Strings in quotes
     escaped = escaped.replace(/(".*?")/g, '<span class="text-emerald-400">$1</span>');
+    escaped = escaped.replace(/('.*?')/g, '<span class="text-emerald-400">$1</span>');
+
+    // Method invocations
     escaped = escaped.replace(/(\.[A-Za-z0-9_]+)(\()/g, '<span class="text-blue-400">$1</span>$2');
+    escaped = escaped.replace(/(::[A-Za-z0-9_]+)/g, '<span class="text-cyan-400">$1</span>');
 
     return escaped;
   }
