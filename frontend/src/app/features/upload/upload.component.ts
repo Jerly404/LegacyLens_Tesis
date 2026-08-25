@@ -77,7 +77,17 @@ export class UploadComponent {
     const combined = url + ' ' + fileName;
 
     setTimeout(() => {
-      if (combined.includes('csharp') || combined.includes('.net') || combined.includes('dotnet') || combined.includes('hl7') || combined.includes('.cs')) {
+      if (combined.includes('ehr') || combined.includes('clinical') || combined.includes('patient') || combined.includes('health')) {
+        this.projectName.set('Clinical Electronic Health Record (EHR) API');
+        this.detectedLanguage.set('Python');
+        this.detectedFramework.set('FastAPI & Async SQLAlchemy 2.0 / PostgreSQL');
+        this.detectedArchitecture.set('Layered Architecture');
+        this.detectedBreakdown.set([
+          { name: 'Python', percentage: 80, color: '#3572A5' },
+          { name: 'SQL / ORM', percentage: 15, color: '#336791' },
+          { name: 'Docker / YAML', percentage: 5, color: '#384d54' }
+        ]);
+      } else if (combined.includes('csharp') || combined.includes('.net') || combined.includes('dotnet') || combined.includes('.cs')) {
         this.projectName.set('C# .NET Enterprise Core');
         this.detectedLanguage.set('C#');
         this.detectedFramework.set('.NET 8 / ASP.NET Core & Entity Framework');

@@ -271,35 +271,46 @@ export class ProjectService {
   }
 
   createProject(projectData: Partial<Project>): Observable<Project> {
-    const lang = projectData.mainLanguage || 'Java';
-    const isMicro = (projectData.name || '').toLowerCase().includes('ecommerce') || (projectData.name || '').toLowerCase().includes('order') || (projectData.name || '').toLowerCase().includes('sample');
-    const fileCount = isMicro ? 8 : (projectData.fileCount || 8);
-    const loc = isMicro ? 450 : (projectData.linesOfCode || 450);
+    const lang = projectData.mainLanguage || 'Python';
+    const isPython = lang.toLowerCase() === 'python' || (projectData.name || '').toLowerCase().includes('ehr') || (projectData.name || '').toLowerCase().includes('clinical') || (projectData.name || '').toLowerCase().includes('patient');
+    const isJava = lang.toLowerCase() === 'java' || (projectData.name || '').toLowerCase().includes('ecommerce') || (projectData.name || '').toLowerCase().includes('order');
+
+    const fileCount = isPython ? 11 : (isJava ? 8 : (projectData.fileCount || 10));
+    const loc = isPython ? 380 : (isJava ? 450 : (projectData.linesOfCode || 400));
+    const name = projectData.name || (isPython ? 'Clinical Electronic Health Record (EHR) API' : (isJava ? 'E-Commerce Order Management Microservice' : `${lang} Enterprise Service`));
+
+    const languages = isPython 
+      ? [
+          { name: 'Python', percentage: 80, color: '#3572A5', loc: 304 },
+          { name: 'SQL / ORM', percentage: 15, color: '#336791', loc: 57 },
+          { name: 'Docker / YAML', percentage: 5, color: '#384d54', loc: 19 }
+        ]
+      : [
+          { name: lang, percentage: 75, color: this.getLanguageColor(lang), loc: Math.round(loc * 0.75) },
+          { name: 'SQL / DB', percentage: 15, color: '#10B981', loc: Math.round(loc * 0.15) },
+          { name: 'XML / Config', percentage: 10, color: '#A855F7', loc: Math.round(loc * 0.10) }
+        ];
 
     const newProject: Project = {
       id: 'proj-' + Date.now().toString(36),
-      name: projectData.name || 'E-Commerce Order Management Microservice',
-      slug: (projectData.name || 'ecommerce-order-service').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      name,
+      slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       description: projectData.description || `Uploaded ${lang} microservice repository for AI reverse engineering and documentation.`,
       repositoryUrl: projectData.repositoryUrl,
       mainLanguage: lang,
-      framework: projectData.framework || `${lang} 11 / Spring Boot 2.7 & Spring Data JPA`,
+      framework: projectData.framework || (isPython ? 'Python 3.11 / FastAPI & Async SQLAlchemy 2.0' : `${lang} 11 / Spring Boot 2.7`),
       branch: projectData.branch || 'main',
-      languages: [
-        { name: lang, percentage: 75, color: this.getLanguageColor(lang), loc: Math.round(loc * 0.75) },
-        { name: 'SQL / DB', percentage: 15, color: '#10B981', loc: Math.round(loc * 0.15) },
-        { name: 'XML / Config', percentage: 10, color: '#A855F7', loc: Math.round(loc * 0.10) }
-      ],
+      languages,
       fileCount,
       linesOfCode: loc,
       architecture: projectData.architecture || 'Layered Architecture',
-      confidence: 94,
+      confidence: 95,
       status: 'COMPLETED',
       progress: 100,
       lastAnalyzedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      healthScore: 88
+      healthScore: 92
     };
 
     this.projectsSignal.update(list => {
@@ -358,6 +369,272 @@ export class ProjectService {
 
   getFileTree(projectId?: string): FileNode[] {
     const targetId = projectId || this.selectedProject().id;
+    const currentProj = this.projectsSignal().find(p => p.id === targetId) || this.selectedProject();
+    const isPython = currentProj.mainLanguage === 'Python' || currentProj.name.toLowerCase().includes('ehr') || currentProj.name.toLowerCase().includes('clinical') || currentProj.name.toLowerCase().includes('patient') || currentProj.slug.includes('python');
+
+    if (isPython) {
+      return [
+        {
+          id: 'dir-py-src',
+          name: 'src',
+          path: 'src',
+          type: 'directory',
+          children: [
+            {
+              id: 'dir-py-api',
+              name: 'api',
+              path: 'src/api',
+              type: 'directory',
+              children: [
+                {
+                  id: 'file-py-router',
+                  name: 'patients_router.py',
+                  path: 'src/api/patients_router.py',
+                  type: 'file',
+                  language: 'python',
+                  lines: 42,
+                  size: 1450,
+                  complexity: 4,
+                  dependencies: ['PatientService', 'PatientRepository', 'FastAPI'],
+                  content: `from uuid import UUID
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.config.database import get_db
+from src.repositories.patient_repository import PatientRepository
+from src.services.patient_service import PatientService
+from src.schemas.patient_dto import PatientCreate, PatientResponse, ClinicalRecordCreate, ClinicalRecordResponse
+
+router = APIRouter()
+
+def get_service(session: AsyncSession = Depends(get_db)) -> PatientService:
+    repo = PatientRepository(session)
+    return PatientService(repo)
+
+@router.post("/", response_model=PatientResponse, status_code=status.HTTP_201_CREATED)
+async def register_patient(dto: PatientCreate, service: PatientService = Depends(get_service)):
+    try:
+        return await service.register_new_patient(dto)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.get("/{patient_id}", response_model=PatientResponse)
+async def get_patient(patient_id: UUID, service: PatientService = Depends(get_service)):
+    patient = await service.fetch_patient_summary(patient_id)
+    if not patient:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient record not found")
+    return patient
+
+@router.get("/", response_model=List[PatientResponse])
+async def list_patients(limit: int = 50, service: PatientService = Depends(get_service)):
+    return await service.retrieve_all_patients(limit=limit)
+
+@router.post("/{patient_id}/records", response_model=ClinicalRecordResponse, status_code=status.HTTP_201_CREATED)
+async def add_clinical_observation(
+    patient_id: UUID, 
+    dto: ClinicalRecordCreate, 
+    service: PatientService = Depends(get_service)
+):
+    try:
+        return await service.append_clinical_observation(patient_id, dto)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))`
+                }
+              ]
+            },
+            {
+              id: 'dir-py-services',
+              name: 'services',
+              path: 'src/services',
+              type: 'directory',
+              children: [
+                {
+                  id: 'file-py-service',
+                  name: 'patient_service.py',
+                  path: 'src/services/patient_service.py',
+                  type: 'file',
+                  language: 'python',
+                  lines: 38,
+                  size: 1380,
+                  complexity: 5,
+                  dependencies: ['PatientRepository', 'PatientResponse'],
+                  content: `from uuid import UUID
+from typing import List, Optional
+from src.repositories.patient_repository import PatientRepository
+from src.schemas.patient_dto import PatientCreate, PatientResponse, ClinicalRecordCreate, ClinicalRecordResponse
+
+class PatientService:
+    def __init__(self, repository: PatientRepository):
+        self.repository = repository
+
+    async def register_new_patient(self, dto: PatientCreate) -> PatientResponse:
+        existing = await self.repository.get_patient_by_mrn(dto.medical_record_number)
+        if existing:
+            raise ValueError(f"Patient with MRN {dto.medical_record_number} already exists")
+        patient = await self.repository.create_patient(dto)
+        return PatientResponse.model_validate(patient)
+
+    async def fetch_patient_summary(self, patient_id: UUID) -> Optional[PatientResponse]:
+        patient = await self.repository.get_patient_by_id(patient_id)
+        if not patient:
+            return None
+        return PatientResponse.model_validate(patient)
+
+    async def append_clinical_observation(self, patient_id: UUID, dto: ClinicalRecordCreate) -> ClinicalRecordResponse:
+        patient = await self.repository.get_patient_by_id(patient_id)
+        if not patient:
+            raise ValueError(f"Patient with ID {patient_id} not found")
+        record = await self.repository.add_clinical_record(patient_id, dto)
+        return ClinicalRecordResponse.model_validate(record)
+
+    async def retrieve_all_patients(self, limit: int = 50) -> List[PatientResponse]:
+        patients = await self.repository.list_patients(limit=limit)
+        return [PatientResponse.model_validate(p) for p in patients]`
+                }
+              ]
+            },
+            {
+              id: 'dir-py-repositories',
+              name: 'repositories',
+              path: 'src/repositories',
+              type: 'directory',
+              children: [
+                {
+                  id: 'file-py-repo',
+                  name: 'patient_repository.py',
+                  path: 'src/repositories/patient_repository.py',
+                  type: 'file',
+                  language: 'python',
+                  lines: 36,
+                  size: 1200,
+                  complexity: 3,
+                  dependencies: ['Patient', 'ClinicalRecord', 'AsyncSession'],
+                  content: `from uuid import UUID
+from typing import List, Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+from src.models.patient import Patient
+from src.models.clinical_record import ClinicalRecord
+from src.schemas.patient_dto import PatientCreate, ClinicalRecordCreate
+
+class PatientRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def create_patient(self, dto: PatientCreate) -> Patient:
+        patient = Patient(**dto.model_dump())
+        self.session.add(patient)
+        await self.session.commit()
+        await self.session.refresh(patient)
+        return patient
+
+    async def get_patient_by_id(self, patient_id: UUID) -> Optional[Patient]:
+        stmt = select(Patient).options(selectinload(Patient.records)).where(Patient.id == patient_id)
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
+
+    async def list_patients(self, limit: int = 50, offset: int = 0) -> List[Patient]:
+        stmt = select(Patient).options(selectinload(Patient.records)).limit(limit).offset(offset)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())`
+                }
+              ]
+            },
+            {
+              id: 'dir-py-models',
+              name: 'models',
+              path: 'src/models',
+              type: 'directory',
+              children: [
+                {
+                  id: 'file-py-model-pat',
+                  name: 'patient.py',
+                  path: 'src/models/patient.py',
+                  type: 'file',
+                  language: 'python',
+                  lines: 24,
+                  size: 890,
+                  complexity: 1,
+                  content: `import uuid
+from datetime import datetime
+from sqlalchemy import Column, String, DateTime, Date
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+from src.config.database import Base
+
+class Patient(Base):
+    __tablename__ = "patients"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    medical_record_number = Column(String(32), unique=True, nullable=False, index=True)
+    first_name = Column(String(64), nullable=False)
+    last_name = Column(String(64), nullable=False)
+    date_of_birth = Column(Date, nullable=False)
+    blood_group = Column(String(8), nullable=True)
+    contact_phone = Column(String(20), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    records = relationship("ClinicalRecord", back_populates="patient", cascade="all, delete-orphan")`
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'file-py-main',
+          name: 'main.py',
+          path: 'main.py',
+          type: 'file',
+          language: 'python',
+          lines: 28,
+          size: 920,
+          complexity: 2,
+          content: `from fastapi import FastAPI
+from src.api.patients_router import router as patients_router
+
+app = FastAPI(title="Clinical Electronic Health Record API", version="2.1.0")
+app.include_router(patients_router, prefix="/api/v1/patients", tags=["Patients"])
+
+@app.get("/health")
+async def health_check():
+    return {"status": "HEALTHY", "service": "clinical-ehr-api"}`
+        },
+        {
+          id: 'file-py-req',
+          name: 'requirements.txt',
+          path: 'requirements.txt',
+          type: 'file',
+          language: 'text',
+          lines: 9,
+          size: 210,
+          complexity: 1,
+          content: `fastapi==0.104.1\nuvicorn==0.24.0\nsqlalchemy==2.0.23\nasyncpg==0.29.0\npydantic==2.5.2\nalembic==1.12.1`
+        },
+        {
+          id: 'file-py-docker',
+          name: 'Dockerfile',
+          path: 'Dockerfile',
+          type: 'file',
+          language: 'dockerfile',
+          lines: 8,
+          size: 220,
+          complexity: 1,
+          content: `FROM python:3.11-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install -r requirements.txt\nCOPY . .\nCMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]`
+        },
+        {
+          id: 'file-py-readme',
+          name: 'README.md',
+          path: 'README.md',
+          type: 'file',
+          language: 'markdown',
+          lines: 15,
+          size: 450,
+          complexity: 1,
+          content: `# Clinical Electronic Health Record (EHR) Microservice\n\nAsync Python 3.11 / FastAPI microservice for patient health records and biometric telemetry.`
+        }
+      ];
+    }
 
     if (targetId === 'proj-health-hl7') {
       return [
