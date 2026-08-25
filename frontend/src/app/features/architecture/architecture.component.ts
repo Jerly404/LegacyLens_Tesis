@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { ArchitectureService } from '../../core/architecture/architecture.service';
 import { ProjectService } from '../../core/projects/project.service';
 import { NotificationService } from '../../core/notifications/notification.service';
+import { TranslationService } from '../../core/i18n/translation.service';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ArchitectureAnalysis, AIRecommendation } from '@codelens/shared';
 
@@ -18,6 +19,7 @@ export class ArchitectureComponent implements OnInit {
   architectureService = inject(ArchitectureService);
   projectService = inject(ProjectService);
   notificationService = inject(NotificationService);
+  translationService = inject(TranslationService);
   router = inject(Router);
 
   architectureData = signal<ArchitectureAnalysis | null>(null);
@@ -25,16 +27,16 @@ export class ArchitectureComponent implements OnInit {
 
   architectureStyles = [
     { name: 'Layered', confidence: 94, match: true },
-    { name: 'Monolithic', confidence: 68, match: false },
-    { name: 'MVC', confidence: 62, match: false },
+    { name: 'Monolithic', confidence: 42, match: false },
+    { name: 'MVC', confidence: 58, match: false },
     { name: 'Hexagonal', confidence: 24, match: false },
     { name: 'Clean Architecture', confidence: 18, match: false },
-    { name: 'Microservices', confidence: 8, match: false },
+    { name: 'Microservices', confidence: 88, match: true },
     { name: 'Event-Driven', confidence: 12, match: false }
   ];
 
   ngOnInit() {
-    this.architectureService.getArchitecture().subscribe(data => {
+    this.architectureService.getAnalysis().subscribe(data => {
       this.architectureData.set(data);
     });
 
@@ -44,7 +46,10 @@ export class ArchitectureComponent implements OnInit {
   }
 
   askAiAboutRecommendation(rec: AIRecommendation) {
-    this.notificationService.info('Refactoring Inquiry', `Opening AI chat for ${rec.title}...`);
+    this.notificationService.info(
+      this.translationService.isSpanish() ? 'Solicitud de Refactorización' : 'Refactoring Inquiry',
+      `Opening AI chat for ${rec.title}...`
+    );
     this.router.navigate(['/ai-chat']);
   }
 }
