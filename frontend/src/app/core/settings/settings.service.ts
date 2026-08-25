@@ -96,30 +96,38 @@ export class SettingsService {
 
   pingServer(): Observable<{ connected: boolean; latencyMs: number; models?: string[]; message?: string }> {
     const startTime = performance.now();
-    const endpoint = `${this.serverUrl()}/api/tags`;
+    const urls = [
+      `${this.serverUrl()}/api/tags`,
+      'http://127.0.0.1:11434/api/tags',
+      'http://localhost:11434/api/tags'
+    ];
 
-    return from(
-      fetch(endpoint, { method: 'GET', headers: { 'Content-Type': 'application/json' } })
-        .then(async res => {
-          const latencyMs = Math.round(performance.now() - startTime);
-          if (res.ok) {
-            const data = await res.json();
-            const modelNames = (data.models || []).map((m: any) => m.name || m.model);
-            this.isOllamaConnected.set(true);
-            this.installedOllamaModels.set(modelNames);
-            this.systemHealth.update(h => ({ ...h, status: 'ONLINE' }));
-            return { connected: true, latencyMs, models: modelNames, message: `Connected to Ollama (${modelNames.length} models installed)` };
-          } else {
-            this.isOllamaConnected.set(false);
-            return { connected: false, latencyMs, message: `Ollama returned HTTP ${res.status}` };
-          }
-        })
-        .catch(err => {
-          const latencyMs = Math.round(performance.now() - startTime);
-          this.isOllamaConnected.set(false);
-          return { connected: false, latencyMs, message: 'Could not connect to Ollama server at ' + this.serverUrl() + '. (Start with: ollama serve)' };
-        })
-    );
+    const tryFetch = async (index: number): Promise<any> => {
+      if (index >= urls.length) {
+        const latencyMs = Math.round(performance.now() - startTime);
+        this.isOllamaConnected.set(false);
+        return { connected: false, latencyMs, message: 'Could not connect to Ollama daemon at ' + this.serverUrl() + '. (Ensure "ollama serve" is active)' };
+      }
+
+      try {
+        const res = await fetch(urls[index], { method: 'GET' });
+        const latencyMs = Math.round(performance.now() - startTime);
+        if (res.ok) {
+          const data = await res.json();
+          const modelNames = (data.models || []).map((m: any) => m.name || m.model);
+          this.isOllamaConnected.set(true);
+          this.installedOllamaModels.set(modelNames);
+          this.systemHealth.update(h => ({ ...h, status: 'ONLINE' }));
+          return { connected: true, latencyMs, models: modelNames, message: `Connected to Ollama (${modelNames.length} model loaded: ${modelNames[0] || 'none'})` };
+        } else {
+          return tryFetch(index + 1);
+        }
+      } catch (err) {
+        return tryFetch(index + 1);
+      }
+    };
+
+    return from(tryFetch(0));
   }
 
   selectModel(id: string) {
