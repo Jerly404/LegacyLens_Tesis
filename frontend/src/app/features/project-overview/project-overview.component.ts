@@ -5,6 +5,8 @@ import { RouterModule, Router } from '@angular/router';
 import { ProjectService } from '../../core/projects/project.service';
 import { ArchitectureService } from '../../core/architecture/architecture.service';
 import { NotificationService } from '../../core/notifications/notification.service';
+import { TranslationService } from '../../core/i18n/translation.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { CodeViewerComponent } from '../../shared/components/code-viewer/code-viewer.component';
 import { DependencyGraphComponent } from '../../shared/components/dependency-graph/dependency-graph.component';
@@ -19,7 +21,8 @@ import { FileNode, DependencyGraphData } from '@codelens/shared';
     RouterModule, 
     BadgeComponent, 
     CodeViewerComponent, 
-    DependencyGraphComponent
+    DependencyGraphComponent,
+    TranslatePipe
   ],
   templateUrl: './project-overview.component.html',
   styleUrls: ['./project-overview.component.css']
@@ -28,6 +31,7 @@ export class ProjectOverviewComponent implements OnInit {
   projectService = inject(ProjectService);
   architectureService = inject(ArchitectureService);
   notificationService = inject(NotificationService);
+  translationService = inject(TranslationService);
   router = inject(Router);
 
   activeTab = signal<'overview' | 'files' | 'dependencies' | 'metrics'>('overview');
@@ -40,8 +44,8 @@ export class ProjectOverviewComponent implements OnInit {
     const files = this.projectService.getFileTree();
     this.fileTree.set(files);
     
-    // Default selected file: AuthController.java
-    if (files[0]?.children?.[0]?.children?.[0]) {
+    // Select first leaf file by default
+    if (files.length > 0 && files[0].children && files[0].children.length > 0 && files[0].children[0].children) {
       this.selectedFile.set(files[0].children[0].children[0]);
     }
 
