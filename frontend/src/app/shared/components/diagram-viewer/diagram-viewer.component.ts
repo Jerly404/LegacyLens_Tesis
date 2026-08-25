@@ -1,5 +1,6 @@
-import { Component, input, signal, ElementRef, viewChild, effect } from '@angular/core';
+import { Component, input, signal, ElementRef, viewChild, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ProjectService } from '../../../core/projects/project.service';
 
 @Component({
   selector: 'app-diagram-viewer',
@@ -70,6 +71,7 @@ export class DiagramViewerComponent {
   definition = input<string>('');
   title = input<string>('Architecture Diagram');
   
+  private projectService = inject(ProjectService);
   diagramContainer = viewChild<ElementRef<HTMLDivElement>>('diagramContainer');
 
   zoomLevel = signal<number>(100);
@@ -82,6 +84,14 @@ export class DiagramViewerComponent {
       const t = this.title().toLowerCase();
       this.generateRichSvgDiagram(t, def);
     });
+  }
+
+  private isPythonProject(): boolean {
+    const proj = this.projectService.selectedProject();
+    return (proj.mainLanguage || '').toLowerCase() === 'python' || 
+           (proj.name || '').toLowerCase().includes('ehr') || 
+           (proj.name || '').toLowerCase().includes('clinical') || 
+           (proj.name || '').toLowerCase().includes('patient');
   }
 
   private generateRichSvgDiagram(title: string, def: string) {
@@ -106,6 +116,12 @@ export class DiagramViewerComponent {
 
   // 1. FULLSTACK ARCHITECTURE SVG
   private renderFullstackArchitectureSvg(): string {
+    const isPy = this.isPythonProject();
+    const runtimeName = isPy ? 'Python 3.11 / FastAPI ASGI' : 'Java 11 / Spring Boot 2.7';
+    const ormName = isPy ? 'Async SQLAlchemy 2.0 / asyncpg' : 'Spring Data JPA / Hibernate';
+    const ctrlName = isPy ? 'FastAPI APIRouter (patients_router.py)' : 'Spring REST Controllers (OrderController.java)';
+    const srvName = isPy ? 'Clinical Domain Services (patient_service.py)' : 'Order Processing Services (OrderService.java)';
+
     return `
       <svg width="960" height="600" viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -124,11 +140,11 @@ export class DiagramViewerComponent {
         
         <g transform="translate(70, 65)">
           <rect width="240" height="42" rx="10" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Angular 20 SPA Client</text>
+          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Angular SPA Web Portal</text>
         </g>
         <g transform="translate(360, 65)">
           <rect width="240" height="42" rx="10" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Mobile App (iOS / Android)</text>
+          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Mobile App (Clinical/Client)</text>
         </g>
         <g transform="translate(650, 65)">
           <rect width="240" height="42" rx="10" fill="#1E293B" stroke="#8B5CF6" stroke-width="1.5" filter="url(#cardShadow)"/>
@@ -158,22 +174,22 @@ export class DiagramViewerComponent {
 
         <!-- Tier 3: Application Core -->
         <rect x="40" y="295" width="880" height="110" rx="16" fill="url(#layerGrad)" stroke="#334155" stroke-width="1.5"/>
-        <text x="60" y="320" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" font-weight="700" letter-spacing="1">APPLICATION & DOMAIN SERVICE TIER</text>
+        <text x="60" y="320" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" font-weight="700" letter-spacing="1">APPLICATION & DOMAIN SERVICE TIER (${runtimeName})</text>
         
         <g transform="translate(70, 335)">
           <rect width="240" height="55" rx="10" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">REST Controllers Layer</text>
-          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">Auth, Projects, Analysis API</text>
+          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11" font-weight="600" text-anchor="middle">API Router / Controllers</text>
+          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">${ctrlName}</text>
         </g>
         <g transform="translate(360, 335)">
           <rect width="240" height="55" rx="10" fill="#1E293B" stroke="#8B5CF6" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Domain Business Services</text>
-          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">Use Cases, AST, Transactions</text>
+          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11" font-weight="600" text-anchor="middle">Domain Services</text>
+          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">${srvName}</text>
         </g>
         <g transform="translate(650, 335)">
           <rect width="240" height="55" rx="10" fill="#1E293B" stroke="#F59E0B" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Async Background Workers</text>
-          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">Reverse-Engineering Pipeline</text>
+          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11" font-weight="600" text-anchor="middle">Data Repository / ORM</text>
+          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">${ormName}</text>
         </g>
 
         <!-- Arrows Tier 3 -> Tier 4 -->
@@ -186,18 +202,18 @@ export class DiagramViewerComponent {
         
         <g transform="translate(70, 490)">
           <rect width="240" height="55" rx="10" fill="#1E293B" stroke="#10B981" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Primary Relational DB</text>
-          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">PostgreSQL 16 / Oracle RAC</text>
+          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">PostgreSQL 16 Database</text>
+          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">Relational Schema & JSONB</text>
         </g>
         <g transform="translate(360, 490)">
           <rect width="240" height="55" rx="10" fill="#1E293B" stroke="#EF4444" stroke-width="1.5" filter="url(#cardShadow)"/>
           <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Redis Distributed Cache</text>
-          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">Sessions, Locks & Queues</text>
+          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">Sessions, Telemetry & Queues</text>
         </g>
         <g transform="translate(650, 490)">
           <rect width="240" height="55" rx="10" fill="#1E293B" stroke="#A855F7" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Local Ollama LLM Daemon</text>
-          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">Qwen 2.5 Coder 7B (GPU RTX 3050)</text>
+          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Local Ollama GPU Inference</text>
+          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">Qwen 2.5 Coder 7B (RTX 3050)</text>
         </g>
       </svg>
     `;
@@ -205,6 +221,127 @@ export class DiagramViewerComponent {
 
   // 2. DATABASE ERD SVG
   private renderDatabaseErdSvg(): string {
+    const isPy = this.isPythonProject();
+
+    if (isPy) {
+      return `
+        <svg width="960" height="620" viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="erdShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.5"/>
+            </filter>
+          </defs>
+
+          <!-- TABLE: PATIENTS -->
+          <g transform="translate(60, 50)" filter="url(#erdShadow)">
+            <rect width="280" height="230" rx="12" fill="#151821" stroke="#3B82F6" stroke-width="1.5"/>
+            <rect width="280" height="34" rx="12" fill="#1E3A8A"/>
+            <text x="140" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">PATIENTS</text>
+            
+            <text x="15" y="60" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
+            <text x="190" y="60" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
+            
+            <text x="15" y="88" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">UQ  medical_record_no</text>
+            <text x="190" y="88" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(32)</text>
+
+            <text x="15" y="116" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    first_name</text>
+            <text x="190" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(64)</text>
+
+            <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    last_name</text>
+            <text x="190" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(64)</text>
+
+            <text x="15" y="172" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    date_of_birth</text>
+            <text x="190" y="172" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">DATE</text>
+
+            <text x="15" y="200" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    blood_group</text>
+            <text x="190" y="200" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(8)</text>
+          </g>
+
+          <!-- TABLE: CLINICAL_RECORDS -->
+          <g transform="translate(560, 50)" filter="url(#erdShadow)">
+            <rect width="320" height="250" rx="12" fill="#151821" stroke="#10B981" stroke-width="1.5"/>
+            <rect width="320" height="34" rx="12" fill="#064E3B"/>
+            <text x="160" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">CLINICAL_RECORDS</text>
+            
+            <text x="15" y="60" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
+            <text x="210" y="60" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
+            
+            <text x="15" y="88" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  patient_id</text>
+            <text x="210" y="88" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
+
+            <text x="15" y="116" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    diagnosis_code</text>
+            <text x="210" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(32)</text>
+
+            <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    systolic_bp</text>
+            <text x="210" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">FLOAT</text>
+
+            <text x="15" y="172" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    diastolic_bp</text>
+            <text x="210" y="172" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">FLOAT</text>
+
+            <text x="15" y="200" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    heart_rate</text>
+            <text x="210" y="200" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">FLOAT</text>
+
+            <text x="15" y="228" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    attending_physician</text>
+            <text x="210" y="228" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(128)</text>
+          </g>
+
+          <!-- Connector Patients (1) -> Clinical Records (N) -->
+          <path d="M 340 140 L 560 140" stroke="#38BDF8" stroke-width="2" stroke-dasharray="6"/>
+          <text x="350" y="130" fill="#F59E0B" font-family="Inter, sans-serif" font-size="12" font-weight="700">1</text>
+          <text x="540" y="130" fill="#38BDF8" font-family="Inter, sans-serif" font-size="12" font-weight="700">N</text>
+          <polygon points="555,140 545,135 545,145" fill="#38BDF8"/>
+
+          <!-- TABLE: DOCTORS -->
+          <g transform="translate(60, 360)" filter="url(#erdShadow)">
+            <rect width="280" height="200" rx="12" fill="#151821" stroke="#8B5CF6" stroke-width="1.5"/>
+            <rect width="280" height="34" rx="12" fill="#4C1D95"/>
+            <text x="140" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">DOCTORS / PRACTITIONERS</text>
+            
+            <text x="15" y="60" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
+            <text x="190" y="60" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
+            
+            <text x="15" y="88" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    license_number</text>
+            <text x="190" y="88" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(32)</text>
+
+            <text x="15" y="116" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    full_name</text>
+            <text x="190" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(128)</text>
+
+            <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    specialty</text>
+            <text x="190" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(64)</text>
+
+            <text x="15" y="172" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    email</text>
+            <text x="190" y="172" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(128)</text>
+          </g>
+
+          <!-- TABLE: BIOMETRIC_ALERTS -->
+          <g transform="translate(560, 360)" filter="url(#erdShadow)">
+            <rect width="320" height="200" rx="12" fill="#151821" stroke="#EF4444" stroke-width="1.5"/>
+            <rect width="320" height="34" rx="12" fill="#7F1D1D"/>
+            <text x="160" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">BIOMETRIC_TELEMETRY_ALERTS</text>
+            
+            <text x="15" y="60" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
+            <text x="210" y="60" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
+            
+            <text x="15" y="88" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  record_id</text>
+            <text x="210" y="88" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
+
+            <text x="15" y="116" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    alert_type</text>
+            <text x="210" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(32)</text>
+
+            <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    severity</text>
+            <text x="210" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">CRITICAL</text>
+
+            <text x="15" y="172" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    triggered_at</text>
+            <text x="210" y="172" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">TIMESTAMP</text>
+          </g>
+
+          <!-- Connector Clinical Records -> Alerts -->
+          <path d="M 720 300 L 720 360" stroke="#EF4444" stroke-width="2" stroke-dasharray="6"/>
+        </svg>
+      `;
+    }
+
+    // Java E-Commerce ERD
     return `
       <svg width="960" height="620" viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -213,452 +350,348 @@ export class DiagramViewerComponent {
           </filter>
         </defs>
 
-        <!-- TABLE: USERS -->
-        <g transform="translate(40, 40)" filter="url(#erdShadow)">
-          <rect width="260" height="190" rx="12" fill="#151821" stroke="#3B82F6" stroke-width="1.5"/>
-          <rect width="260" height="32" rx="12" fill="#1E3A8A"/>
-          <text x="130" y="21" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">USERS</text>
+        <!-- TABLE: ORDERS -->
+        <g transform="translate(60, 50)" filter="url(#erdShadow)">
+          <rect width="280" height="210" rx="12" fill="#151821" stroke="#3B82F6" stroke-width="1.5"/>
+          <rect width="280" height="34" rx="12" fill="#1E3A8A"/>
+          <text x="140" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">ORDERS</text>
           
-          <text x="15" y="58" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
-          <text x="180" y="58" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
+          <text x="15" y="60" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
+          <text x="190" y="60" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
           
-          <text x="15" y="84" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    email</text>
-          <text x="180" y="84" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR</text>
+          <text x="15" y="88" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  customer_id</text>
+          <text x="190" y="88" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
 
-          <text x="15" y="110" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    username</text>
-          <text x="180" y="110" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR</text>
+          <text x="15" y="116" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    total_amount</text>
+          <text x="190" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">DECIMAL</text>
 
-          <text x="15" y="136" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    password_hash</text>
-          <text x="180" y="136" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR</text>
+          <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    status</text>
+          <text x="190" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR</text>
 
-          <text x="15" y="162" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    created_at</text>
-          <text x="180" y="162" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">TIMESTAMP</text>
+          <text x="15" y="172" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    created_at</text>
+          <text x="190" y="172" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">TIMESTAMP</text>
         </g>
 
-        <!-- TABLE: ACCOUNTS -->
-        <g transform="translate(360, 40)" filter="url(#erdShadow)">
-          <rect width="260" height="210" rx="12" fill="#151821" stroke="#10B981" stroke-width="1.5"/>
-          <rect width="260" height="32" rx="12" fill="#064E3B"/>
-          <text x="130" y="21" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">ACCOUNTS</text>
+        <!-- TABLE: ORDER_ITEMS -->
+        <g transform="translate(560, 50)" filter="url(#erdShadow)">
+          <rect width="320" height="210" rx="12" fill="#151821" stroke="#10B981" stroke-width="1.5"/>
+          <rect width="320" height="34" rx="12" fill="#064E3B"/>
+          <text x="160" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">ORDER_ITEMS</text>
           
-          <text x="15" y="58" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
-          <text x="180" y="58" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
+          <text x="15" y="60" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
+          <text x="210" y="60" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
           
-          <text x="15" y="84" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  user_id</text>
-          <text x="180" y="84" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
+          <text x="15" y="88" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  order_id</text>
+          <text x="210" y="88" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
 
-          <text x="15" y="110" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    account_number</text>
-          <text x="180" y="110" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR</text>
+          <text x="15" y="116" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  product_id</text>
+          <text x="210" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
 
-          <text x="15" y="136" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    balance</text>
-          <text x="180" y="136" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">DECIMAL</text>
+          <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    quantity</text>
+          <text x="210" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
 
-          <text x="15" y="162" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    currency</text>
-          <text x="180" y="162" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR</text>
-
-          <text x="15" y="188" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    status</text>
-          <text x="180" y="188" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR</text>
+          <text x="15" y="172" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    unit_price</text>
+          <text x="210" y="172" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">DECIMAL</text>
         </g>
 
-        <!-- TABLE: TRANSACTIONS -->
-        <g transform="translate(680, 40)" filter="url(#erdShadow)">
-          <rect width="250" height="210" rx="12" fill="#151821" stroke="#8B5CF6" stroke-width="1.5"/>
-          <rect width="250" height="32" rx="12" fill="#4C1D95"/>
-          <text x="125" y="21" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">TRANSACTIONS</text>
-          
-          <text x="15" y="58" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
-          <text x="170" y="58" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
-          
-          <text x="15" y="84" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  source_acct_id</text>
-          <text x="170" y="84" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
-
-          <text x="15" y="110" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  target_acct_id</text>
-          <text x="170" y="110" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
-
-          <text x="15" y="136" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    amount</text>
-          <text x="170" y="136" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">DECIMAL</text>
-
-          <text x="15" y="162" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    status</text>
-          <text x="170" y="162" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR</text>
-
-          <text x="15" y="188" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    executed_at</text>
-          <text x="170" y="188" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">TIMESTAMP</text>
-        </g>
-
-        <!-- TABLE: LEDGER_ENTRIES -->
-        <g transform="translate(360, 360)" filter="url(#erdShadow)">
-          <rect width="260" height="190" rx="12" fill="#151821" stroke="#EC4899" stroke-width="1.5"/>
-          <rect width="260" height="32" rx="12" fill="#831843"/>
-          <text x="130" y="21" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">LEDGER_ENTRIES</text>
-          
-          <text x="15" y="58" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
-          <text x="180" y="58" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
-          
-          <text x="15" y="84" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  transaction_id</text>
-          <text x="180" y="84" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
-
-          <text x="15" y="110" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    entry_type</text>
-          <text x="180" y="110" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR</text>
-
-          <text x="15" y="136" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    amount</text>
-          <text x="180" y="136" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">DECIMAL</text>
-
-          <text x="15" y="162" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    posted_at</text>
-          <text x="180" y="162" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">TIMESTAMP</text>
-        </g>
-
-        <!-- TABLE: AUDIT_LOGS -->
-        <g transform="translate(40, 360)" filter="url(#erdShadow)">
-          <rect width="260" height="190" rx="12" fill="#151821" stroke="#F59E0B" stroke-width="1.5"/>
-          <rect width="260" height="32" rx="12" fill="#78350F"/>
-          <text x="130" y="21" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">AUDIT_LOGS</text>
-          
-          <text x="15" y="58" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
-          <text x="180" y="58" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
-          
-          <text x="15" y="84" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  user_id</text>
-          <text x="180" y="84" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
-
-          <text x="15" y="110" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    action</text>
-          <text x="180" y="110" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR</text>
-
-          <text x="15" y="136" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    resource</text>
-          <text x="180" y="136" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR</text>
-
-          <text x="15" y="162" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    timestamp</text>
-          <text x="180" y="162" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">TIMESTAMP</text>
-        </g>
-
-        <!-- Relations Connectors -->
-        <path d="M 300 120 L 360 120" stroke="#60A5FA" stroke-width="2"/>
-        <text x="330" y="115" fill="#60A5FA" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">1 : N</text>
-
-        <path d="M 620 120 L 680 120" stroke="#60A5FA" stroke-width="2"/>
-        <text x="650" y="115" fill="#60A5FA" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">1 : N</text>
-
-        <path d="M 490 250 L 490 360" stroke="#EC4899" stroke-width="2"/>
-        <text x="515" y="310" fill="#EC4899" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">1 : N</text>
-
-        <path d="M 170 230 L 170 360" stroke="#F59E0B" stroke-width="2"/>
-        <text x="195" y="300" fill="#F59E0B" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">1 : N</text>
+        <!-- Connector Orders (1) -> Order Items (N) -->
+        <path d="M 340 140 L 560 140" stroke="#38BDF8" stroke-width="2" stroke-dasharray="6"/>
+        <text x="350" y="130" fill="#F59E0B" font-family="Inter, sans-serif" font-size="12" font-weight="700">1</text>
+        <text x="540" y="130" fill="#38BDF8" font-family="Inter, sans-serif" font-size="12" font-weight="700">N</text>
       </svg>
     `;
   }
 
-  // 3. SEQUENCE DIAGRAM SVG
-  private renderSequenceSvg(): string {
+  // 3. C4 CONTAINER SVG
+  private renderC4ContainerSvg(): string {
+    const isPy = this.isPythonProject();
+    const appTitle = isPy ? 'FastAPI Async Backend' : 'Spring Boot Microservice';
+    const appTech = isPy ? 'Python 3.11 / Uvicorn ASGI' : 'Java 11 / Tomcat Embedded';
+
     return `
-      <svg width="960" height="520" viewBox="0 0 960 520" xmlns="http://www.w3.org/2000/svg">
-        <!-- Actors / Columns -->
+      <svg width="960" height="580" viewBox="0 0 960 580" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="20" width="920" height="540" rx="16" fill="#0B0F19" stroke="#1E293B" stroke-width="2"/>
+        <text x="50" y="55" fill="#94A3B8" font-family="Inter, sans-serif" font-size="13" font-weight="700" letter-spacing="1">C4 CONTAINER MODEL — SYSTEM BOUNDARY</text>
+
+        <!-- Container 1: SPA -->
+        <g transform="translate(60, 100)">
+          <rect width="250" height="150" rx="12" fill="#151821" stroke="#3B82F6" stroke-width="1.5"/>
+          <text x="125" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="14" font-weight="700" text-anchor="middle">Single-Page App</text>
+          <text x="125" y="55" fill="#38BDF8" font-family="Inter, sans-serif" font-size="10" font-weight="600" text-anchor="middle">[Container: Angular 20 SPA]</text>
+          <text x="125" y="90" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Delivers responsive UI for</text>
+          <text x="125" y="110" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">clinicians and operations.</text>
+        </g>
+
+        <!-- Connector SPA -> API -->
+        <path d="M 310 175 L 430 175" stroke="#60A5FA" stroke-width="2"/>
+        <text x="370" y="165" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">HTTPS / JSON</text>
+        <polygon points="425,175 415,170 415,180" fill="#60A5FA"/>
+
+        <!-- Container 2: API Gateway / Core -->
+        <g transform="translate(430, 100)">
+          <rect width="260" height="150" rx="12" fill="#151821" stroke="#10B981" stroke-width="1.5"/>
+          <text x="130" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="14" font-weight="700" text-anchor="middle">${appTitle}</text>
+          <text x="130" y="55" fill="#34D399" font-family="Inter, sans-serif" font-size="10" font-weight="600" text-anchor="middle">[Container: ${appTech}]</text>
+          <text x="130" y="90" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Exposes REST endpoints, validates</text>
+          <text x="130" y="110" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">DTOs and applies business rules.</text>
+        </g>
+
+        <!-- Connector API -> DB -->
+        <path d="M 560 250 L 560 350" stroke="#60A5FA" stroke-width="2"/>
+        <text x="610" y="305" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10">SQL / TCP</text>
+        <polygon points="560,345 555,335 565,335" fill="#60A5FA"/>
+
+        <!-- Container 3: Database -->
+        <g transform="translate(430, 350)">
+          <rect width="260" height="140" rx="12" fill="#151821" stroke="#F59E0B" stroke-width="1.5"/>
+          <text x="130" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="14" font-weight="700" text-anchor="middle">Relational Database</text>
+          <text x="130" y="55" fill="#FBBF24" font-family="Inter, sans-serif" font-size="10" font-weight="600" text-anchor="middle">[Container: PostgreSQL 16]</text>
+          <text x="130" y="90" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Stores normalized records</text>
+          <text x="130" y="110" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">and transactional logs.</text>
+        </g>
+
+        <!-- Container 4: Ollama Local AI -->
+        <g transform="translate(60, 350)">
+          <rect width="250" height="140" rx="12" fill="#151821" stroke="#A855F7" stroke-width="1.5"/>
+          <text x="125" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="14" font-weight="700" text-anchor="middle">Local AI Daemon</text>
+          <text x="125" y="55" fill="#C084FC" font-family="Inter, sans-serif" font-size="10" font-weight="600" text-anchor="middle">[Container: Ollama / Qwen 2.5]</text>
+          <text x="125" y="90" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Runs hardware-accelerated</text>
+          <text x="125" y="110" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">reverse-engineering agents.</text>
+        </g>
+      </svg>
+    `;
+  }
+
+  // 4. CLASS HIERARCHY SVG
+  private renderClassDiagramSvg(): string {
+    const isPy = this.isPythonProject();
+
+    if (isPy) {
+      return `
+        <svg width="960" height="580" viewBox="0 0 960 580" xmlns="http://www.w3.org/2000/svg">
+          <!-- Class: PatientsRouter -->
+          <g transform="translate(60, 40)">
+            <rect width="260" height="140" rx="8" fill="#151821" stroke="#3B82F6" stroke-width="1.5"/>
+            <rect width="260" height="28" fill="#1E3A8A"/>
+            <text x="130" y="19" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" text-anchor="middle">PatientsRouter (FastAPI)</text>
+            <text x="12" y="50" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ register_patient(dto)</text>
+            <text x="12" y="70" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ get_patient(id)</text>
+            <text x="12" y="90" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ add_clinical_observation(dto)</text>
+            <text x="12" y="110" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ list_patients(limit)</text>
+          </g>
+
+          <!-- Class: PatientService -->
+          <g transform="translate(360, 40)">
+            <rect width="260" height="140" rx="8" fill="#151821" stroke="#8B5CF6" stroke-width="1.5"/>
+            <rect width="260" height="28" fill="#4C1D95"/>
+            <text x="130" y="19" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" text-anchor="middle">PatientService</text>
+            <text x="12" y="50" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ register_new_patient()</text>
+            <text x="12" y="70" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ fetch_patient_summary()</text>
+            <text x="12" y="90" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ append_clinical_observation()</text>
+            <text x="12" y="110" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ retrieve_all_patients()</text>
+          </g>
+
+          <!-- Class: PatientRepository -->
+          <g transform="translate(660, 40)">
+            <rect width="250" height="140" rx="8" fill="#151821" stroke="#10B981" stroke-width="1.5"/>
+            <rect width="250" height="28" fill="#064E3B"/>
+            <text x="125" y="19" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" text-anchor="middle">PatientRepository (Async)</text>
+            <text x="12" y="50" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ create_patient()</text>
+            <text x="12" y="70" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ get_patient_by_id()</text>
+            <text x="12" y="90" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ get_patient_by_mrn()</text>
+            <text x="12" y="110" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ add_clinical_record()</text>
+          </g>
+
+          <!-- Arrow Router -> Service -->
+          <path d="M 320 110 L 360 110" stroke="#60A5FA" stroke-width="2"/>
+          <!-- Arrow Service -> Repo -->
+          <path d="M 620 110 L 660 110" stroke="#60A5FA" stroke-width="2"/>
+
+          <!-- Class: Patient Entity -->
+          <g transform="translate(200, 260)">
+            <rect width="250" height="150" rx="8" fill="#151821" stroke="#F59E0B" stroke-width="1.5"/>
+            <rect width="250" height="28" fill="#78350F"/>
+            <text x="125" y="19" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" text-anchor="middle">Patient (SQLAlchemy)</text>
+            <text x="12" y="50" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ id: UUID</text>
+            <text x="12" y="70" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ medical_record_number: str</text>
+            <text x="12" y="90" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ first_name: str</text>
+            <text x="12" y="110" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ records: List[ClinicalRecord]</text>
+          </g>
+
+          <!-- Class: ClinicalRecord Entity -->
+          <g transform="translate(520, 260)">
+            <rect width="260" height="150" rx="8" fill="#151821" stroke="#EC4899" stroke-width="1.5"/>
+            <rect width="260" height="28" fill="#831843"/>
+            <text x="130" y="19" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" text-anchor="middle">ClinicalRecord (SQLAlchemy)</text>
+            <text x="12" y="50" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ id: UUID</text>
+            <text x="12" y="70" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ patient_id: UUID</text>
+            <text x="12" y="90" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ diagnosis_code: str</text>
+            <text x="12" y="110" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ systolic_bp: float</text>
+          </g>
+
+          <!-- Association Patient <-> ClinicalRecord -->
+          <path d="M 450 335 L 520 335" stroke="#EC4899" stroke-width="2" stroke-dasharray="4"/>
+          <text x="480" y="325" fill="#FFF" font-family="Inter, sans-serif" font-size="11">1 : N</text>
+        </svg>
+      `;
+    }
+
+    // Java Class Diagram
+    return `
+      <svg width="960" height="580" viewBox="0 0 960 580" xmlns="http://www.w3.org/2000/svg">
+        <rect x="60" y="40" width="250" height="130" rx="8" fill="#151821" stroke="#3B82F6" stroke-width="1.5"/>
+        <text x="185" y="70" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="12" font-weight="700" text-anchor="middle">OrderController</text>
+        <rect x="360" y="40" width="250" height="130" rx="8" fill="#151821" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="485" y="70" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="12" font-weight="700" text-anchor="middle">OrderService</text>
+        <rect x="660" y="40" width="250" height="130" rx="8" fill="#151821" stroke="#10B981" stroke-width="1.5"/>
+        <text x="785" y="70" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="12" font-weight="700" text-anchor="middle">OrderRepository</text>
+      </svg>
+    `;
+  }
+
+  // 5. SEQUENCE FLOW SVG
+  private renderSequenceSvg(): string {
+    const isPy = this.isPythonProject();
+    const routerName = isPy ? 'FastAPI Router' : 'REST Controller';
+    const srvName = isPy ? 'PatientService' : 'OrderService';
+    const actionName = isPy ? 'POST /patients/{id}/records' : 'POST /orders/checkout';
+    const dbAction = isPy ? 'INSERT into clinical_records' : 'INSERT into orders, order_items';
+
+    return `
+      <svg width="960" height="560" viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg">
+        <!-- Actors / Lifelines -->
         <g transform="translate(60, 30)">
-          <rect width="120" height="38" rx="8" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5"/>
-          <text x="60" y="24" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Web Client</text>
-          <line x1="60" y1="38" x2="60" y2="460" stroke="#334155" stroke-width="2" stroke-dasharray="4"/>
+          <rect width="140" height="40" rx="8" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5"/>
+          <text x="70" y="25" fill="#FFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Client / Clinician</text>
+          <line x1="70" y1="40" x2="70" y2="480" stroke="#334155" stroke-dasharray="4"/>
+        </g>
+        <g transform="translate(280, 30)">
+          <rect width="160" height="40" rx="8" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+          <text x="80" y="25" fill="#FFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">${routerName}</text>
+          <line x1="80" y1="40" x2="80" y2="480" stroke="#334155" stroke-dasharray="4"/>
+        </g>
+        <g transform="translate(510, 30)">
+          <rect width="160" height="40" rx="8" fill="#1E293B" stroke="#8B5CF6" stroke-width="1.5"/>
+          <text x="80" y="25" fill="#FFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">${srvName}</text>
+          <line x1="80" y1="40" x2="80" y2="480" stroke="#334155" stroke-dasharray="4"/>
+        </g>
+        <g transform="translate(740, 30)">
+          <rect width="160" height="40" rx="8" fill="#1E293B" stroke="#F59E0B" stroke-width="1.5"/>
+          <text x="80" y="25" fill="#FFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">PostgreSQL DB</text>
+          <line x1="80" y1="40" x2="80" y2="480" stroke="#334155" stroke-dasharray="4"/>
         </g>
 
-        <g transform="translate(240, 30)">
-          <rect width="140" height="38" rx="8" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
-          <text x="70" y="24" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">API Gateway</text>
-          <line x1="70" y1="38" x2="70" y2="460" stroke="#334155" stroke-width="2" stroke-dasharray="4"/>
-        </g>
+        <!-- Message 1: Client -> Router -->
+        <path d="M 130 110 L 360 110" stroke="#60A5FA" stroke-width="2"/>
+        <polygon points="355,110 345,105 345,115" fill="#60A5FA"/>
+        <text x="245" y="100" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">1. ${actionName}</text>
 
-        <g transform="translate(440, 30)">
-          <rect width="150" height="38" rx="8" fill="#1E293B" stroke="#8B5CF6" stroke-width="1.5"/>
-          <text x="75" y="24" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Backend Service</text>
-          <line x1="75" y1="38" x2="75" y2="460" stroke="#334155" stroke-width="2" stroke-dasharray="4"/>
-        </g>
+        <!-- Message 2: Router -> Service -->
+        <path d="M 360 170 L 590 170" stroke="#34D399" stroke-width="2"/>
+        <polygon points="585,170 575,165 575,175" fill="#34D399"/>
+        <text x="475" y="160" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">2. Validate DTO & invoke domain logic</text>
 
-        <g transform="translate(650, 30)">
-          <rect width="130" height="38" rx="8" fill="#1E293B" stroke="#F59E0B" stroke-width="1.5"/>
-          <text x="65" y="24" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">PostgreSQL DB</text>
-          <line x1="65" y1="38" x2="65" y2="460" stroke="#334155" stroke-width="2" stroke-dasharray="4"/>
-        </g>
-
-        <g transform="translate(830, 30)">
-          <rect width="110" height="38" rx="8" fill="#1E293B" stroke="#EC4899" stroke-width="1.5"/>
-          <text x="55" y="24" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Message Broker</text>
-          <line x1="55" y1="38" x2="55" y2="460" stroke="#334155" stroke-width="2" stroke-dasharray="4"/>
-        </g>
-
-        <!-- Message 1: Client -> Gateway -->
-        <line x1="120" y1="100" x2="305" y2="100" stroke="#60A5FA" stroke-width="2"/>
-        <polygon points="300,96 310,100 300,104" fill="#60A5FA"/>
-        <text x="215" y="92" fill="#E2E8F0" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">1. POST /transfer</text>
-
-        <!-- Message 2: Gateway -> Service -->
-        <line x1="310" y1="145" x2="510" y2="145" stroke="#60A5FA" stroke-width="2"/>
-        <polygon points="505,141 515,145 505,149" fill="#60A5FA"/>
-        <text x="410" y="137" fill="#E2E8F0" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">2. Validate JWT & Forward</text>
-
-        <!-- Message 3: Service -> DB (Lock) -->
-        <line x1="515" y1="190" x2="710" y2="190" stroke="#F59E0B" stroke-width="2"/>
-        <polygon points="705,186 715,190 705,194" fill="#F59E0B"/>
-        <text x="615" y="182" fill="#F59E0B" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">3. SELECT FOR UPDATE (Lock)</text>
+        <!-- Message 3: Service -> DB -->
+        <path d="M 590 230 L 820 230" stroke="#A78BFA" stroke-width="2"/>
+        <polygon points="815,230 805,225 805,235" fill="#A78BFA"/>
+        <text x="705" y="220" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">3. ${dbAction}</text>
 
         <!-- Message 4: DB -> Service -->
-        <line x1="715" y1="235" x2="515" y2="235" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="4"/>
-        <polygon points="525,231 515,235 525,239" fill="#94A3B8"/>
-        <text x="615" y="227" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">4. Row Locked Return</text>
+        <path d="M 820 290 L 590 290" stroke="#FBBF24" stroke-width="2" stroke-dasharray="4"/>
+        <polygon points="595,290 605,285 605,295" fill="#FBBF24"/>
+        <text x="705" y="280" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">4. Commit transaction & return entity</text>
 
-        <!-- Message 5: Service -> DB (Commit) -->
-        <line x1="515" y1="280" x2="710" y2="280" stroke="#10B981" stroke-width="2"/>
-        <polygon points="705,276 715,280 705,284" fill="#10B981"/>
-        <text x="615" y="272" fill="#10B981" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">5. UPDATE & COMMIT</text>
+        <!-- Message 5: Service -> Router -->
+        <path d="M 590 350 L 360 350" stroke="#34D399" stroke-width="2" stroke-dasharray="4"/>
+        <polygon points="365,350 375,345 375,355" fill="#34D399"/>
+        <text x="475" y="340" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">5. Return DTO response</text>
 
-        <!-- Message 6: Service -> Broker -->
-        <line x1="515" y1="325" x2="880" y2="325" stroke="#EC4899" stroke-width="2"/>
-        <polygon points="875,321 885,325 875,329" fill="#EC4899"/>
-        <text x="700" y="317" fill="#EC4899" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">6. Publish 'TxCompleted' Event</text>
-
-        <!-- Message 7: Service -> Client -->
-        <line x1="515" y1="375" x2="120" y2="375" stroke="#3B82F6" stroke-width="2" stroke-dasharray="4"/>
-        <polygon points="130,371 120,375 130,379" fill="#3B82F6"/>
-        <text x="315" y="367" fill="#3B82F6" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">7. 200 OK Transfer Confirmation</text>
+        <!-- Message 6: Router -> Client -->
+        <path d="M 360 410 L 130 410" stroke="#60A5FA" stroke-width="2" stroke-dasharray="4"/>
+        <polygon points="135,410 145,405 145,415" fill="#60A5FA"/>
+        <text x="245" y="400" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">6. 201 Created JSON response</text>
       </svg>
     `;
   }
 
-  // 4. C4 CONTAINER SVG
-  private renderC4ContainerSvg(): string {
-    return `
-      <svg width="960" height="540" viewBox="0 0 960 540" xmlns="http://www.w3.org/2000/svg">
-        <rect x="40" y="30" width="880" height="480" rx="20" fill="#0B0F19" stroke="#334155" stroke-width="2" stroke-dasharray="6"/>
-        <text x="65" y="60" fill="#94A3B8" font-family="Inter, sans-serif" font-size="13" font-weight="700">ENTERPRISE SYSTEM BOUNDARY [C4 CONTAINER MODEL]</text>
-
-        <!-- Container: Frontend -->
-        <g transform="translate(80, 90)">
-          <rect width="240" height="150" rx="14" fill="#151821" stroke="#3B82F6" stroke-width="2"/>
-          <text x="120" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="14" font-weight="700" text-anchor="middle">Frontend SPA</text>
-          <text x="120" y="55" fill="#60A5FA" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">[Container: Angular 20 Standalone]</text>
-          <text x="120" y="90" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Provides interactive UI,</text>
-          <text x="120" y="108" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">AST code viewer and dashboards.</text>
-        </g>
-
-        <!-- Container: Backend -->
-        <g transform="translate(390, 90)">
-          <rect width="240" height="150" rx="14" fill="#151821" stroke="#8B5CF6" stroke-width="2"/>
-          <text x="120" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="14" font-weight="700" text-anchor="middle">Backend API</text>
-          <text x="120" y="55" fill="#A78BFA" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">[Container: NestJS 10 / Node.js]</text>
-          <text x="120" y="90" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Handles business rules, AST</text>
-          <text x="120" y="108" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">extraction & auth services.</text>
-        </g>
-
-        <!-- Container: Database -->
-        <g transform="translate(700, 90)">
-          <rect width="200" height="150" rx="14" fill="#151821" stroke="#10B981" stroke-width="2"/>
-          <text x="100" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="14" font-weight="700" text-anchor="middle">Database</text>
-          <text x="100" y="55" fill="#34D399" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">[Container: PostgreSQL 16]</text>
-          <text x="100" y="90" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Stores project metadata,</text>
-          <text x="100" y="108" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">user entities and logs.</text>
-        </g>
-
-        <!-- Container: Local AI Engine -->
-        <g transform="translate(390, 310)">
-          <rect width="240" height="150" rx="14" fill="#151821" stroke="#F59E0B" stroke-width="2"/>
-          <text x="120" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="14" font-weight="700" text-anchor="middle">Local AI Engine</text>
-          <text x="120" y="55" fill="#FBBF24" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">[Daemon: Ollama / RTX 3050]</text>
-          <text x="120" y="90" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Runs Qwen 2.5 Coder 7B</text>
-          <text x="120" y="108" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">for offline AST code reasoning.</text>
-        </g>
-
-        <!-- Connecting Lines -->
-        <line x1="320" y1="165" x2="390" y2="165" stroke="#60A5FA" stroke-width="2"/>
-        <text x="355" y="155" fill="#60A5FA" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">HTTPS / REST</text>
-
-        <line x1="630" y1="165" x2="700" y2="165" stroke="#34D399" stroke-width="2"/>
-        <text x="665" y="155" fill="#34D399" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">SQL / TCP</text>
-
-        <line x1="510" y1="240" x2="510" y2="310" stroke="#FBBF24" stroke-width="2"/>
-        <text x="560" y="280" fill="#FBBF24" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">HTTP 11434</text>
-      </svg>
-    `;
-  }
-
-  // 5. CLASS DIAGRAM SVG
-  private renderClassDiagramSvg(): string {
-    return `
-      <svg width="960" height="520" viewBox="0 0 960 520" xmlns="http://www.w3.org/2000/svg">
-        <!-- Class 1: AuthController -->
-        <g transform="translate(60, 40)">
-          <rect width="250" height="150" rx="10" fill="#151821" stroke="#3B82F6" stroke-width="1.5"/>
-          <rect width="250" height="30" rx="10" fill="#1E3A8A"/>
-          <text x="125" y="20" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">AuthController</text>
-          <text x="15" y="55" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">- authService: AuthService</text>
-          <text x="15" y="75" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">- tokenUtil: JwtTokenUtil</text>
-          <line x1="0" y1="90" x2="250" y2="90" stroke="#334155" stroke-width="1"/>
-          <text x="15" y="112" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">+ authenticate(req): Token</text>
-          <text x="15" y="132" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">+ refreshToken(str): Token</text>
-        </g>
-
-        <!-- Class 2: AuthService -->
-        <g transform="translate(370, 40)">
-          <rect width="250" height="150" rx="10" fill="#151821" stroke="#8B5CF6" stroke-width="1.5"/>
-          <rect width="250" height="30" rx="10" fill="#4C1D95"/>
-          <text x="125" y="20" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">AuthService</text>
-          <text x="15" y="55" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">- userRepo: UserRepository</text>
-          <line x1="0" y1="90" x2="250" y2="90" stroke="#334155" stroke-width="1"/>
-          <text x="15" y="112" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">+ validateCredentials(): bool</text>
-          <text x="15" y="132" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">- legacyPasswordVerify(): bool</text>
-        </g>
-
-        <!-- Interface 3: UserRepository -->
-        <g transform="translate(680, 40)">
-          <rect width="240" height="130" rx="10" fill="#151821" stroke="#10B981" stroke-width="1.5"/>
-          <rect width="240" height="30" rx="10" fill="#064E3B"/>
-          <text x="120" y="20" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">&lt;&lt;interface&gt;&gt; UserRepository</text>
-          <text x="15" y="60" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">+ findByUsername(): User</text>
-          <text x="15" y="85" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">+ existsByEmail(): bool</text>
-          <text x="15" y="110" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">+ save(User): User</text>
-        </g>
-
-        <!-- Connecting Lines -->
-        <line x1="310" y1="115" x2="370" y2="115" stroke="#60A5FA" stroke-width="2"/>
-        <polygon points="360,111 370,115 360,119" fill="#60A5FA"/>
-
-        <line x1="620" y1="115" x2="680" y2="115" stroke="#A78BFA" stroke-width="2"/>
-        <polygon points="670,111 680,115 670,119" fill="#A78BFA"/>
-      </svg>
-    `;
-  }
-
-  // 6. DEPLOYMENT DOCKER SVG
+  // 6. DEPLOYMENT SVG
   private renderDeploymentSvg(): string {
     return `
-      <svg width="960" height="480" viewBox="0 0 960 480" xmlns="http://www.w3.org/2000/svg">
-        <rect x="40" y="30" width="880" height="420" rx="16" fill="#0F172A" stroke="#334155" stroke-width="2"/>
-        <text x="65" y="60" fill="#94A3B8" font-family="Inter, sans-serif" font-size="12" font-weight="700">DOCKER HOST INFRASTRUCTURE (ARCH LINUX / AMD64)</text>
+      <svg width="960" height="560" viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg">
+        <rect x="30" y="30" width="900" height="500" rx="16" fill="#0E131F" stroke="#334155" stroke-width="1.5"/>
+        <text x="50" y="65" fill="#94A3B8" font-family="Inter, sans-serif" font-size="13" font-weight="700" letter-spacing="1">DOCKER CONTAINER NETWORK & GPU HARDWARE</text>
 
-        <g transform="translate(80, 90)">
-          <rect width="240" height="130" rx="12" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5"/>
-          <text x="120" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="13" font-weight="700" text-anchor="middle">legacyai-frontend</text>
-          <text x="120" y="58" fill="#60A5FA" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Port 4200 : 80</text>
-          <text x="120" y="90" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Network: frontend-net</text>
+        <g transform="translate(60, 100)">
+          <rect width="250" height="180" rx="12" fill="#151821" stroke="#3B82F6" stroke-width="1.5"/>
+          <text x="125" y="35" fill="#FFF" font-family="Inter, sans-serif" font-size="13" font-weight="700" text-anchor="middle">Container: App API</text>
+          <text x="125" y="65" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Port: 8000 (HTTP)</text>
+          <text x="125" y="90" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Image: python:3.11-slim</text>
+          <text x="125" y="130" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle">bridge_net</text>
         </g>
 
-        <g transform="translate(360, 90)">
-          <rect width="240" height="130" rx="12" fill="#1E293B" stroke="#8B5CF6" stroke-width="1.5"/>
-          <text x="120" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="13" font-weight="700" text-anchor="middle">legacyai-backend</text>
-          <text x="120" y="58" fill="#A78BFA" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Port 3000 : 3000</text>
-          <text x="120" y="90" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Network: backend-net</text>
+        <g transform="translate(360, 100)">
+          <rect width="250" height="180" rx="12" fill="#151821" stroke="#10B981" stroke-width="1.5"/>
+          <text x="125" y="35" fill="#FFF" font-family="Inter, sans-serif" font-size="13" font-weight="700" text-anchor="middle">Container: PostgreSQL</text>
+          <text x="125" y="65" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Port: 5432 (TCP)</text>
+          <text x="125" y="90" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Image: postgres:16-alpine</text>
+          <text x="125" y="130" fill="#34D399" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle">Volume: pgdata</text>
         </g>
 
-        <g transform="translate(640, 90)">
-          <rect width="240" height="130" rx="12" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
-          <text x="120" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="13" font-weight="700" text-anchor="middle">postgres:16-alpine</text>
-          <text x="120" y="58" fill="#34D399" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Port 5432 : 5432</text>
-          <text x="120" y="90" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Volume: pgdata</text>
-        </g>
-
-        <!-- Hardware Card -->
-        <g transform="translate(220, 270)">
-          <rect width="520" height="130" rx="14" fill="#151821" stroke="#F59E0B" stroke-width="1.5"/>
-          <text x="260" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="13" font-weight="700" text-anchor="middle">Hardware Acceleration: NVIDIA GeForce RTX 3050 (4GB VRAM)</text>
-          <text x="260" y="65" fill="#FBBF24" font-family="Inter, sans-serif" font-size="12" text-anchor="middle">Ollama Daemon :11434 · Qwen 2.5 Coder 7B</text>
-          <text x="260" y="95" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Direct CUDA 13.3 Compute · Offloaded AST Embeddings</text>
+        <g transform="translate(660, 100)">
+          <rect width="240" height="180" rx="12" fill="#151821" stroke="#A855F7" stroke-width="1.5"/>
+          <text x="120" y="35" fill="#FFF" font-family="Inter, sans-serif" font-size="13" font-weight="700" text-anchor="middle">Ollama AI Daemon</text>
+          <text x="120" y="65" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Port: 11434 (HTTP)</text>
+          <text x="120" y="90" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Model: Qwen 2.5 Coder 7B</text>
+          <text x="120" y="130" fill="#C084FC" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle">GPU: RTX 3050 CUDA</text>
         </g>
       </svg>
     `;
   }
 
-  // 7. COMPONENT BOUNDARY SVG
-  private renderComponentBoundarySvg(): string {
-    return `
-      <svg width="960" height="480" viewBox="0 0 960 480" xmlns="http://www.w3.org/2000/svg">
-        <g transform="translate(60, 60)">
-          <rect width="250" height="150" rx="12" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5"/>
-          <text x="125" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="13" font-weight="700" text-anchor="middle">Presentation Module</text>
-          <text x="125" y="70" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">• AuthController</text>
-          <text x="125" y="95" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">• ProjectController</text>
-          <text x="125" y="120" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">• AnalysisController</text>
-        </g>
-
-        <g transform="translate(370, 60)">
-          <rect width="250" height="150" rx="12" fill="#1E293B" stroke="#8B5CF6" stroke-width="1.5"/>
-          <text x="125" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="13" font-weight="700" text-anchor="middle">Application Core</text>
-          <text x="125" y="70" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">• AnalysisPipeline</text>
-          <text x="125" y="95" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">• DocGenerator</text>
-          <text x="125" y="120" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">• UMLGenerator</text>
-        </g>
-
-        <g transform="translate(680, 60)">
-          <rect width="230" height="150" rx="12" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
-          <text x="115" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="13" font-weight="700" text-anchor="middle">Infrastructure</text>
-          <text x="115" y="70" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">• PrismaAdapter</text>
-          <text x="115" y="95" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">• OllamaAdapter</text>
-          <text x="115" y="120" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">• StorageAdapter</text>
-        </g>
-
-        <line x1="310" y1="135" x2="370" y2="135" stroke="#60A5FA" stroke-width="2"/>
-        <polygon points="360,131 370,135 360,139" fill="#60A5FA"/>
-
-        <line x1="620" y1="135" x2="680" y2="135" stroke="#A78BFA" stroke-width="2"/>
-        <polygon points="670,131 680,135 670,139" fill="#A78BFA"/>
-      </svg>
-    `;
-  }
-
-  // 8. PROCESS FLOW SVG
+  // 7. PROCESS FLOW SVG
   private renderProcessFlowSvg(): string {
     return `
-      <svg width="960" height="520" viewBox="0 0 960 520" xmlns="http://www.w3.org/2000/svg">
-        <!-- Start Pill -->
-        <g transform="translate(380, 30)">
-          <rect width="200" height="40" rx="20" fill="#1E3A8A" stroke="#3B82F6" stroke-width="1.5"/>
-          <text x="100" y="25" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Receive Request</text>
-        </g>
+      <svg width="960" height="400" viewBox="0 0 960 400" xmlns="http://www.w3.org/2000/svg">
+        <rect x="40" y="160" width="160" height="60" rx="10" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5"/>
+        <text x="120" y="195" fill="#FFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">HTTP Ingress</text>
 
-        <line x1="480" y1="70" x2="480" y2="110" stroke="#60A5FA" stroke-width="2"/>
-        <polygon points="476,105 484,105 480,112" fill="#60A5FA"/>
+        <path d="M 200 190 L 280 190" stroke="#60A5FA" stroke-width="2"/>
+        
+        <rect x="280" y="160" width="180" height="60" rx="10" fill="#1E293B" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="370" y="195" fill="#FFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Schema Validation</text>
 
-        <!-- Decision 1: Auth -->
-        <g transform="translate(390, 110)">
-          <polygon points="90,0 180,40 90,80 0,40" fill="#151821" stroke="#F59E0B" stroke-width="1.5"/>
-          <text x="90" y="44" fill="#F59E0B" font-family="Inter, sans-serif" font-size="11" font-weight="600" text-anchor="middle">Is Auth Valid?</text>
-        </g>
+        <path d="M 460 190 L 540 190" stroke="#60A5FA" stroke-width="2"/>
 
-        <!-- No Branch (Error) -->
-        <line x1="390" y1="150" x2="260" y2="150" stroke="#EF4444" stroke-width="2"/>
-        <polygon points="265,146 255,150 265,154" fill="#EF4444"/>
-        <rect x="130" y="130" width="120" height="40" rx="8" fill="#7F1D1D"/>
-        <text x="190" y="155" fill="#FCA5A5" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Return 401</text>
+        <rect x="540" y="160" width="180" height="60" rx="10" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+        <text x="630" y="195" fill="#FFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Domain Execution</text>
 
-        <!-- Yes Branch -->
-        <line x1="480" y1="190" x2="480" y2="230" stroke="#10B981" stroke-width="2"/>
-        <polygon points="476,225 484,225 480,232" fill="#10B981"/>
+        <path d="M 720 190 L 800 190" stroke="#60A5FA" stroke-width="2"/>
 
-        <!-- Step 2: Lock & Validate -->
-        <g transform="translate(360, 235)">
-          <rect width="240" height="50" rx="10" fill="#1E293B" stroke="#8B5CF6" stroke-width="1.5"/>
-          <text x="120" y="30" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Lock DB Row & Validate Rules</text>
-        </g>
+        <rect x="800" y="160" width="140" height="60" rx="10" fill="#1E293B" stroke="#F59E0B" stroke-width="1.5"/>
+        <text x="870" y="195" fill="#FFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">DB Commit</text>
+      </svg>
+    `;
+  }
 
-        <line x1="480" y1="285" x2="480" y2="325" stroke="#60A5FA" stroke-width="2"/>
-        <polygon points="476,320 484,320 480,327" fill="#60A5FA"/>
+  // 8. COMPONENT BOUNDARY SVG
+  private renderComponentBoundarySvg(): string {
+    return `
+      <svg width="960" height="500" viewBox="0 0 960 500" xmlns="http://www.w3.org/2000/svg">
+        <rect x="40" y="40" width="400" height="400" rx="14" fill="#0F172A" stroke="#3B82F6" stroke-width="1.5"/>
+        <text x="60" y="70" fill="#93C5FD" font-family="Inter, sans-serif" font-size="12" font-weight="700">CORE DOMAIN BOUNDARY</text>
 
-        <!-- Step 3: Commit & Emit -->
-        <g transform="translate(360, 330)">
-          <rect width="240" height="50" rx="10" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
-          <text x="120" y="30" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Commit DB & Publish Event</text>
-        </g>
-
-        <line x1="480" y1="380" x2="480" y2="420" stroke="#10B981" stroke-width="2"/>
-        <polygon points="476,415 484,415 480,422" fill="#10B981"/>
-
-        <!-- End Pill -->
-        <g transform="translate(380, 425)">
-          <rect width="200" height="40" rx="20" fill="#064E3B" stroke="#10B981" stroke-width="1.5"/>
-          <text x="100" y="25" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Return 200 OK</text>
-        </g>
+        <rect x="520" y="40" width="400" height="400" rx="14" fill="#0F172A" stroke="#10B981" stroke-width="1.5"/>
+        <text x="540" y="70" fill="#86EFAC" font-family="Inter, sans-serif" font-size="12" font-weight="700">PERSISTENCE & STORAGE BOUNDARY</text>
       </svg>
     `;
   }
 
   zoomIn() {
-    this.zoomLevel.update(z => Math.min(220, z + 15));
+    this.zoomLevel.update(z => Math.min(z + 15, 200));
   }
 
   zoomOut() {
-    this.zoomLevel.update(z => Math.max(30, z - 15));
+    this.zoomLevel.update(z => Math.max(z - 15, 50));
   }
 
   resetZoom() {
@@ -670,8 +703,7 @@ export class DiagramViewerComponent {
   }
 
   exportSvg() {
-    const svg = this.svgContent();
-    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    const blob = new Blob([this.svgContent()], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

@@ -203,17 +203,31 @@
             </h3>
 
             @if (translationService.isSpanish()) {
-              <div class="text-xs text-slate-300 space-y-3 mt-3 leading-relaxed">
-                <p>
-                  <strong>Arquitectura Detectada:</strong> El sistema implementa una arquitectura limpia <strong>{{ projectService.selectedProject().architecture }}</strong> con límites bien definidos entre Controladores REST, Servicios de Dominio y Repositorios JPA.
-                </p>
-                <p>
-                  <strong>Punto Crítico (Hotspot):</strong> Bucle de cálculo de totales e iteración de ítems en <code class="text-amber-400 font-mono bg-white/5 px-1 py-0.5 rounded">OrderService.processOrderCheckout()</code>. Se recomienda asegurar bloqueo transaccional bajo alta concurrencia.
-                </p>
-                <p>
-                  <strong>Aviso de Arquitectura:</strong> Mapeo directo de entidades en las respuestas de los controladores. Se recomienda encapsular los modelos en DTOs (*Data Transfer Objects*) para garantizar la estabilidad del contrato de la API.
-                </p>
-              </div>
+              @if (projectService.selectedProject().mainLanguage === 'Python' || projectService.selectedProject().name.toLowerCase().includes('ehr')) {
+                <div class="text-xs text-slate-300 space-y-3 mt-3 leading-relaxed">
+                  <p>
+                    <strong>Arquitectura Detectada:</strong> El sistema implementa una arquitectura en capas <strong>{{ projectService.selectedProject().architecture }}</strong> asíncrona con límites bien definidos entre Enrutadores FastAPI, Servicios de Dominio y Repositorios SQLAlchemy 2.0.
+                  </p>
+                  <p>
+                    <strong>Punto Crítico (Hotspot):</strong> Validación de telemetría biométrica y commit asíncrono en <code class="text-amber-400 font-mono bg-white/5 px-1 py-0.5 rounded">patient_service.append_clinical_observation()</code>. Se recomienda asegurar manejo de excepciones de base de datos.
+                  </p>
+                  <p>
+                    <strong>Aviso de Seguridad / Arquitectura:</strong> Los endpoints de historias clínicas no cuentan con autenticación OAuth2 / JWT. Se recomienda proteger el acceso con roles clínicos antes de desplegar en producción.
+                  </p>
+                </div>
+              } @else {
+                <div class="text-xs text-slate-300 space-y-3 mt-3 leading-relaxed">
+                  <p>
+                    <strong>Arquitectura Detectada:</strong> El sistema implementa una arquitectura limpia <strong>{{ projectService.selectedProject().architecture }}</strong> con límites bien definidos entre Controladores REST, Servicios de Dominio y Repositorios JPA.
+                  </p>
+                  <p>
+                    <strong>Punto Crítico (Hotspot):</strong> Bucle de cálculo de totales e iteración de ítems en <code class="text-amber-400 font-mono bg-white/5 px-1 py-0.5 rounded">OrderService.processOrderCheckout()</code>. Se recomienda asegurar bloqueo transaccional bajo alta concurrencia.
+                  </p>
+                  <p>
+                    <strong>Aviso de Arquitectura:</strong> Mapeo directo de entidades en las respuestas de los controladores. Se recomienda encapsular los modelos en DTOs (*Data Transfer Objects*) para garantizar la estabilidad del contrato de la API.
+                  </p>
+                </div>
+              }
             } @else {
               <div class="text-xs text-slate-300 space-y-3 mt-3 leading-relaxed">
                 <p>

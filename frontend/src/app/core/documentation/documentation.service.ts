@@ -15,12 +15,248 @@ export class DocumentationService {
   private generateDocsForProject(): DocumentationSection[] {
     const proj = this.projectService.selectedProject();
     const isEs = this.translationService.isSpanish();
-    const name = proj.name || 'Microservicio de Comercio Electrónico';
-    const lang = proj.mainLanguage || 'Java';
-    const framework = proj.framework || 'Spring Boot';
+    const isPython = (proj.mainLanguage || '').toLowerCase() === 'python' || 
+                     (proj.name || '').toLowerCase().includes('ehr') || 
+                     (proj.name || '').toLowerCase().includes('clinical') || 
+                     (proj.name || '').toLowerCase().includes('patient');
+
+    const name = proj.name || (isPython ? 'Clinical Electronic Health Record (EHR) API' : 'E-Commerce Order Management Microservice');
+    const lang = proj.mainLanguage || (isPython ? 'Python' : 'Java');
+    const framework = proj.framework || (isPython ? 'FastAPI & Async SQLAlchemy 2.0' : 'Spring Boot & JPA');
     const arch = proj.architecture || 'Layered Architecture';
     const dateStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
 
+    if (isPython) {
+      if (isEs) {
+        return [
+          {
+            id: 'doc-overview',
+            projectId: proj.id,
+            title: 'Resumen Ejecutivo y Propósito del Sistema',
+            slug: 'overview',
+            category: 'Overview',
+            lastUpdated: dateStr,
+            generatedByAI: true,
+            content: `# ${name} — Resumen del Sistema
+
+## 1. Resumen Ejecutivo
+El sistema **${name}** es un microservicio de salud clínica de alto rendimiento desarrollado en **${lang} 3.11** utilizando el framework asíncrono **${framework}**. Implementa una arquitectura **${arch}** diseñada para la ingesta de historias clínicas, registro de signos vitales y telemetría biométrica de pacientes.
+
+## 2. Capacidades Principales
+- **Gestión Maestra de Pacientes**: Registro y consulta indexada mediante Identificador Médico Único (MRN).
+- **Ingesta de Observaciones Clínicas**: Almacenamiento de diagnósticos CIE-10, presión arterial y frecuencia cardíaca.
+- **ORM Asíncrono de Alto Rendimiento**: Acceso no bloqueante a PostgreSQL con \`asyncpg\` y \`SQLAlchemy 2.0\`.
+- **Validación Automática de Esquemas**: Contratos de datos fuertemente tipados mediante DTOs de Pydantic v2.
+
+## 3. Stack Tecnológico de Alto Nivel
+- **Lenguaje / Runtime**: ${lang} 3.11 (${framework})
+- **Patrón Arquitectónico**: ${arch}
+- **Base de Datos**: PostgreSQL 16 (Motor Relacional Asíncrono)
+- **Motor de IA Local**: Qwen 2.5 Coder 7B (GPU Local RTX 3050 con aceleración CUDA)
+`
+          },
+          {
+            id: 'doc-architecture',
+            projectId: proj.id,
+            title: 'Arquitectura de Software y Límites de Capas',
+            slug: 'architecture',
+            category: 'Architecture',
+            lastUpdated: dateStr,
+            generatedByAI: true,
+            content: `# Arquitectura de Software y Límites de Capas
+
+## 1. Estilo Arquitectónico: ${arch}
+El microservicio se organiza en módulos desacoplados con inyección de dependencias nativa de FastAPI:
+
+- **Capa de Endpoints REST (\`src/api/patients_router.py\`)\**: Define las rutas HTTP, deserializa JSON y valida los DTOs de entrada.
+- **Capa de Servicios de Dominio (\`src/services/patient_service.py\`)\**: Ejecuta las validaciones clínicas y reglas de negocio.
+- **Capa de Repositorios (\`src/repositories/patient_repository.py\`)\**: Realiza consultas asíncronas con \`selectinload\` para evitar el problema N+1.
+- **Capa de Modelos Relacionales (\`src/models/\`)\**: Entidades SQLAlchemy \`Patient\` y \`ClinicalRecord\`.
+`
+          },
+          {
+            id: 'doc-api',
+            projectId: proj.id,
+            title: 'Especificación de Contratos y Endpoints REST',
+            slug: 'api-specification',
+            category: 'API',
+            lastUpdated: dateStr,
+            generatedByAI: true,
+            content: `# Especificación de Contratos y Endpoints REST
+
+### URL Base: \`/api/v1/patients\`
+
+## 1. Registro de Paciente
+### \`POST /api/v1/patients/\`
+Crea una nueva historia clínica en el sistema.
+
+**Cuerpo de la Petición (JSON):**
+\`\`\`json
+{
+  "medical_record_number": "MRN-88231",
+  "first_name": "Sarah",
+  "last_name": "Connor",
+  "date_of_birth": "1985-06-15",
+  "blood_group": "O+",
+  "contact_phone": "+1-555-0199"
+}
+\`\`\`
+
+**Respuesta Exitosa \`201 Created\`:**
+\`\`\`json
+{
+  "id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+  "medical_record_number": "MRN-88231",
+  "first_name": "Sarah",
+  "last_name": "Connor",
+  "created_at": "2026-08-25T19:00:00Z"
+}
+\`\`\`
+
+---
+
+## 2. Ingesta de Registro Clínico y Telemetría
+### \`POST /api/v1/patients/{patient_id}/records\`
+Registra observaciones biométricas (presión arterial, frecuencia cardíaca y diagnóstico).
+
+**Cuerpo de la Petición (JSON):**
+\`\`\`json
+{
+  "diagnosis_code": "I10",
+  "systolic_bp": 120.0,
+  "diastolic_bp": 80.0,
+  "heart_rate": 72.0,
+  "clinical_notes": "Examen de rutina normal.",
+  "attending_physician": "Dr. Gregory House, MD"
+}
+\`\`\`
+`
+          },
+          {
+            id: 'doc-database',
+            projectId: proj.id,
+            title: 'Modelos de Base de Datos y Diccionario de Datos',
+            slug: 'database-models',
+            category: 'Database',
+            lastUpdated: dateStr,
+            generatedByAI: true,
+            content: `# Modelos de Base de Datos y Diccionario de Datos
+
+## 1. Tabla Maestra: \`patients\`
+Almacena el registro maestro de identificación del paciente.
+
+| Columna | Tipo de Dato | Restricción | Descripción |
+|---|---|---|---|
+| \`id\` | UUID | PRIMARY KEY | Identificador único global |
+| \`medical_record_number\` | VARCHAR(32) | UNIQUE, NOT NULL | Número de historia clínica (MRN) |
+| \`first_name\` | VARCHAR(64) | NOT NULL | Nombres del paciente |
+| \`last_name\` | VARCHAR(64) | NOT NULL | Apellidos del paciente |
+| \`date_of_birth\` | DATE | NOT NULL | Fecha de nacimiento |
+| \`blood_group\` | VARCHAR(8) | NULLABLE | Grupo sanguíneo (\`O+\`, \`A-\`, etc.) |
+| \`created_at\` | TIMESTAMP | NOT NULL | Fecha de registro |
+
+## 2. Tabla de Eventos: \`clinical_records\`
+Almacena el histórico inmutable de consultas y signos vitales.
+
+| Columna | Tipo de Dato | Restricción | Descripción |
+|---|---|---|---|
+| \`id\` | UUID | PRIMARY KEY | Identificador de la observación |
+| \`patient_id\` | UUID | FOREIGN KEY (\`patients.id\`) | Referencia al paciente |
+| \`diagnosis_code\` | VARCHAR(32) | NOT NULL | Código diagnóstico CIE-10 |
+| \`systolic_bp\` | FLOAT | NULLABLE | Presión sistólica (mmHg) |
+| \`diastolic_bp\` | FLOAT | NULLABLE | Presión diastólica (mmHg) |
+| \`heart_rate\` | FLOAT | NULLABLE | Frecuencia cardíaca (LPM) |
+| \`attending_physician\` | VARCHAR(128) | NOT NULL | Médico tratante |
+`
+          },
+          {
+            id: 'doc-deployment',
+            projectId: proj.id,
+            title: 'Infraestructura de Despliegue y Contenedores',
+            slug: 'deployment',
+            category: 'Deployment',
+            lastUpdated: dateStr,
+            generatedByAI: true,
+            content: `# Infraestructura de Despliegue y Contenedores
+
+## 1. Contenedor Docker ASGI
+Empaquetado optimizado con Python 3.11-slim y servidor ASGI Uvicorn:
+
+\`\`\`dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 8000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+\`\`\`
+
+## 2. Entorno de Inferencia de Inteligencia Artificial Local
+- **Motor de Inferencia**: Daemon Ollama (\`http://localhost:11434\`)
+- **Modelo Activo**: Qwen 2.5 Coder 7B
+- **Aceleración por GPU**: NVIDIA GeForce RTX 3050 (4GB VRAM con CUDA 13.3)
+`
+          }
+        ];
+      }
+
+      // English Python EHR
+      return [
+        {
+          id: 'doc-overview',
+          projectId: proj.id,
+          title: 'System Overview & Executive Purpose',
+          slug: 'overview',
+          category: 'Overview',
+          lastUpdated: dateStr,
+          generatedByAI: true,
+          content: `# ${name} — System Overview\n\nAsync Python 3.11 / FastAPI microservice for patient health records and biometric telemetry ingestion.`
+        },
+        {
+          id: 'doc-architecture',
+          projectId: proj.id,
+          title: 'Software Architecture & Component Boundaries',
+          slug: 'architecture',
+          category: 'Architecture',
+          lastUpdated: dateStr,
+          generatedByAI: true,
+          content: `# System Architecture\n\nLayered architecture separating FastAPI router, domain service, and SQLAlchemy async repository.`
+        },
+        {
+          id: 'doc-api',
+          projectId: proj.id,
+          title: 'REST API & Endpoints Specification',
+          slug: 'api-specification',
+          category: 'API',
+          lastUpdated: dateStr,
+          generatedByAI: true,
+          content: `# REST API Specification\n\n- \`POST /api/v1/patients/\`: Register patient\n- \`GET /api/v1/patients/{patient_id}\`: Get patient summary\n- \`POST /api/v1/patients/{patient_id}/records\`: Ingest clinical record`
+        },
+        {
+          id: 'doc-database',
+          projectId: proj.id,
+          title: 'Database Models & Schema Dictionary',
+          slug: 'database-models',
+          category: 'Database',
+          lastUpdated: dateStr,
+          generatedByAI: true,
+          content: `# Database Models\n\nRelational schema with \`patients\` and \`clinical_records\` tables.`
+        },
+        {
+          id: 'doc-deployment',
+          projectId: proj.id,
+          title: 'Deployment & Container Infrastructure',
+          slug: 'deployment',
+          category: 'Deployment',
+          lastUpdated: dateStr,
+          generatedByAI: true,
+          content: `# Deployment\n\nDockerized Python 3.11-slim with Uvicorn ASGI server.`
+        }
+      ];
+    }
+
+    // Java E-Commerce fallback
     if (isEs) {
       return [
         {
@@ -31,23 +267,7 @@ export class DocumentationService {
           category: 'Overview',
           lastUpdated: dateStr,
           generatedByAI: true,
-          content: `# ${name} — Resumen del Sistema
-
-## 1. Resumen Ejecutivo
-El sistema **${name}** es un microservicio empresarial desarrollado en **${lang}** utilizando **${framework}**. Implementa una arquitectura **${arch}** diseñada para gestionar el procesamiento transaccional, flujos de órdenes de compra y persistencia de datos relacionales con alta consistencia.
-
-## 2. Capacidades Principales
-- **Motor de Dominio Empresarial**: Encapsula las reglas de negocio y cálculo de totales monetarios con garantías transaccionales ACID.
-- **APIs REST de Integración**: Expone endpoints HTTP de alto rendimiento para clientes web (SPA) y aplicaciones móviles.
-- **Capa de Persistencia y ORM**: Gestiona el mapeo de entidades relacionales hacia la base de datos PostgreSQL.
-- **Trazabilidad y Auditoría**: Registro inmutable de operaciones con identificadores únicos de traza.
-
-## 3. Stack Tecnológico de Alto Nivel
-- **Lenguaje / Runtime**: ${lang} (${framework})
-- **Patrón Arquitectónico**: ${arch}
-- **Base de Datos**: PostgreSQL / Motor Relacional
-- **Motor de IA Local**: Qwen 2.5 Coder 7B (GPU Local RTX 3050 con aceleración CUDA)
-`
+          content: `# ${name} — Resumen del Sistema\n\nMicroservicio empresarial desarrollado en ${lang} utilizando ${framework}.`
         },
         {
           id: 'doc-architecture',
@@ -57,34 +277,7 @@ El sistema **${name}** es un microservicio empresarial desarrollado en **${lang}
           category: 'Architecture',
           lastUpdated: dateStr,
           generatedByAI: true,
-          content: `# Arquitectura de Software y Límites de Capas
-
-## 1. Estilo Arquitectónico: ${arch}
-El código fuente se organiza en capas horizontales desacopladas con flujo unidireccional de dependencias:
-
-\`\`\`
-┌────────────────────────────────────────────────────────┐
-│  Capa de Presentación: Controladores REST y DTOs       │
-└───────────────────────────┬────────────────────────────┘
-                            │ (invoca)
-┌───────────────────────────▼────────────────────────────┐
-│  Capa de Aplicación: Servicios de Dominio y Negocio    │
-└───────────────────────────┬────────────────────────────┘
-                            │ (consulta / persiste)
-┌───────────────────────────▼────────────────────────────┐
-│  Capa de Persistencia: Repositorios JPA e Interfaces   │
-└───────────────────────────┬────────────────────────────┘
-                            │ (SQL / ORM)
-┌───────────────────────────▼────────────────────────────┐
-│  Capa de Base de Datos: Esquema Relacional PostgreSQL  │
-└────────────────────────────────────────────────────────┘
-\`\`\`
-
-## 2. Responsabilidades por Capa
-- **Controladores (\`src/controllers\`)\**: Deserializa solicitudes HTTP, valida los contratos JSON y devuelve respuestas estructuradas.
-- **Servicios (\`src/services\`)\**: Contiene la lógica de negocio, reglas de cálculo y límites transaccionales mediante \`@Transactional\`.
-- **Repositorios (\`src/repositories\`)\**: Abstrae las consultas a base de datos mediante Spring Data JPA.
-`
+          content: `# Arquitectura de Software\n\nEstructura en capas con Controladores REST, Servicios de Dominio y Repositorios JPA.`
         },
         {
           id: 'doc-api',
@@ -94,46 +287,7 @@ El código fuente se organiza en capas horizontales desacopladas con flujo unidi
           category: 'API',
           lastUpdated: dateStr,
           generatedByAI: true,
-          content: `# Especificación de Contratos y Endpoints REST
-
-### URL Base: \`/api/v1\`
-
-## 1. Procesamiento de Checkout y Creación de Órdenes
-### \`POST /api/v1/orders/checkout\`
-Crea una nueva orden, calcula el total acumulado y registra los ítems.
-
-**Cuerpo de la Petición (Request Body):**
-\`\`\`json
-{
-  "customerId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "items": [
-    { "productId": "d8e3a2b1-1234-5678-9abc-def012345678", "quantity": 2, "unitPrice": 49.99 }
-  ]
-}
-\`\`\`
-
-**Respuesta Exitosa \`200 OK\`:**
-\`\`\`json
-{
-  "id": "e7b1a2c3-9876-5432-10fe-dcba98765432",
-  "customerId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "totalAmount": 99.98,
-  "status": "PROCESSING"
-}
-\`\`\`
-
----
-
-## 2. Consulta de Orden por Identificador
-### \`GET /api/v1/orders/{orderId}\`
-Retorna el estado actual, monto total e ítems asociados a la orden.
-
----
-
-## 3. Historial de Órdenes por Cliente
-### \`GET /api/v1/orders/customer/{customerId}\`
-Retorna la lista de todas las órdenes asociadas al cliente.
-`
+          content: `# Especificación de Contratos REST\n\n- \`POST /api/v1/orders/checkout\`\n- \`GET /api/v1/orders/{orderId}\``
         },
         {
           id: 'doc-database',
@@ -143,30 +297,7 @@ Retorna la lista de todas las órdenes asociadas al cliente.
           category: 'Database',
           lastUpdated: dateStr,
           generatedByAI: true,
-          content: `# Modelos de Base de Datos y Diccionario de Datos
-
-## 1. Entidad Principal: \`orders\`
-Almacena el registro maestro de la transacción de compra.
-
-| Columna | Tipo de Dato | Restricción | Descripción |
-|---|---|---|---|
-| \`id\` | UUID | PRIMARY KEY | Identificador único de la orden |
-| \`customer_id\` | UUID | NOT NULL | Identificador del cliente |
-| \`total_amount\` | DECIMAL(12,2) | NOT NULL | Importe total monetario |
-| \`status\` | VARCHAR(32) | NOT NULL | Estado (\`PROCESSING\`, \`COMPLETED\`) |
-| \`created_at\` | TIMESTAMP | NOT NULL | Fecha y hora de creación |
-
-## 2. Entidad Hija: \`order_items\`
-Registra las líneas de detalle y productos comprados.
-
-| Columna | Tipo de Dato | Restricción | Descripción |
-|---|---|---|---|
-| \`id\` | UUID | PRIMARY KEY | Llave primaria de la línea |
-| \`order_id\` | UUID | FOREIGN KEY | Referencia a \`orders(id)\` |
-| \`product_id\` | UUID | NOT NULL | Referencia al producto |
-| \`quantity\` | INTEGER | NOT NULL | Cantidad de unidades |
-| \`unit_price\` | DECIMAL(10,2) | NOT NULL | Precio unitario del ítem |
-`
+          content: `# Diccionario de Base de Datos\n\nTablas relacionales \`orders\` y \`order_items\`.`
         },
         {
           id: 'doc-deployment',
@@ -176,29 +307,11 @@ Registra las líneas de detalle y productos comprados.
           category: 'Deployment',
           lastUpdated: dateStr,
           generatedByAI: true,
-          content: `# Infraestructura de Despliegue y Contenedores
-
-## 1. Configuración de Contenedores Docker
-Empaquetado como una imagen de contenedor optimizada con OpenJDK 11 Alpine:
-
-\`\`\`dockerfile
-FROM eclipse-temurin:11-jre-alpine
-WORKDIR /app
-COPY target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
-\`\`\`
-
-## 2. Entorno de Inteligencia Artificial Local
-- **Motor de Inferencia**: Daemon Ollama (\`http://localhost:11434\`)
-- **Modelo Activo**: Qwen 2.5 Coder 7B
-- **Aceleración por GPU**: NVIDIA GeForce RTX 3050 (4GB VRAM con CUDA 13.3)
-`
+          content: `# Infraestructura Docker\n\nImagen Docker OpenJDK 11 Alpine.`
         }
       ];
     }
 
-    // English version
     return [
       {
         id: 'doc-overview',
@@ -208,23 +321,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
         category: 'Overview',
         lastUpdated: dateStr,
         generatedByAI: true,
-        content: `# ${name} — System Overview
-
-## 1. Executive Summary
-The **${name}** is an enterprise microservice developed in **${lang}** utilizing **${framework}**. It implements a **${arch}** designed to handle order processing and transactional database consistency.
-
-## 2. Core Capabilities
-- **Domain Business Engine**: Encapsulates business rules and price calculations with ACID consistency.
-- **REST APIs**: Exposes high-throughput API endpoints for client consumers and web applications.
-- **Persistence Tier**: Manages relational entities and data mapping.
-- **Audit & Traceability**: Forensic logging of all state mutations.
-
-## 3. High-Level Technology Stack
-- **Language / Runtime**: ${lang} (${framework})
-- **Architecture Pattern**: ${arch}
-- **Database**: Relational Database Engine (PostgreSQL / SQL)
-- **Local AI Engine**: Qwen 2.5 Coder 7B (Ollama Local GPU)
-`
+        content: `# ${name} — System Overview\n\nEnterprise microservice developed in ${lang}.`
       },
       {
         id: 'doc-architecture',
@@ -234,11 +331,7 @@ The **${name}** is an enterprise microservice developed in **${lang}** utilizing
         category: 'Architecture',
         lastUpdated: dateStr,
         generatedByAI: true,
-        content: `# System Architecture & Component Boundaries
-
-## 1. Architectural Style: ${arch}
-Organized into horizontal layers with strict top-to-bottom dependency flow.
-`
+        content: `# Software Architecture\n\nLayered architecture.`
       },
       {
         id: 'doc-api',
@@ -248,13 +341,7 @@ Organized into horizontal layers with strict top-to-bottom dependency flow.
         category: 'API',
         lastUpdated: dateStr,
         generatedByAI: true,
-        content: `# REST API & Endpoints Specification
-
-### Base URL: \`/api/v1\`
-- \`POST /api/v1/orders/checkout\`: Create new order and calculate totals
-- \`GET /api/v1/orders/{orderId}\`: Retrieve order status
-- \`GET /api/v1/orders/customer/{customerId}\`: Customer history
-`
+        content: `# REST API Specification\n\n- \`POST /api/v1/orders/checkout\``
       },
       {
         id: 'doc-database',
@@ -264,14 +351,7 @@ Organized into horizontal layers with strict top-to-bottom dependency flow.
         category: 'Database',
         lastUpdated: dateStr,
         generatedByAI: true,
-        content: `# Database Models & Schema Dictionary
-
-## 1. Entity: \`orders\`
-Represents root order aggregate.
-
-## 2. Entity: \`order_items\`
-Child entity capturing purchased line items.
-`
+        content: `# Database Models\n\nTables \`orders\` and \`order_items\`.`
       },
       {
         id: 'doc-deployment',
@@ -281,19 +361,7 @@ Child entity capturing purchased line items.
         category: 'Deployment',
         lastUpdated: dateStr,
         generatedByAI: true,
-        content: `# Deployment & Container Infrastructure
-
-## 1. Container Configuration
-Packaged as a lightweight container image for local and cloud orchestration:
-
-\`\`\`dockerfile
-FROM eclipse-temurin:11-jre-alpine
-WORKDIR /app
-COPY target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
-\`\`\`
-`
+        content: `# Deployment\n\nDocker containerized service.`
       }
     ];
   }
