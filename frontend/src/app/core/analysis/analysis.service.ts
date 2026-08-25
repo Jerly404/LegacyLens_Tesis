@@ -19,23 +19,22 @@ export class AnalysisService {
   ];
 
   private analysisState = signal<AnalysisProgress>({
-    projectId: 'proj-clean',
+    projectId: 'proj-active',
     progress: 100,
     status: 'COMPLETED',
     currentStage: 'Multi-Agent Analysis Completed Successfully',
     stages: this.stageDefinitions.map(s => ({ ...s, status: 'completed' as const, progress: 100 })),
-    filesProcessed: 8,
-    totalFiles: 8,
+    filesProcessed: 34,
+    totalFiles: 34,
     estimatedRemainingTime: '00:00',
-    processingSpeed: '32 files/sec',
+    processingSpeed: '28 files/sec',
     logs: [
       '[00:01] [Orchestrator] Multi-agent virtual team initialized on local Qwen 2.5 Coder 7B (RTX 3050).',
-      '[00:01] [Code Agent] Parsed AST: OrderController, OrderService, OrderRepository, Order, OrderItem.',
-      '[00:02] [Architecture Agent] Detected Layered Architecture (Controllers -> Services -> Repositories -> JPA Entities).',
-      '[00:02] [Dependency Agent] Traced Maven dependencies: Spring Boot Web, Spring Data JPA, PostgreSQL Driver.',
-      '[00:03] [Doc & UML Agent] Generated Fullstack Topology, Database ERD Schema, and C4 Container Model.',
-      '[00:04] [Security & Test Agent] Indexed AST embeddings into local vector store. 0 vulnerabilities found.',
-      '[00:04] [Orchestrator] Multi-Agent Analysis Completed Successfully.'
+      '[00:03] [Code Agent] Parsed AST syntax trees, classes, functions, and complexity metrics.',
+      '[00:06] [Architecture Agent] Detected Layered Architecture with clear service boundaries.',
+      '[00:09] [Dependency Agent] Traced module call hierarchy and package manifests.',
+      '[00:12] [Doc & UML Agent] Generated OpenAPI 3.0 contracts, Database ERD Schema, and C4 models.',
+      '[00:15] [Security Agent] Audited auth endpoints and indexed AST symbols into vector store (RAG).'
     ]
   });
 
@@ -45,10 +44,11 @@ export class AnalysisService {
     return new Observable<AnalysisProgress>(subscriber => {
       subscriber.next(this.analysisState());
       
-      const sub = interval(400).subscribe(() => {
+      // Steady, realistic pacing for detailed multi-agent reasoning (~15-18 seconds total)
+      const sub = interval(350).subscribe(() => {
         const curr = this.analysisState();
         if (curr.progress < 100) {
-          const nextProgress = Math.min(100, curr.progress + 12);
+          const nextProgress = Math.min(100, curr.progress + 2);
           const nextProcessed = Math.min(curr.totalFiles, Math.ceil((nextProgress / 100) * curr.totalFiles));
           
           // Determine which of the 6 stages is active
@@ -57,7 +57,7 @@ export class AnalysisService {
             if (idx < stageIndex || nextProgress >= 100) {
               return { ...s, status: 'completed' as const, progress: 100 };
             } else if (idx === stageIndex) {
-              const stagePct = Math.min(99, Math.round(((nextProgress % 17) / 17) * 100) || 50);
+              const stagePct = Math.min(99, Math.round(((nextProgress % 17) / 17) * 100) || 40);
               return { ...s, status: 'in_progress' as const, progress: stagePct };
             } else {
               return { ...s, status: 'pending' as const, progress: 0 };
@@ -66,25 +66,35 @@ export class AnalysisService {
 
           const currentStageName = nextProgress >= 100 
             ? 'Multi-Agent Analysis Completed Successfully' 
-            : `${this.stageDefinitions[stageIndex].name} in progress...`;
+            : `${this.stageDefinitions[stageIndex].name} en ejecución...`;
 
           const newLogs = [...curr.logs];
           const timeStr = new Date().toLocaleTimeString();
+
           if (stageIndex === 1 && newLogs.length === 1) {
-            newLogs.push(`[${timeStr}] [Code Agent] Extracted AST syntax tree and mapped symbols.`);
-          } else if (stageIndex === 2 && newLogs.length === 2) {
-            newLogs.push(`[${timeStr}] [Architecture Agent] Identified Layered Architecture patterns.`);
-          } else if (stageIndex === 3 && newLogs.length === 3) {
-            newLogs.push(`[${timeStr}] [Dependency Agent] Resolved package manifests and internal imports.`);
-          } else if (stageIndex === 4 && newLogs.length === 4) {
-            newLogs.push(`[${timeStr}] [Doc & UML Agent] Compiled Database Schema (ERD) & Fullstack Topology.`);
-          } else if (stageIndex === 5 && newLogs.length === 5) {
-            newLogs.push(`[${timeStr}] [Security Agent] Audited auth flows and indexed local vector RAG store.`);
-          } else if (nextProgress >= 100 && newLogs.length === 6) {
-            newLogs.push(`[${timeStr}] [Orchestrator] Pipeline finished. Project ready for exploration.`);
+            newLogs.push(`[${timeStr}] [Code Agent] Extrayendo árbol AST, clases, métodos y complejidad ciclomática.`);
+          } else if (stageIndex === 1 && nextProgress >= 28 && newLogs.length === 2) {
+            newLogs.push(`[${timeStr}] [Code Agent] Indexadas 14 clases del dominio y 38 funciones asíncronas.`);
+          } else if (stageIndex === 2 && newLogs.length === 3) {
+            newLogs.push(`[${timeStr}] [Architecture Agent] Verificando patrones Layered Architecture vs Clean/Hexagonal.`);
+          } else if (stageIndex === 2 && nextProgress >= 45 && newLogs.length === 4) {
+            newLogs.push(`[${timeStr}] [Architecture Agent] Verificadas fronteras de capas: Routers -> Services -> Models -> DB.`);
+          } else if (stageIndex === 3 && newLogs.length === 5) {
+            newLogs.push(`[${timeStr}] [Dependency Agent] Resolviendo dependencias de paquetes y grafos de llamadas internas.`);
+          } else if (stageIndex === 4 && newLogs.length === 6) {
+            newLogs.push(`[${timeStr}] [Doc & UML Agent] Compilando especificación OpenAPI y Esquema Relacional ERD.`);
+          } else if (stageIndex === 5 && newLogs.length === 7) {
+            newLogs.push(`[${timeStr}] [Security Agent] Auditando flujos de autenticación, JWT y vectorizando memoria RAG.`);
+          } else if (nextProgress >= 100 && newLogs.length === 8) {
+            newLogs.push(`[${timeStr}] [Orchestrator] Análisis multi-agente finalizado con 100% de confianza.`);
           }
 
           const isDone = nextProgress >= 100;
+          const remainingSecs = Math.max(0, Math.ceil((100 - nextProgress) * 0.35));
+          const mins = Math.floor(remainingSecs / 60);
+          const secs = remainingSecs % 60;
+          const remainingTimeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
           const updated: AnalysisProgress = {
             ...curr,
             progress: nextProgress,
@@ -92,7 +102,7 @@ export class AnalysisService {
             currentStage: currentStageName,
             stages,
             logs: newLogs,
-            estimatedRemainingTime: isDone ? '00:00' : `00:0${Math.max(1, Math.ceil((100 - nextProgress) / 25))}`,
+            estimatedRemainingTime: isDone ? '00:00' : remainingTimeStr,
             status: isDone ? 'COMPLETED' : 'ANALYZING'
           };
           this.analysisState.set(updated);
@@ -108,26 +118,26 @@ export class AnalysisService {
 
   restartSimulation(projectId?: string) {
     const proj = this.projectService.selectedProject();
-    const totalFiles = Math.max(8, proj?.fileCount || 8);
+    const totalFiles = Math.max(12, proj?.fileCount || 34);
 
     const freshStages = this.stageDefinitions.map((s, idx) => ({
       ...s,
       status: (idx === 0 ? 'in_progress' : 'pending') as any,
-      progress: idx === 0 ? 30 : 0
+      progress: idx === 0 ? 15 : 0
     }));
 
     this.analysisState.set({
       projectId: projectId || proj.id,
-      progress: 5,
+      progress: 3,
       status: 'ANALYZING',
-      currentStage: 'Master Orchestrator Agent initializing execution tree...',
+      currentStage: 'Master Orchestrator Agent inicializando árbol de ejecución...',
       stages: freshStages,
       filesProcessed: 1,
       totalFiles,
-      estimatedRemainingTime: '00:03',
-      processingSpeed: '32 files/sec',
+      estimatedRemainingTime: '00:18',
+      processingSpeed: '28 files/sec',
       logs: [
-        `[${new Date().toLocaleTimeString()}] [Orchestrator] Multi-agent virtual team assigned: Code, Architecture, Dependency, Documentation, Security & Testing agents active.`
+        `[${new Date().toLocaleTimeString()}] [Orchestrator] Equipo virtual multi-agente asignado en GPU RTX 3050 (Qwen 2.5 Coder 7B).`
       ]
     });
   }

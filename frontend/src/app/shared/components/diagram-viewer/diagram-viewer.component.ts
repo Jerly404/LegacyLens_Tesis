@@ -89,9 +89,17 @@ export class DiagramViewerComponent {
     });
   }
 
+  private isMindguardProject(): boolean {
+    const proj = this.projectService.selectedProject();
+    return (proj.name || '').toLowerCase().includes('mindguard') || 
+           (proj.slug || '').includes('mindguard') || 
+           (proj.name || '').toLowerCase().includes('quality');
+  }
+
   private isPythonProject(): boolean {
     const proj = this.projectService.selectedProject();
-    return (proj.mainLanguage || '').toLowerCase() === 'python' || 
+    return this.isMindguardProject() ||
+           (proj.mainLanguage || '').toLowerCase() === 'python' || 
            (proj.name || '').toLowerCase().includes('ehr') || 
            (proj.name || '').toLowerCase().includes('clinical') || 
            (proj.name || '').toLowerCase().includes('patient');
@@ -123,11 +131,12 @@ export class DiagramViewerComponent {
 
   // 1. FULLSTACK ARCHITECTURE SVG
   private renderFullstackArchitectureSvg(): string {
+    const isMg = this.isMindguardProject();
     const isPy = this.isPythonProject();
-    const runtimeName = isPy ? 'Python 3.11 / FastAPI ASGI' : 'Java 11 / Spring Boot 2.7';
-    const ormName = isPy ? 'Async SQLAlchemy 2.0 / asyncpg' : 'Spring Data JPA / Hibernate';
-    const ctrlName = isPy ? 'FastAPI APIRouter (patients_router.py)' : 'Spring REST Controllers (OrderController.java)';
-    const srvName = isPy ? 'Clinical Domain Services (patient_service.py)' : 'Order Processing Services (OrderService.java)';
+    const runtimeName = isMg ? 'Python 3.11 / FastAPI & Angular 17' : (isPy ? 'Python 3.11 / FastAPI ASGI' : 'Java 11 / Spring Boot 2.7');
+    const ormName = isMg ? 'SQLAlchemy ORM / SQLite & PostgreSQL' : (isPy ? 'Async SQLAlchemy 2.0 / asyncpg' : 'Spring Data JPA / Hibernate');
+    const ctrlName = isMg ? 'FastAPI APIRouters (assessments.py, auth.py)' : (isPy ? 'FastAPI APIRouter (patients_router.py)' : 'Spring REST Controllers (OrderController.java)');
+    const srvName = isMg ? 'Clinical AI & Psychometrics (clinical_ai.py)' : (isPy ? 'Clinical Domain Services (patient_service.py)' : 'Order Processing Services (OrderService.java)');
 
     return `
       <svg width="960" height="600" viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg">
@@ -141,57 +150,57 @@ export class DiagramViewerComponent {
           </filter>
         </defs>
 
-        <!-- Tier 1: Clients -->
-        <rect x="40" y="30" width="880" height="90" rx="16" fill="url(#layerGrad)" stroke="#334155" stroke-width="1.5"/>
+        <!-- Tier 1: Client & Presentation -->
+        <rect x="40" y="30" width="880" height="100" rx="16" fill="url(#layerGrad)" stroke="#334155" stroke-width="1.5"/>
         <text x="60" y="55" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" font-weight="700" letter-spacing="1">CLIENT & PRESENTATION TIER</text>
         
-        <g transform="translate(70, 65)">
-          <rect width="240" height="42" rx="10" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Angular SPA Web Portal</text>
+        <g transform="translate(70, 70)">
+          <rect width="240" height="45" rx="10" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5" filter="url(#cardShadow)"/>
+          <text x="120" y="27" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11.5" font-weight="600" text-anchor="middle">${isMg ? 'Angular 17 Web Portal' : 'Angular SPA Web Portal'}</text>
         </g>
-        <g transform="translate(360, 65)">
-          <rect width="240" height="42" rx="10" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Mobile App (Clinical/Client)</text>
+        <g transform="translate(360, 70)">
+          <rect width="240" height="45" rx="10" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5" filter="url(#cardShadow)"/>
+          <text x="120" y="27" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11.5" font-weight="600" text-anchor="middle">${isMg ? 'Mobile Psychometrics Client' : 'Mobile App (Clinical/Client)'}</text>
         </g>
-        <g transform="translate(650, 65)">
-          <rect width="240" height="42" rx="10" fill="#1E293B" stroke="#8B5CF6" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Third-Party REST Consumers</text>
+        <g transform="translate(650, 70)">
+          <rect width="240" height="45" rx="10" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5" filter="url(#cardShadow)"/>
+          <text x="120" y="27" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11.5" font-weight="600" text-anchor="middle">Third-Party REST Consumers</text>
         </g>
 
         <!-- Arrows Tier 1 -> Tier 2 -->
-        <path d="M 480 120 L 480 160" stroke="#60A5FA" stroke-width="2" stroke-dasharray="4"/>
+        <path d="M 480 130 L 480 160" stroke="#60A5FA" stroke-width="2" stroke-dasharray="4"/>
         <polygon points="476,155 484,155 480,162" fill="#60A5FA"/>
 
-        <!-- Tier 2: Ingress Gateway -->
-        <rect x="40" y="165" width="880" height="85" rx="16" fill="url(#layerGrad)" stroke="#334155" stroke-width="1.5"/>
+        <!-- Tier 2: Ingress & Security Gateway -->
+        <rect x="40" y="165" width="880" height="100" rx="16" fill="url(#layerGrad)" stroke="#334155" stroke-width="1.5"/>
         <text x="60" y="190" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" font-weight="700" letter-spacing="1">SECURITY & INGRESS GATEWAY</text>
         
-        <g transform="translate(180, 200)">
-          <rect width="280" height="40" rx="10" fill="#1E293B" stroke="#10B981" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="140" y="25" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">NGINX Ingress & SSL Termination</text>
+        <g transform="translate(180, 205)">
+          <rect width="270" height="45" rx="10" fill="#1E293B" stroke="#8B5CF6" stroke-width="1.5" filter="url(#cardShadow)"/>
+          <text x="135" y="27" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11.5" font-weight="600" text-anchor="middle">NGINX Ingress & SSL Termination</text>
         </g>
-        <g transform="translate(500, 200)">
-          <rect width="280" height="40" rx="10" fill="#1E293B" stroke="#EC4899" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="140" y="25" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">JWT Security & Rate Limiter</text>
+        <g transform="translate(510, 205)">
+          <rect width="270" height="45" rx="10" fill="#1E293B" stroke="#8B5CF6" stroke-width="1.5" filter="url(#cardShadow)"/>
+          <text x="135" y="27" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11.5" font-weight="600" text-anchor="middle">JWT Security & Rate Limiter</text>
         </g>
 
         <!-- Arrows Tier 2 -> Tier 3 -->
-        <path d="M 480 250 L 480 290" stroke="#60A5FA" stroke-width="2" stroke-dasharray="4"/>
-        <polygon points="476,285 484,285 480,292" fill="#60A5FA"/>
+        <path d="M 480 265 L 480 295" stroke="#60A5FA" stroke-width="2" stroke-dasharray="4"/>
+        <polygon points="476,290 484,290 480,297" fill="#60A5FA"/>
 
-        <!-- Tier 3: Application Core -->
-        <rect x="40" y="295" width="880" height="110" rx="16" fill="url(#layerGrad)" stroke="#334155" stroke-width="1.5"/>
-        <text x="60" y="320" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" font-weight="700" letter-spacing="1">APPLICATION & DOMAIN SERVICE TIER (${runtimeName})</text>
+        <!-- Tier 3: Application & Domain Tier -->
+        <rect x="40" y="300" width="880" height="110" rx="16" fill="url(#layerGrad)" stroke="#334155" stroke-width="1.5"/>
+        <text x="60" y="325" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" font-weight="700" letter-spacing="1">APPLICATION & DOMAIN SERVICE TIER (${runtimeName})</text>
         
         <g transform="translate(70, 335)">
-          <rect width="240" height="55" rx="10" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5" filter="url(#cardShadow)"/>
+          <rect width="240" height="55" rx="10" fill="#1E293B" stroke="#10B981" stroke-width="1.5" filter="url(#cardShadow)"/>
           <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11" font-weight="600" text-anchor="middle">API Router / Controllers</text>
-          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">${ctrlName}</text>
+          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="9" text-anchor="middle">${ctrlName}</text>
         </g>
         <g transform="translate(360, 335)">
-          <rect width="240" height="55" rx="10" fill="#1E293B" stroke="#8B5CF6" stroke-width="1.5" filter="url(#cardShadow)"/>
+          <rect width="240" height="55" rx="10" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5" filter="url(#cardShadow)"/>
           <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11" font-weight="600" text-anchor="middle">Domain Services</text>
-          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="9.5" text-anchor="middle">${srvName}</text>
+          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="9" text-anchor="middle">${srvName}</text>
         </g>
         <g transform="translate(650, 335)">
           <rect width="240" height="55" rx="10" fill="#1E293B" stroke="#F59E0B" stroke-width="1.5" filter="url(#cardShadow)"/>
@@ -200,22 +209,22 @@ export class DiagramViewerComponent {
         </g>
 
         <!-- Arrows Tier 3 -> Tier 4 -->
-        <path d="M 480 405 L 480 445" stroke="#60A5FA" stroke-width="2" stroke-dasharray="4"/>
+        <path d="M 480 410 L 480 445" stroke="#60A5FA" stroke-width="2" stroke-dasharray="4"/>
         <polygon points="476,440 484,440 480,447" fill="#60A5FA"/>
 
-        <!-- Tier 4: Data & Messaging -->
+        <!-- Tier 4: Data & Local AI -->
         <rect x="40" y="450" width="880" height="110" rx="16" fill="url(#layerGrad)" stroke="#334155" stroke-width="1.5"/>
         <text x="60" y="475" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" font-weight="700" letter-spacing="1">PERSISTENCE, CACHE & LOCAL AI TIER</text>
         
         <g transform="translate(70, 490)">
           <rect width="240" height="55" rx="10" fill="#1E293B" stroke="#10B981" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">PostgreSQL 16 Database</text>
-          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">Relational Schema & JSONB</text>
+          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">${isMg ? 'SQLite / PostgreSQL 16 DB' : 'PostgreSQL 16 Database'}</text>
+          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">${isMg ? 'mindguard.db / alembic' : 'Relational Schema & JSONB'}</text>
         </g>
         <g transform="translate(360, 490)">
           <rect width="240" height="55" rx="10" fill="#1E293B" stroke="#EF4444" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Redis Distributed Cache</text>
-          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">Sessions, Telemetry & Queues</text>
+          <text x="120" y="26" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">${isMg ? 'Gemini 1.5 & Groq Llama 3' : 'Redis Distributed Cache'}</text>
+          <text x="120" y="44" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">${isMg ? 'Cloud AI Ingestion API' : 'Sessions, Telemetry & Queues'}</text>
         </g>
         <g transform="translate(650, 490)">
           <rect width="240" height="55" rx="10" fill="#1E293B" stroke="#A855F7" stroke-width="1.5" filter="url(#cardShadow)"/>
@@ -228,7 +237,153 @@ export class DiagramViewerComponent {
 
   // 2. DATABASE ERD SVG
   private renderDatabaseErdSvg(): string {
+    const isMg = this.isMindguardProject();
     const isPy = this.isPythonProject();
+
+    if (isMg) {
+      return `
+        <svg width="960" height="620" viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="erdShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.5"/>
+            </filter>
+          </defs>
+
+          <!-- TABLE: USUARIO -->
+          <g transform="translate(40, 40)" filter="url(#erdShadow)">
+            <rect width="270" height="230" rx="12" fill="#151821" stroke="#3B82F6" stroke-width="1.5"/>
+            <rect width="270" height="34" rx="12" fill="#1E3A8A"/>
+            <text x="135" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">USUARIO</text>
+            
+            <text x="15" y="60" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
+            <text x="180" y="60" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+            
+            <text x="15" y="88" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    nombre</text>
+            <text x="180" y="88" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(100)</text>
+
+            <text x="15" y="116" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">UQ  email</text>
+            <text x="180" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(150)</text>
+
+            <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    password_hash</text>
+            <text x="180" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(255)</text>
+
+            <text x="15" y="172" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    rol</text>
+            <text x="180" y="172" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(50)</text>
+
+            <text x="15" y="200" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    colegiatura</text>
+            <text x="180" y="200" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(50)</text>
+          </g>
+
+          <!-- TABLE: EVALUACION -->
+          <g transform="translate(360, 40)" filter="url(#erdShadow)">
+            <rect width="270" height="250" rx="12" fill="#151821" stroke="#10B981" stroke-width="1.5"/>
+            <rect width="270" height="34" rx="12" fill="#064E3B"/>
+            <text x="135" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">EVALUACION</text>
+            
+            <text x="15" y="60" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
+            <text x="180" y="60" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+            
+            <text x="15" y="88" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  id_usuario</text>
+            <text x="180" y="88" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+
+            <text x="15" y="116" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    phq9Score</text>
+            <text x="180" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+
+            <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    gad7Score</text>
+            <text x="180" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+
+            <text x="15" y="172" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    nivelRiesgo</text>
+            <text x="180" y="172" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(50)</text>
+
+            <text x="15" y="200" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    has_high_risk</text>
+            <text x="180" y="200" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">BOOLEAN</text>
+
+            <text x="15" y="228" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    fecha</text>
+            <text x="180" y="228" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">TIMESTAMP</text>
+          </g>
+
+          <!-- TABLE: RESULTADO_IA -->
+          <g transform="translate(680, 40)" filter="url(#erdShadow)">
+            <rect width="240" height="170" rx="12" fill="#151821" stroke="#A855F7" stroke-width="1.5"/>
+            <rect width="240" height="34" rx="12" fill="#581C87"/>
+            <text x="120" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">RESULTADO_IA</text>
+            
+            <text x="15" y="60" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
+            <text x="160" y="60" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+            
+            <text x="15" y="88" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  id_evaluacion</text>
+            <text x="160" y="88" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+
+            <text x="15" y="116" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    nivel</text>
+            <text x="160" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(10)</text>
+
+            <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    scoreConfianza</text>
+            <text x="160" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">FLOAT</text>
+          </g>
+
+          <!-- TABLE: REGISTRO_EMOCIONAL -->
+          <g transform="translate(40, 330)" filter="url(#erdShadow)">
+            <rect width="270" height="200" rx="12" fill="#151821" stroke="#EC4899" stroke-width="1.5"/>
+            <rect width="270" height="34" rx="12" fill="#831843"/>
+            <text x="135" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">REGISTRO_EMOCIONAL</text>
+            
+            <text x="15" y="60" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
+            <text x="180" y="60" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+            
+            <text x="15" y="88" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  id_usuario</text>
+            <text x="180" y="88" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+
+            <text x="15" y="116" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    emocion_principal</text>
+            <text x="180" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(50)</text>
+
+            <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    intensidad</text>
+            <text x="180" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+
+            <text x="15" y="172" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    disparador</text>
+            <text x="180" y="172" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(200)</text>
+          </g>
+
+          <!-- TABLE: CITA -->
+          <g transform="translate(360, 330)" filter="url(#erdShadow)">
+            <rect width="270" height="200" rx="12" fill="#151821" stroke="#EAB308" stroke-width="1.5"/>
+            <rect width="270" height="34" rx="12" fill="#713F12"/>
+            <text x="135" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">CITA</text>
+            
+            <text x="15" y="60" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
+            <text x="180" y="60" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+            
+            <text x="15" y="88" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  id_paciente</text>
+            <text x="180" y="88" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+
+            <text x="15" y="116" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  id_profesional</text>
+            <text x="180" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+
+            <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    fecha_cita</text>
+            <text x="180" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">TIMESTAMP</text>
+
+            <text x="15" y="172" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    estado</text>
+            <text x="180" y="172" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(50)</text>
+          </g>
+
+          <!-- Connectors -->
+          <!-- Usuario (1) -> Evaluacion (N) -->
+          <path d="M 310 120 L 360 120" stroke="#38BDF8" stroke-width="2" stroke-dasharray="6"/>
+          <text x="320" y="110" fill="#F59E0B" font-family="Inter, sans-serif" font-size="12" font-weight="700">1</text>
+          <text x="345" y="110" fill="#38BDF8" font-family="Inter, sans-serif" font-size="12" font-weight="700">N</text>
+
+          <!-- Evaluacion (1) -> ResultadoIA (1) -->
+          <path d="M 630 120 L 680 120" stroke="#A855F7" stroke-width="2"/>
+          <text x="640" y="110" fill="#10B981" font-family="Inter, sans-serif" font-size="12" font-weight="700">1</text>
+          <text x="665" y="110" fill="#A855F7" font-family="Inter, sans-serif" font-size="12" font-weight="700">1</text>
+
+          <!-- Usuario (1) -> RegistroEmocional (N) -->
+          <path d="M 175 270 L 175 330" stroke="#EC4899" stroke-width="2" stroke-dasharray="6"/>
+
+          <!-- Usuario (1) -> Cita (N) -->
+          <path d="M 310 230 L 490 230 L 490 330" stroke="#EAB308" stroke-width="2" stroke-dasharray="6" fill="none"/>
+        </svg>
+      `;
+    }
 
     if (isPy) {
       return `

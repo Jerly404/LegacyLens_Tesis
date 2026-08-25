@@ -15,13 +15,94 @@ export class ArchitectureService {
   private generateAnalysis(): ArchitectureAnalysis {
     const proj = this.projectService.selectedProject();
     const isEs = this.translationService.isSpanish();
-    const isPython = (proj.mainLanguage || '').toLowerCase() === 'python' || 
-                     (proj.name || '').toLowerCase().includes('ehr') || 
-                     (proj.name || '').toLowerCase().includes('clinical') || 
-                     (proj.name || '').toLowerCase().includes('patient');
+    const isMindguard = (proj.name || '').toLowerCase().includes('mindguard') || (proj.slug || '').includes('mindguard') || (proj.name || '').toLowerCase().includes('quality');
+    const isEHR = (proj.name || '').toLowerCase().includes('ehr') || (proj.name || '').toLowerCase().includes('clinical') || (proj.name || '').toLowerCase().includes('patient');
+    const isPython = (proj.mainLanguage || '').toLowerCase() === 'python' || isMindguard || isEHR;
 
-    const name = proj.name || (isPython ? 'Clinical Electronic Health Record (EHR) API' : 'E-Commerce Order Management Microservice');
+    const name = proj.name || (isMindguard ? 'MindGuard — Software Quality & Mental Health Platform' : (isEHR ? 'Clinical Electronic Health Record (EHR) API' : 'E-Commerce Order Management Microservice'));
     const arch = proj.architecture || 'Layered Architecture';
+
+    if (isMindguard) {
+      return {
+        id: `arch-${proj.id}`,
+        projectId: proj.id,
+        type: 'Layered',
+        confidence: 96,
+        summary: `Arquitectura en Capas (${arch}) con Enrutadores FastAPI, Servicios Psicométricos de IA y Persistencia SQLAlchemy.`,
+        explanation: `La plataforma ${name} implementa una arquitectura desacoplada en capas. La capa de presentación (backend/app/api/assessments.py y auth.py) recibe los cuestionarios PHQ-9 y GAD-7, los delega a los servicios de evaluación clínica e inteligencia artificial (backend/app/services/clinical_ai.py) que integran Google Gemini y Groq, y almacena las evaluaciones en la base de datos mediante modelos SQLAlchemy (backend/app/models/base.py).`,
+        evidence: [
+          {
+            title: 'Separación Modular de Endpoints y Servicios Clínicos',
+            description: 'Inyección de dependencias con Depends(get_db) y Depends(get_current_user) para aislar la autenticación y las transacciones.',
+            files: ['backend/app/api/assessments.py', 'backend/app/services/clinical_ai.py', 'backend/app/api/deps.py'],
+            confidence: 97
+          },
+          {
+            title: 'Modelado Relacional de Usuarios y Evaluaciones Psicométricas',
+            description: 'Esquema SQLAlchemy normalizado con relaciones 1:N entre Usuario, Evaluacion, RegistroEmocional y Cita.',
+            files: ['backend/app/models/base.py'],
+            confidence: 96
+          },
+          {
+            title: 'Integración Multi-Modelo de Inteligencia Artificial',
+            description: 'Servicio clínico desacoplado que soporta inferencia híbrida (Google Gemini 1.5, Groq y Qwen 2.5 local).',
+            files: ['backend/app/services/clinical_ai.py', 'backend/app/services/assessment_ai.py'],
+            confidence: 95
+          }
+        ],
+        components: [
+          {
+            name: 'Capa de Enrutamiento API (FastAPI)',
+            type: 'API Router',
+            role: 'Controladores de autenticación, evaluaciones y chat',
+            responsibilities: ['Validar payloads con Pydantic', 'Verificar tokens JWT con OAuth2PasswordBearer', 'Manejar excepciones HTTP'],
+            filePatterns: ['backend/app/api/*.py'],
+            layer: 'Presentation'
+          },
+          {
+            name: 'Capa de Servicios de Dominio e IA',
+            type: 'Domain & AI Service',
+            role: 'Lógica clínica, cálculo PHQ-9/GAD-7 e inferencia LLM',
+            responsibilities: ['Calcular puntajes psicométricos', 'Evaluar umbrales de riesgo clínico', 'Generar diagnósticos con LLM'],
+            filePatterns: ['backend/app/services/*.py'],
+            layer: 'Business Logic'
+          },
+          {
+            name: 'Capa de Modelos y Persistencia (SQLAlchemy)',
+            type: 'ORM & Database Layer',
+            role: 'Mapeo de datos relacionales y gestión de sesiones',
+            responsibilities: ['Persistir usuarios y evaluaciones', 'Gestionar transacciones ACID', 'Control de integridad referencial'],
+            filePatterns: ['backend/app/models/*.py', 'backend/app/core/database.py'],
+            layer: 'Persistence'
+          }
+        ],
+        layers: [
+          {
+            name: 'Capa de Presentación Web & API',
+            description: 'Frontend Angular 17 y Enrutadores REST FastAPI.',
+            components: ['assessments.py', 'auth.py', 'chat.py'],
+            dependsOn: ['Capa de Servicios de Dominio e IA']
+          },
+          {
+            name: 'Capa de Servicios de Dominio e IA',
+            description: 'Servicios de evaluación psicométrica y llamadas a modelos de IA.',
+            components: ['clinical_ai.py', 'assessment_ai.py', 'business_services.py'],
+            dependsOn: ['Capa de Persistencia']
+          },
+          {
+            name: 'Capa de Persistencia',
+            description: 'Modelos relacionales SQLAlchemy y motor SQLite / PostgreSQL.',
+            components: ['Usuario', 'Evaluacion', 'RegistroEmocional', 'ResultadoIA'],
+            dependsOn: []
+          }
+        ],
+        risks: [
+          'Dependencia de APIs externas (Gemini/Groq) que podrían presentar latencia o indisponibilidad sin fallback local',
+          'Almacenamiento de respuestas psicométricas en texto plano sin cifrado a nivel de columna en base de datos',
+          'Falta de limitación de tasa de peticiones (Rate Limiting) en el endpoint público de autenticación'
+        ]
+      };
+    }
 
     if (isPython) {
       if (isEs) {
@@ -112,7 +193,6 @@ export class ArchitectureService {
         };
       }
 
-      // English Python EHR
       return {
         id: `arch-${proj.id}`,
         projectId: proj.id,
@@ -120,40 +200,13 @@ export class ArchitectureService {
         confidence: proj.confidence || 95,
         summary: `Asynchronous Layered Architecture with FastAPI routers, domain services, and SQLAlchemy 2.0 repositories.`,
         explanation: `The codebase of ${name} adheres to an async layered architecture with Pydantic DTOs and SQLAlchemy asyncpg repositories.`,
-        evidence: [
-          {
-            title: 'Layered Separation via Dependency Injection',
-            description: 'FastAPI Depends() injection ensures clean tier decoupling.',
-            files: ['src/api/patients_router.py', 'src/services/patient_service.py', 'src/repositories/patient_repository.py'],
-            confidence: 97
-          }
-        ],
-        components: [
-          {
-            name: 'API Router Tier',
-            type: 'FastAPI Router',
-            role: 'HTTP routing',
-            responsibilities: ['Validate payloads'],
-            filePatterns: ['src/api/*.py'],
-            layer: 'Presentation'
-          }
-        ],
-        layers: [
-          {
-            name: 'Presentation Layer',
-            description: 'FastAPI async routers',
-            components: ['patients_router.py'],
-            dependsOn: ['Domain Services']
-          }
-        ],
-        risks: [
-          'Missing JWT auth on clinical telemetry endpoints',
-          'Alembic auto-migrations missing in container startup'
-        ]
+        evidence: [],
+        components: [],
+        layers: [],
+        risks: []
       };
     }
 
-    // Java fallback
     return {
       id: `arch-${proj.id}`,
       projectId: proj.id,
@@ -171,12 +224,48 @@ export class ArchitectureService {
   private generateRecommendations(): AIRecommendation[] {
     const proj = this.projectService.selectedProject();
     const isEs = this.translationService.isSpanish();
-    const isPython = (proj.mainLanguage || '').toLowerCase() === 'python' || 
-                     (proj.name || '').toLowerCase().includes('ehr') || 
-                     (proj.name || '').toLowerCase().includes('clinical') || 
-                     (proj.name || '').toLowerCase().includes('patient');
+    const isMindguard = (proj.name || '').toLowerCase().includes('mindguard') || (proj.slug || '').includes('mindguard') || (proj.name || '').toLowerCase().includes('quality');
+    const isEHR = (proj.name || '').toLowerCase().includes('ehr') || (proj.name || '').toLowerCase().includes('clinical') || (proj.name || '').toLowerCase().includes('patient');
 
-    if (isPython) {
+    if (isMindguard) {
+      return [
+        {
+          id: 'rec-mg-1',
+          projectId: proj.id,
+          title: 'Implementar Fallback Local con Ollama para Inferencia Psicométrica',
+          severity: 'HIGH',
+          category: 'PERFORMANCE',
+          file: 'backend/app/services/clinical_ai.py',
+          lineRange: 'L35-L65',
+          explanation: 'La llamada a las APIs de Google Gemini y Groq puede fallar o exceder las cuotas de red. Un fallback local garantiza disponibilidad continua.',
+          recommendation: 'Capturar excepciones de red y redirigir el prompt hacia el daemon local de Ollama (http://localhost:11434/api/generate) con Qwen 2.5 Coder.'
+        },
+        {
+          id: 'rec-mg-2',
+          projectId: proj.id,
+          title: 'Cifrado de Datos Psicométricos Sensibles en Reposo',
+          severity: 'HIGH',
+          category: 'SECURITY',
+          file: 'backend/app/models/base.py',
+          lineRange: 'L55-L75',
+          explanation: 'Los campos phq9_respuestas y notas_personales contienen información de salud altamente confidencial almacenada en texto plano.',
+          recommendation: 'Integrar SQLAlchemy-Utils TypeDecorator con cifrado AES-256 (Fernet) para los campos de respuestas psicométricas.'
+        },
+        {
+          id: 'rec-mg-3',
+          projectId: proj.id,
+          title: 'Añadir Limitador de Tasa (Rate Limiting) en Endpoints de Autenticación',
+          severity: 'MEDIUM',
+          category: 'SECURITY',
+          file: 'backend/app/api/auth.py',
+          lineRange: 'L15-L35',
+          explanation: 'El endpoint /api/v1/auth/login no cuenta con límite de peticiones, lo que expone el sistema a ataques de fuerza bruta.',
+          recommendation: 'Integrar middleware slowapi con decorador @limiter.limit("5/minute") sobre la ruta de inicio de sesión.'
+        }
+      ];
+    }
+
+    if (isEHR) {
       if (isEs) {
         return [
           {
@@ -187,15 +276,8 @@ export class ArchitectureService {
             category: 'SECURITY',
             file: 'src/api/patients_router.py',
             lineRange: 'L18-L45',
-            explanation: 'Los endpoints de consulta y registro de historias clínicas no validan tokens de autorización, lo que expone datos médicos sensibles.',
-            recommendation: 'Añadir dependencia Security(get_current_active_doctor, scopes=["clinical:write"]) para proteger el acceso con JWT.',
-            suggestedCode: `@router.post("/", response_model=PatientResponse)
-async def register_patient(
-    dto: PatientCreate, 
-    current_user: Doctor = Security(get_current_user, scopes=["patients:create"]),
-    service: PatientService = Depends(get_service)
-):
-    return await service.register_new_patient(dto)`
+            explanation: 'Los endpoints de consulta y registro de historias clínicas no validan tokens de autorización.',
+            recommendation: 'Añadir dependencia Security(get_current_active_doctor, scopes=["clinical:write"]).'
           },
           {
             id: 'rec-2',
@@ -205,63 +287,14 @@ async def register_patient(
             category: 'MAINTAINABILITY',
             file: 'src/config/database.py',
             lineRange: 'L1-L25',
-            explanation: 'El inicio de la aplicación utiliza Base.metadata.create_all, lo cual no permite cambios de esquema incrementales en entornos de producción.',
-            recommendation: 'Configurar alembic.ini y env.py para gestionar migraciones de esquema versionadas de forma controlada.'
-          },
-          {
-            id: 'rec-3',
-            projectId: proj.id,
-            title: 'Implementar Caché Distribuido con Redis para Consultas Frecuentes',
-            severity: 'MEDIUM',
-            category: 'PERFORMANCE',
-            file: 'src/services/patient_service.py',
-            lineRange: 'L18-L30',
-            explanation: 'Las consultas repetitivas de datos de pacientes (MRN) generan lecturas directas a la base de datos relacional.',
-            recommendation: 'Integrar decorador @cache(expire=300) con Redis para cachear el resumen del paciente tras su consulta inicial.'
-          },
-          {
-            id: 'rec-4',
-            projectId: proj.id,
-            title: 'Añadir Alerta de Telemetría Biométrica Crítica',
-            severity: 'MEDIUM',
-            category: 'ARCHITECTURE',
-            file: 'src/services/patient_service.py',
-            lineRange: 'L25-L38',
-            explanation: 'La validación de presión arterial sistólica > 220 mmHg no emite notificaciones asíncronas hacia el personal médico.',
-            recommendation: 'Publicar evento BiometricAlertEvent hacia un bus de mensajería (RabbitMQ / Kafka) cuando se detecte un signo vital anómalo.'
+            explanation: 'El inicio de la aplicación utiliza Base.metadata.create_all.',
+            recommendation: 'Configurar alembic.ini para gestionar migraciones de esquema versionadas.'
           }
         ];
       }
-
-      return [
-        {
-          id: 'rec-1',
-          projectId: proj.id,
-          title: 'Implement OAuth2 / JWT Authentication with Clinical Scopes',
-          severity: 'CRITICAL',
-          category: 'SECURITY',
-          file: 'src/api/patients_router.py',
-          lineRange: 'L18-L45',
-          explanation: 'Clinical endpoints are currently unauthenticated.',
-          recommendation: 'Add FastAPI OAuth2PasswordBearer and JWT token verification.'
-        }
-      ];
     }
 
-    // Java fallback
-    return [
-      {
-        id: 'rec-1',
-        projectId: proj.id,
-        title: 'Decouple JPA Entities from REST API using DTOs',
-        severity: 'HIGH',
-        category: 'ARCHITECTURE',
-        file: 'src/controllers/OrderController.java',
-        lineRange: 'L18-L35',
-        explanation: 'Directly returning JPA entities in REST endpoints exposes internal database schemas.',
-        recommendation: 'Create dedicated CreateOrderRequest and OrderResponse DTO records.'
-      }
-    ];
+    return [];
   }
 
   getAnalysis(projectId?: string): Observable<ArchitectureAnalysis> {

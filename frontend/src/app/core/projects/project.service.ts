@@ -69,14 +69,24 @@ export class ProjectService {
 
   createProject(projectData: Partial<Project>): Observable<Project> {
     const lang = projectData.mainLanguage || 'Python';
-    const isPython = lang.toLowerCase() === 'python' || (projectData.name || '').toLowerCase().includes('ehr') || (projectData.name || '').toLowerCase().includes('clinical') || (projectData.name || '').toLowerCase().includes('patient');
+    const isMindguard = (projectData.name || '').toLowerCase().includes('mindguard') || 
+                        (projectData.repositoryUrl || '').toLowerCase().includes('mindguard') ||
+                        (projectData.name || '').toLowerCase().includes('quality');
+    const isEHR = (projectData.name || '').toLowerCase().includes('ehr') || (projectData.name || '').toLowerCase().includes('clinical') || (projectData.name || '').toLowerCase().includes('patient');
+    const isPython = lang.toLowerCase() === 'python' || isMindguard || isEHR;
     const isJava = lang.toLowerCase() === 'java' || (projectData.name || '').toLowerCase().includes('ecommerce') || (projectData.name || '').toLowerCase().includes('order');
 
-    const fileCount = isPython ? 11 : (isJava ? 8 : (projectData.fileCount || 10));
-    const loc = isPython ? 380 : (isJava ? 450 : (projectData.linesOfCode || 400));
-    const name = projectData.name || (isPython ? 'Clinical Electronic Health Record (EHR) API' : (isJava ? 'E-Commerce Order Management Microservice' : `${lang} Enterprise Service`));
+    const fileCount = isMindguard ? 34 : (isEHR ? 11 : (isJava ? 8 : (projectData.fileCount || 10)));
+    const loc = isMindguard ? 1850 : (isEHR ? 380 : (isJava ? 450 : (projectData.linesOfCode || 400)));
+    const name = projectData.name || (isMindguard ? 'MindGuard — Software Quality & Mental Health Platform' : (isEHR ? 'Clinical Electronic Health Record (EHR) API' : (isJava ? 'E-Commerce Order Management Microservice' : `${lang} Enterprise Service`)));
 
-    const languages = isPython 
+    const languages = isMindguard 
+      ? [
+          { name: 'Python', percentage: 65, color: '#3572A5', loc: 1202 },
+          { name: 'TypeScript / Angular', percentage: 25, color: '#3178C6', loc: 463 },
+          { name: 'SQL / DB', percentage: 10, color: '#336791', loc: 185 }
+        ]
+      : isEHR 
       ? [
           { name: 'Python', percentage: 80, color: '#3572A5', loc: 304 },
           { name: 'SQL / ORM', percentage: 15, color: '#336791', loc: 57 },
@@ -92,22 +102,24 @@ export class ProjectService {
       id: 'proj-' + Date.now().toString(36),
       name,
       slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      description: projectData.description || `Uploaded ${lang} microservice repository for AI reverse engineering and documentation.`,
+      description: projectData.description || (isMindguard 
+        ? 'AI-powered psychological assessment & clinical decision support platform with FastAPI, Gemini/Groq LLMs, and Angular.'
+        : `Uploaded ${lang} microservice repository for AI reverse engineering and documentation.`),
       repositoryUrl: projectData.repositoryUrl,
       mainLanguage: lang,
-      framework: projectData.framework || (isPython ? 'Python 3.11 / FastAPI & Async SQLAlchemy 2.0' : `${lang} 11 / Spring Boot 2.7`),
+      framework: projectData.framework || (isMindguard ? 'Python 3.11 / FastAPI, SQLAlchemy & Angular 17' : (isEHR ? 'Python 3.11 / FastAPI & Async SQLAlchemy 2.0' : `${lang} 11 / Spring Boot 2.7`)),
       branch: projectData.branch || 'main',
       languages,
       fileCount,
       linesOfCode: loc,
       architecture: projectData.architecture || 'Layered Architecture',
-      confidence: 95,
+      confidence: 96,
       status: 'COMPLETED',
       progress: 100,
       lastAnalyzedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      healthScore: 92
+      healthScore: 94
     };
 
     this.projectsSignal.update(list => {
@@ -171,6 +183,272 @@ export class ProjectService {
   getFileTree(projectId?: string): FileNode[] {
     const targetId = projectId || this.selectedProject().id;
     const currentProj = this.projectsSignal().find(p => p.id === targetId) || this.selectedProject();
+    const isMindguard = currentProj.name.toLowerCase().includes('mindguard') || currentProj.slug.includes('mindguard') || currentProj.name.toLowerCase().includes('quality');
+
+    if (isMindguard) {
+      return [
+        {
+          id: 'dir-mg-backend',
+          name: 'backend',
+          path: 'backend',
+          type: 'directory',
+          children: [
+            {
+              id: 'dir-mg-app',
+              name: 'app',
+              path: 'backend/app',
+              type: 'directory',
+              children: [
+                {
+                  id: 'dir-mg-api',
+                  name: 'api',
+                  path: 'backend/app/api',
+                  type: 'directory',
+                  children: [
+                    {
+                      id: 'file-mg-assessments-api',
+                      name: 'assessments.py',
+                      path: 'backend/app/api/assessments.py',
+                      type: 'file',
+                      language: 'python',
+                      lines: 110,
+                      complexity: 6,
+                      dependencies: ['clinical_ai', 'assessment_ai', 'Usuario', 'Evaluacion'],
+                      content: `from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from app.core.database import get_db
+from app.api.deps import get_current_user
+from app.models.base import Usuario, Evaluacion
+from app.services.clinical_ai import ClinicalAIService
+from app.schemas.assessment import AssessmentCreate, AssessmentResponse
+
+router = APIRouter(prefix="/assessments", tags=["Assessments"])
+
+@router.post("/submit", response_model=AssessmentResponse)
+async def submit_psychological_assessment(
+    data: AssessmentCreate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    service = ClinicalAIService(db)
+    evaluation = await service.process_and_evaluate(current_user.id, data)
+    return evaluation`
+                    },
+                    {
+                      id: 'file-mg-auth-api',
+                      name: 'auth.py',
+                      path: 'backend/app/api/auth.py',
+                      type: 'file',
+                      language: 'python',
+                      lines: 95,
+                      complexity: 5,
+                      dependencies: ['security', 'Usuario', 'OAuth2'],
+                      content: `from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+from app.core.database import get_db
+from app.core.security import verify_password, create_access_token
+from app.models.base import Usuario
+
+router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+@router.post("/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(Usuario).filter(Usuario.email == form_data.username).first()
+    if not user or not verify_password(form_data.password, user.password_hash):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    token = create_access_token(data={"sub": user.email, "role": user.rol})
+    return {"access_token": token, "token_type": "bearer"}`
+                    },
+                    {
+                      id: 'file-mg-deps',
+                      name: 'deps.py',
+                      path: 'backend/app/api/deps.py',
+                      type: 'file',
+                      language: 'python',
+                      lines: 45,
+                      complexity: 3,
+                      content: `from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import jwt, JWTError
+from sqlalchemy.orm import Session
+from app.core.database import get_db
+from app.core.config import settings
+from app.models.base import Usuario
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> Usuario:
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=401, detail="Could not validate credentials")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
+    user = db.query(Usuario).filter(Usuario.email == email).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user`
+                    }
+                  ]
+                },
+                {
+                  id: 'dir-mg-services',
+                  name: 'services',
+                  path: 'backend/app/services',
+                  type: 'directory',
+                  children: [
+                    {
+                      id: 'file-mg-clinical-ai',
+                      name: 'clinical_ai.py',
+                      path: 'backend/app/services/clinical_ai.py',
+                      type: 'file',
+                      language: 'python',
+                      lines: 135,
+                      complexity: 8,
+                      dependencies: ['Google Gemini 1.5', 'Groq Llama 3', 'Evaluacion', 'ResultadoIA'],
+                      content: `import json
+import os
+from sqlalchemy.orm import Session
+from app.models.base import Evaluacion, ResultadoIA
+
+class ClinicalAIService:
+    def __init__(self, db: Session):
+        self.db = db
+
+    async def process_and_evaluate(self, user_id: int, data) -> Evaluacion:
+        # Calculate PHQ-9 and GAD-7 standard psychometric scores
+        phq9_score = sum(data.phq9_responses)
+        gad7_score = sum(data.gad7_responses)
+
+        risk_level = "BAJO"
+        if phq9_score >= 15 or gad7_score >= 15:
+            risk_level = "ALTO"
+        elif phq9_score >= 10 or gad7_score >= 10:
+            risk_level = "MEDIO"
+
+        evaluation = Evaluacion(
+            id_usuario=user_id,
+            phq9Score=phq9_score,
+            gad7Score=gad7_score,
+            nivelRiesgo=risk_level,
+            resultadoIA=f"Nivel de riesgo estimado: {risk_level}. Se recomienda seguimiento psicológico.",
+            has_high_risk=(risk_level == "ALTO")
+        )
+        self.db.add(evaluation)
+        self.db.commit()
+        self.db.refresh(evaluation)
+        return evaluation`
+                    }
+                  ]
+                },
+                {
+                  id: 'dir-mg-models',
+                  name: 'models',
+                  path: 'backend/app/models',
+                  type: 'directory',
+                  children: [
+                    {
+                      id: 'file-mg-models-base',
+                      name: 'base.py',
+                      path: 'backend/app/models/base.py',
+                      type: 'file',
+                      language: 'python',
+                      lines: 180,
+                      complexity: 2,
+                      content: `from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Text
+from sqlalchemy.orm import DeclarativeBase, relationship
+from datetime import datetime, UTC
+
+class Base(DeclarativeBase):
+    pass
+
+class Usuario(Base):
+    __tablename__ = "Usuario"
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(100), nullable=False)
+    email = Column(String(150), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    rol = Column(String(50))
+    twoFactorEnabled = Column(Boolean, default=False)
+    colegiatura = Column(String(50), nullable=True)
+    especialidad = Column(String(100), nullable=True)
+
+    evaluaciones = relationship("Evaluacion", back_populates="usuario", cascade="all, delete-orphan")
+
+class Evaluacion(Base):
+    __tablename__ = "Evaluacion"
+    id = Column(Integer, primary_key=True, index=True)
+    fecha = Column(DateTime, default=lambda: datetime.now(UTC))
+    phq9Score = Column(Integer)
+    gad7Score = Column(Integer)
+    nivelRiesgo = Column(String(50))
+    resultadoIA = Column(Text)
+    has_high_risk = Column(Boolean, default=False)
+    id_usuario = Column(Integer, ForeignKey("Usuario.id", ondelete="CASCADE"), nullable=False)
+
+    usuario = relationship("Usuario", back_populates="evaluaciones")`
+                    }
+                  ]
+                },
+                {
+                  id: 'file-mg-main',
+                  name: 'main.py',
+                  path: 'backend/app/main.py',
+                  type: 'file',
+                  language: 'python',
+                  lines: 48,
+                  complexity: 3,
+                  content: `from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.api.auth import router as auth_router
+from app.api.assessments import router as assessments_router
+
+app = FastAPI(title="MindGuard Clinical API", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(assessments_router, prefix="/api/v1")
+
+@app.get("/health")
+def health():
+    return {"status": "HEALTHY", "service": "MindGuard-API"}`
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'file-mg-docker-compose',
+          name: 'docker-compose.yml',
+          path: 'docker-compose.yml',
+          type: 'file',
+          language: 'yaml',
+          lines: 28,
+          complexity: 1,
+          content: `version: '3.8'\nservices:\n  backend:\n    build: ./backend\n    ports:\n      - "8000:8000"\n    environment:\n      - DATABASE_URL=sqlite:///./mindguard.db\n  frontend:\n    build: ./frontend\n    ports:\n      - "4200:80"`
+        },
+        {
+          id: 'file-mg-readme',
+          name: 'README.md',
+          path: 'README.md',
+          type: 'file',
+          language: 'markdown',
+          lines: 60,
+          complexity: 1,
+          content: `# MindGuard — Software Quality & Mental Health Platform\n\nSistema integral para la evaluación psicométrica automatizada (PHQ-9 / GAD-7) con soporte de IA generativa.`
+        }
+      ];
+    }
+
     const isPython = currentProj.mainLanguage === 'Python' || currentProj.name.toLowerCase().includes('ehr') || currentProj.name.toLowerCase().includes('clinical') || currentProj.name.toLowerCase().includes('patient') || currentProj.slug.includes('python');
 
     if (isPython) {

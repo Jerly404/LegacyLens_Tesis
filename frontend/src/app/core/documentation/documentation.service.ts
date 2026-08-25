@@ -15,16 +15,192 @@ export class DocumentationService {
   private generateDocsForProject(): DocumentationSection[] {
     const proj = this.projectService.selectedProject();
     const isEs = this.translationService.isSpanish();
-    const isPython = (proj.mainLanguage || '').toLowerCase() === 'python' || 
-                     (proj.name || '').toLowerCase().includes('ehr') || 
-                     (proj.name || '').toLowerCase().includes('clinical') || 
-                     (proj.name || '').toLowerCase().includes('patient');
+    const isMindguard = (proj.name || '').toLowerCase().includes('mindguard') || (proj.slug || '').includes('mindguard') || (proj.name || '').toLowerCase().includes('quality');
+    const isEHR = (proj.name || '').toLowerCase().includes('ehr') || (proj.name || '').toLowerCase().includes('clinical') || (proj.name || '').toLowerCase().includes('patient');
+    const isPython = (proj.mainLanguage || '').toLowerCase() === 'python' || isMindguard || isEHR;
 
-    const name = proj.name || (isPython ? 'Clinical Electronic Health Record (EHR) API' : 'E-Commerce Order Management Microservice');
+    const name = proj.name || (isMindguard ? 'MindGuard — Software Quality & Mental Health Platform' : (isEHR ? 'Clinical Electronic Health Record (EHR) API' : 'E-Commerce Order Management Microservice'));
     const lang = proj.mainLanguage || (isPython ? 'Python' : 'Java');
-    const framework = proj.framework || (isPython ? 'FastAPI & Async SQLAlchemy 2.0' : 'Spring Boot & JPA');
+    const framework = proj.framework || (isMindguard ? 'FastAPI, SQLAlchemy & Angular 17' : (isEHR ? 'FastAPI & Async SQLAlchemy 2.0' : 'Spring Boot & JPA'));
     const arch = proj.architecture || 'Layered Architecture';
     const dateStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
+
+    if (isMindguard) {
+      return [
+        {
+          id: 'doc-overview',
+          projectId: proj.id,
+          title: 'Resumen Ejecutivo y Propósito del Sistema',
+          slug: 'overview',
+          category: 'Overview',
+          lastUpdated: dateStr,
+          generatedByAI: true,
+          content: `# ${name} — Resumen del Sistema
+
+## 1. Resumen Ejecutivo
+El sistema **${name}** es una plataforma integral de salud mental e ingeniería de calidad de software desarrollada en **Python 3.11** con **FastAPI & SQLAlchemy** y frontend en **Angular 17 / TailwindCSS**. Implementa una arquitectura **${arch}** diseñada para la evaluación psicométrica automatizada mediante escalas estandarizadas (PHQ-9 para depresión y GAD-7 para ansiedad) con soporte de modelos de lenguaje (LLMs) como Google Gemini y Groq.
+
+## 2. Capacidades Principales
+- **Evaluación Psicométrica Automatizada**: Procesamiento y cálculo de puntajes en cuestionarios PHQ-9 y GAD-7 con detección de niveles de riesgo.
+- **Asistencia Clínica con IA Generativa**: Generación de resúmenes de diagnóstico preliminar y recomendaciones mediante Gemini / Groq.
+- **Seguridad y Control de Acceso**: Autenticación JWT, control de roles (Paciente, Profesional, Administrador) y hashing bcrypt.
+- **Registro Emocional Continuo**: Bitácora de estados anímicos, intensidad y factores disparadores.
+
+## 3. Stack Tecnológico de Alto Nivel
+- **Lenguaje / Runtime**: Python 3.11 (FastAPI ASGI) + TypeScript (Angular 17)
+- **Base de Datos**: SQLite / PostgreSQL 16 con SQLAlchemy ORM y migraciones Alembic
+- **Modelos de IA Integrados**: Google Gemini 1.5 Flash + Groq Llama-3-70B + Qwen 2.5 Coder 7B Local
+`
+        },
+        {
+          id: 'doc-architecture',
+          projectId: proj.id,
+          title: 'Arquitectura de Software y Límites de Capas',
+          slug: 'architecture',
+          category: 'Architecture',
+          lastUpdated: dateStr,
+          generatedByAI: true,
+          content: `# Arquitectura de Software y Límites de Capas
+
+## 1. Estilo Arquitectónico: ${arch}
+El backend se estructura en capas desacopladas con inyección de dependencias mediante FastAPI:
+
+- **Capa de Endpoints REST (\`backend/app/api/\`)\**: Routers modulares (\`assessments.py\`, \`auth.py\`, \`chat.py\`, \`deps.py\`).
+- **Capa de Servicios de Dominio (\`backend/app/services/\`)\**: Lógica de cálculo psicométrico e integración con IA (\`clinical_ai.py\`, \`assessment_ai.py\`, \`business_services.py\`).
+- **Capa de Modelos Relacionales (\`backend/app/models/\`)\**: Entidades SQLAlchemy mapeadas (\`Usuario\`, \`Evaluacion\`, \`RegistroEmocional\`, \`ResultadoIA\`, \`Cita\`).
+- **Capa de Configuración y Seguridad (\`backend/app/core/\`)\**: Configuración centralizada (\`config.py\`), seguridad JWT (\`security.py\`) y sesión de base de datos (\`database.py\`).
+`
+        },
+        {
+          id: 'doc-api',
+          projectId: proj.id,
+          title: 'Especificación de Contratos y Endpoints REST',
+          slug: 'api-specification',
+          category: 'API',
+          lastUpdated: dateStr,
+          generatedByAI: true,
+          content: `# Especificación de Contratos y Endpoints REST
+
+### URL Base: \`/api/v1\`
+
+## 1. Autenticación de Usuarios
+### \`POST /api/v1/auth/login\`
+Autentica al usuario y devuelve un token de acceso JWT.
+
+**Cuerpo de la Petición (Form URL Encoded):**
+\`\`\`
+username=paciente@mindguard.com&password=SecurePassword123!
+\`\`\`
+
+**Respuesta Exitosa \`200 OK\`:**
+\`\`\`json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
+}
+\`\`\`
+
+---
+
+## 2. Envío y Evaluación de Cuestionario Psicométrico
+### \`POST /api/v1/assessments/submit\`
+Recibe las respuestas de los tests PHQ-9 y GAD-7, calcula los puntajes y genera el diagnóstico asistido por IA.
+
+**Cuerpo de la Petición (JSON):**
+\`\`\`json
+{
+  "phq9_responses": [1, 2, 0, 1, 3, 2, 1, 0, 0],
+  "gad7_responses": [2, 1, 2, 2, 1, 0, 1],
+  "notas_personales": "Dificultad recurrente para conciliar el sueño durante la última semana."
+}
+\`\`\`
+
+**Respuesta Exitosa \`200 OK\`:**
+\`\`\`json
+{
+  "id": 142,
+  "phq9Score": 10,
+  "gad7Score": 9,
+  "nivelRiesgo": "MEDIO",
+  "has_high_risk": false,
+  "resultadoIA": "Nivel de riesgo estimado: MEDIO. Se recomienda seguimiento preventivo y pautas de higiene del sueño."
+}
+\`\`\`
+`
+        },
+        {
+          id: 'doc-database',
+          projectId: proj.id,
+          title: 'Modelos de Base de Datos y Diccionario de Datos',
+          slug: 'database-models',
+          category: 'Database',
+          lastUpdated: dateStr,
+          generatedByAI: true,
+          content: `# Modelos de Base de Datos y Diccionario de Datos
+
+## 1. Tabla Maestra: \`Usuario\`
+Almacena las cuentas de usuarios, psicólogos y administradores.
+
+| Columna | Tipo de Dato | Restricción | Descripción |
+|---|---|---|---|
+| \`id\` | INTEGER | PRIMARY KEY | Identificador único autoincremental |
+| \`nombre\` | VARCHAR(100) | NOT NULL | Nombre completo del usuario |
+| \`email\` | VARCHAR(150) | UNIQUE, NOT NULL | Correo electrónico de inicio de sesión |
+| \`password_hash\` | VARCHAR(255) | NOT NULL | Contraseña cifrada con algoritmo bcrypt |
+| \`rol\` | VARCHAR(50) | NOT NULL | Rol en el sistema (\`PACIENTE\`, \`PSICOLOGO\`, \`ADMIN\`) |
+| \`colegiatura\` | VARCHAR(50) | NULLABLE | Número de colegiatura profesional para psicólogos |
+
+## 2. Tabla de Evaluaciones: \`Evaluacion\`
+Registra las pruebas diagnósticas y puntajes psicométricos de los pacientes.
+
+| Columna | Tipo de Dato | Restricción | Descripción |
+|---|---|---|---|
+| \`id\` | INTEGER | PRIMARY KEY | Identificador de la evaluación |
+| \`id_usuario\` | INTEGER | FOREIGN KEY (\`Usuario.id\`) | Paciente evaluado |
+| \`phq9Score\` | INTEGER | NOT NULL | Puntaje acumulado en escala PHQ-9 (0 - 27) |
+| \`gad7Score\` | INTEGER | NOT NULL | Puntaje acumulado en escala GAD-7 (0 - 21) |
+| \`nivelRiesgo\` | VARCHAR(50) | NOT NULL | Nivel de riesgo (\`BAJO\`, \`MEDIO\`, \`ALTO\`) |
+| \`has_high_risk\` | BOOLEAN | DEFAULT FALSE | Flag de alerta crítica de salud mental |
+| \`fecha\` | TIMESTAMP | NOT NULL | Fecha y hora UTC del test |
+`
+        },
+        {
+          id: 'doc-deployment',
+          projectId: proj.id,
+          title: 'Infraestructura de Despliegue y Contenedores',
+          slug: 'deployment',
+          category: 'Deployment',
+          lastUpdated: dateStr,
+          generatedByAI: true,
+          content: `# Infraestructura de Despliegue y Contenedores
+
+## 1. Configuración Docker Compose Multi-Contenedor
+El sistema incluye orquestación mediante \`docker-compose.yml\`:
+
+\`\`\`yaml
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./mindguard.db
+      - GEMINI_API_KEY=\${GEMINI_API_KEY}
+  frontend:
+    build: ./frontend
+    ports:
+      - "4200:80"
+\`\`\`
+
+## 2. Motor de Inteligencia Artificial Local
+- **Motor de Inferencia**: Daemon Ollama (\`http://localhost:11434\`)
+- **Modelo Activo**: Qwen 2.5 Coder 7B
+- **Acelerador por Hardware**: NVIDIA GeForce RTX 3050 (4GB VRAM con CUDA 13.3)
+`
+        }
+      ];
+    }
 
     if (isPython) {
       if (isEs) {
