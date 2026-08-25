@@ -87,9 +87,10 @@ export class ProjectService {
 
     const languages = isMindguard 
       ? [
-          { name: 'Python', percentage: 65, color: '#3572A5', loc: 1202 },
-          { name: 'TypeScript / Angular', percentage: 25, color: '#3178C6', loc: 463 },
-          { name: 'SQL / DB', percentage: 10, color: '#336791', loc: 185 }
+          { name: 'TypeScript', percentage: 46.8, color: '#3178C6', loc: 866 },
+          { name: 'HTML', percentage: 38.9, color: '#E34F26', loc: 720 },
+          { name: 'Python', percentage: 11.8, color: '#3572A5', loc: 218 },
+          { name: 'CSS / Config', percentage: 2.5, color: '#563D7C', loc: 46 }
         ]
       : isEHR 
       ? [

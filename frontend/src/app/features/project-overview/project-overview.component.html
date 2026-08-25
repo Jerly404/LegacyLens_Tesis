@@ -212,7 +212,19 @@
             </h3>
 
             @if (translationService.isSpanish()) {
-              @if (projectService.selectedProject().mainLanguage === 'Python' || projectService.selectedProject().name.toLowerCase().includes('ehr')) {
+              @if (projectService.selectedProject().name.toLowerCase().includes('mindguard') || projectService.selectedProject().slug.includes('mindguard')) {
+                <div class="text-xs text-slate-300 space-y-3 mt-3 leading-relaxed">
+                  <p>
+                    <strong>Arquitectura Detectada:</strong> Plataforma Fullstack en capas (<strong>{{ projectService.selectedProject().architecture }}</strong>) compuesta por una SPA en Angular 17 / TypeScript (46.8%) y microservicio backend en FastAPI / Python 3.11 con persistencia SQLAlchemy y modelos de IA generativa (Gemini 1.5 y Groq).
+                  </p>
+                  <p>
+                    <strong>Punto Crítico (Hotspot):</strong> Latencia y timeout en la llamada de inferencia a los LLMs externos (Google Gemini 1.5 / Groq Llama 3) en <code class="text-amber-400 font-mono bg-white/5 px-1 py-0.5 rounded">backend/app/services/clinical_ai.py</code>. Se recomienda implementar reintentos exponenciales y fallback al modelo local de Ollama (Qwen 2.5 Coder en GPU).
+                  </p>
+                  <p>
+                    <strong>Aviso de Seguridad / Arquitectura:</strong> Respuestas a evaluaciones psicométricas (PHQ-9 y GAD-7) almacenadas en texto plano en la tabla <code class="text-blue-400 font-mono bg-white/5 px-1 py-0.5 rounded">Evaluacion</code>. Se recomienda habilitar cifrado a nivel de columna (AES-256) y limitador de tasa (*Rate Limiting*) en el endpoint de autenticación.
+                  </p>
+                </div>
+              } @else if (projectService.selectedProject().mainLanguage === 'Python' || projectService.selectedProject().name.toLowerCase().includes('ehr')) {
                 <div class="text-xs text-slate-300 space-y-3 mt-3 leading-relaxed">
                   <p>
                     <strong>Arquitectura Detectada:</strong> El sistema implementa una arquitectura en capas <strong>{{ projectService.selectedProject().architecture }}</strong> asíncrona con límites bien definidos entre Enrutadores FastAPI, Servicios de Dominio y Repositorios SQLAlchemy 2.0.

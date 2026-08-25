@@ -78,13 +78,14 @@ export class UploadComponent {
       const combined = url + ' ' + fileName;
       if (combined.includes('mindguard') || combined.includes('guard') || combined.includes('quality') || combined.includes('jerly') || combined.includes('software-quality')) {
         this.projectName.set('MindGuard — Software Quality & Mental Health Platform');
-        this.detectedLanguage.set('Python');
-        this.detectedFramework.set('FastAPI & SQLAlchemy + Angular / TailwindCSS');
+        this.detectedLanguage.set('TypeScript & Python');
+        this.detectedFramework.set('Angular 17 / TailwindCSS + FastAPI & SQLAlchemy');
         this.detectedArchitecture.set('Layered Architecture');
         this.detectedBreakdown.set([
-          { name: 'Python', percentage: 65, color: '#3572A5' },
-          { name: 'TypeScript / Angular', percentage: 25, color: '#3178C6' },
-          { name: 'SQL / DB', percentage: 10, color: '#336791' }
+          { name: 'TypeScript', percentage: 46.8, color: '#3178C6' },
+          { name: 'HTML', percentage: 38.9, color: '#E34F26' },
+          { name: 'Python', percentage: 11.8, color: '#3572A5' },
+          { name: 'CSS / Config', percentage: 2.5, color: '#563D7C' }
         ]);
       } else if (combined.includes('ehr') || combined.includes('clinical') || combined.includes('patient') || combined.includes('health')) {
         this.projectName.set('Clinical Electronic Health Record (EHR) API');
