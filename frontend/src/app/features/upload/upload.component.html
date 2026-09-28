@@ -46,6 +46,16 @@
       @if (sourceType() === 'git') {
         <div class="space-y-4">
           <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-300">Nombre del Proyecto</label>
+            <input 
+              type="text" 
+              [(ngModel)]="projectName" 
+              placeholder="E-Commerce Order Management Microservice"
+              class="w-full bg-[#0E1017] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div class="space-y-1.5">
             <label class="text-xs font-semibold text-slate-300">{{ 'upload.git_url' | translate }}</label>
             <input 
               type="text" 
@@ -103,14 +113,60 @@
         </div>
       }
 
-      <div class="pt-4 border-t border-white/[0.08] flex justify-end">
-        <button 
-          (click)="nextStep()" 
-          class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/20 flex items-center gap-1.5"
-        >
-          <span>Continuar a Detección</span>
-          <span class="material-symbols-outlined text-base">arrow_forward</span>
-        </button>
+      @if (isInvalidProjectSimulated()) {
+        <div class="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-300 space-y-3">
+          <div class="flex items-start gap-3">
+            <span class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-lg flex-shrink-0 mt-0.5">⚠️</span>
+            <div class="space-y-1 flex-1">
+              <div class="flex items-center justify-between">
+                <h4 class="font-bold text-rose-200 text-sm">Error de Validación: Estructura de Proyecto Inválida (ERR_INVALID_JAVA_PROJECT)</h4>
+                <span class="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-mono border border-rose-500/30">Carga Rechazada</span>
+              </div>
+              <p class="text-slate-300 text-xs leading-relaxed">
+                El repositorio seleccionado <strong class="text-rose-200 font-mono">https://github.com/empresa-demo/documentos-legales-2024.git</strong> no contiene una estructura reconocida de software Java/Spring. No se encontró ningún archivo descriptor de construcción (<code class="text-rose-200">pom.xml</code> o <code class="text-rose-200">build.gradle</code>) ni clases fuente compilables (<code class="text-rose-200">*.java</code>).
+              </p>
+            </div>
+          </div>
+          
+          <div class="p-3 bg-black/40 rounded-xl font-mono text-[11px] text-slate-300 border border-white/5 space-y-1">
+            <div class="text-rose-400">&gt; [VALIDATOR] Scanned 14 files in root directory: 0 Java sources found (all .pdf, .docx, .xlsx).</div>
+            <div class="text-rose-400">&gt; [EXCEPTION] InvalidRepositoryException: Target repository does not match supported Java ecosystem specs.</div>
+            <div class="text-emerald-400 font-semibold">&gt; [SISTEMA OPERATIVO] Manejo seguro activo: Proceso cancelado sin consumo de GPU ni alteración de memoria. El sistema permanece 100% disponible.</div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-[11px] text-slate-400">Por favor, ingrese una URL o archivo ZIP con un proyecto Spring Boot o Java válido.</span>
+            <button class="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+              <span class="material-symbols-outlined text-sm">refresh</span>
+              Reintentar con otro repositorio
+            </button>
+          </div>
+        </div>
+      }
+
+      <div class="pt-4 border-t border-white/[0.08] flex items-center justify-between">
+        @if (isInvalidProjectSimulated()) {
+          <span class="text-xs text-rose-400 font-medium flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+            El avance a la siguiente fase se encuentra bloqueado hasta cargar un proyecto compatible.
+          </span>
+          <button 
+            disabled
+            class="px-6 py-2.5 bg-slate-700/50 text-slate-400 text-xs font-semibold rounded-xl cursor-not-allowed flex items-center gap-1.5 border border-white/5"
+          >
+            <span>Continuar a Detección (Bloqueado)</span>
+            <span class="material-symbols-outlined text-base">block</span>
+          </button>
+        } @else {
+          <div></div>
+          <button 
+            (click)="nextStep()" 
+            class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/20 flex items-center gap-1.5"
+          >
+            <span>Continuar a Detección</span>
+            <span class="material-symbols-outlined text-base">arrow_forward</span>
+          </button>
+        }
       </div>
     </div>
   }

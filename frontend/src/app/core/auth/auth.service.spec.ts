@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 
 describe('AuthService', () => {
   let service: AuthService;
-  let routerSpy = { navigate: jasmine.createSpy('navigate') };
+  let routerSpy: { navigate: jest.Mock };
 
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
+    routerSpy = { navigate: jest.fn() };
 
     TestBed.configureTestingModule({
       providers: [
@@ -21,13 +22,13 @@ describe('AuthService', () => {
 
   it('should be created and have default session', () => {
     expect(service).toBeTruthy();
-    expect(service.isAuthenticated()).toBeTrue();
+    expect(service.isAuthenticated()).toBe(true);
     expect(service.currentUser()?.role).toBe('ADMIN');
   });
 
   it('should perform login and update session', (done) => {
     service.login('developer@legacyai.io', 'pass', true, 'DEVELOPER').subscribe(success => {
-      expect(success).toBeTrue();
+      expect(success).toBe(true);
       expect(service.currentUser()?.email).toBe('developer@legacyai.io');
       expect(service.currentUser()?.role).toBe('DEVELOPER');
       expect(routerSpy.navigate).toHaveBeenCalledWith(['/dashboard']);
@@ -38,7 +39,7 @@ describe('AuthService', () => {
   it('should logout and clear tokens', () => {
     service.logout();
     expect(service.currentUser()).toBeNull();
-    expect(service.isAuthenticated()).toBeFalse();
+    expect(service.isAuthenticated()).toBe(false);
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/login']);
   });
 });

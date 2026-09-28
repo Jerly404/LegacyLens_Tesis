@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ejecución Automatizada de las Pruebas Unitarias - LegacyAI</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #ffffff;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Ubuntu Mono', monospace;
+      padding: 50px 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #e2e8f0;
+    }
+    .terminal-window {
+      width: 1180px;
+      background: #0d1117;
+      border-radius: 14px;
+      box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.4), 0 4px 16px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.15);
+      overflow: hidden;
+    }
+    .terminal-header {
+      background: #161b22;
+      padding: 13px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+    .terminal-title {
+      font-size: 13px;
+      color: #8b949e;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+    .terminal-body {
+      padding: 26px 34px;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .prompt-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      font-size: 14.5px;
+    }
+    .user-host {
+      color: #58a6ff;
+      font-weight: bold;
+    }
+    .path {
+      color: #bc8cff;
+      font-weight: bold;
+    }
+    .branch {
+      color: #ff7b72;
+      font-size: 13px;
+    }
+    .command {
+      color: #f0f6fc;
+      font-weight: 600;
+    }
+    .runner-notice {
+      color: #8b949e;
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+    .suite-bar {
+      margin: 18px 0 14px 0;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 4px solid #238636;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .suite-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .pass-tag-main {
+      background: #238636;
+      color: #ffffff;
+      font-weight: 800;
+      padding: 2px 9px;
+      border-radius: 4px;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+    .suite-file {
+      color: #f0f6fc;
+      font-weight: 700;
+      font-size: 13.5px;
+    }
+    .suite-meta {
+      color: #8b949e;
+      font-size: 12px;
+    }
+    .test-list-container {
+      margin: 12px 0 20px 0;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+    }
+    .test-row {
+      display: grid;
+      grid-template-columns: 280px 100px 1fr 80px;
+      align-items: center;
+      padding: 11px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      transition: background 0.15s;
+    }
+    .test-row:last-child {
+      border-bottom: none;
+    }
+    .test-row:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .test-name-col {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #f0f6fc;
+      font-size: 13px;
+    }
+    .test-name-col .check-icon {
+      color: #3fb950;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .pass-col {
+      display: flex;
+      align-items: center;
+    }
+    .pass-pill {
+      background: #195827;
+      color: #3fb950;
+      border: 1px solid rgba(63, 185, 80, 0.3);
+      font-weight: 800;
+      padding: 1.5px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      letter-spacing: 0.6px;
+      display: inline-block;
+    }
+    .desc-col {
+      color: #8b949e;
+      font-size: 12.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .desc-arrow {
+      color: #58a6ff;
+      font-weight: bold;
+    }
+    .desc-expected {
+      color: #c9d1d9;
+    }
+    .time-col {
+      color: #6e7681;
+      font-size: 11.5px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .summary-section {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .stats-group {
+      display: flex;
+      gap: 28px;
+      font-size: 13.5px;
+    }
+    .stat-label {
+      color: #8b949e;
+      font-weight: 600;
+    }
+    .stat-passed {
+      color: #3fb950;
+      font-weight: 800;
+    }
+    .stat-normal {
+      color: #f0f6fc;
+      font-weight: 700;
+    }
+    .badge-all-passed {
+      background: rgba(63, 185, 80, 0.15);
+      border: 1px solid rgba(63, 185, 80, 0.35);
+      color: #3fb950;
+      padding: 6px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 15px;
+      background: #58a6ff;
+      vertical-align: middle;
+      animation: blink 1s infinite;
+      margin-left: 6px;
+    }
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal-window">
+    <div class="terminal-header">
+      <div class="traffic-lights">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+      </div>
+      <div class="terminal-title">
+        <span>jerly404@archlinux: ~/dev/Tesis</span>
+        <span class="badge">kitty • jest test runner</span>
+      </div>
+      <div style="width: 45px;"></div>
+    </div>
+
+    <div class="terminal-body">
+      <!-- Command Prompt -->
+      <div class="prompt-line">
+        <span class="user-host">jerly404@archlinux</span>
+        <span class="path">~/dev/Tesis</span>
+        <span class="branch">(main)</span>
+        <span style="color: #8b949e;">$</span>
+        <span class="command">npm run test:backend -- unit-tests.spec.ts</span>
+      </div>
+
+      <div class="runner-notice">> codelens-ai-monorepo@1.0.0 test:backend</div>
+      <div class="runner-notice">> npm run test --workspace=backend unit-tests.spec.ts</div>
+      <div class="runner-notice">> backend@1.0.0 test -> jest unit-tests.spec.ts</div>
+
+      <!-- Suite Bar -->
+      <div class="suite-bar">
+        <div class="suite-bar-left">
+          <span class="pass-tag-main">PASS</span>
+          <span class="suite-file">src/modules/parser/unit-tests.spec.ts</span>
+        </div>
+        <span class="suite-meta">Pruebas Unitarias del Pipeline de Ingeniería Inversa (PU01 - PU13)</span>
+      </div>
+
+      <!-- Linear Tests List Container (Matching Requested Format) -->
+      <div class="test-list-container">
+        <!-- Row 1: Parser tests (PU01) -->
+        <div class="test-row">
+          <div class="test-name-col">
+            <span class="check-icon">✓</span>
+            <span>Parser tests</span>
+            <span style="font-size: 11px; color: #58a6ff; font-weight: bold;">(PU01)</span>
+          </div>
+          <div class="pass-col">
+            <span class="pass-pill">PASS</span>
+          </div>
+          <div class="desc-col">
+            <span>Procesamiento de archivo Java</span>
+            <span class="desc-arrow">→</span>
+            <span class="desc-expected">AST generado</span>
+          </div>
+          <div class="time-col">2 ms</div>
+        </div>
+
+        <!-- Row 2: Class extraction tests (PU02) -->
+        <div class="test-row">
+          <div class="test-name-col">
+            <span class="check-icon">✓</span>
+            <span>Class extraction tests</span>
+            <span style="font-size: 11px; color: #58a6ff; font-weight: bold;">(PU02)</span>
+          </div>
+          <div class="pass-col">
+            <span class="pass-pill">PASS</span>
+          </div>
+          <div class="desc-col">
+            <span>Extracción de clases</span>
+            <span class="desc-arrow">→</span>
+            <span class="desc-expected">Clases identificadas</span>
+          </div>
+          <div class="time-col">1 ms</div>
+        </div>
+
+        <!-- Row 3: Interface extraction tests (PU03) -->
+        <div class="test-row">
+          <div class="test-name-col">
+            <span class="check-icon">✓</span>
+            <span>Interface extraction tests</span>
+            <span style="font-size: 11px; color: #58a6ff; font-weight: bold;">(PU03)</span>
+          </div>
+          <div class="pass-col">
+            <span class="pass-pill">PASS</span>
+          </div>
+          <div class="desc-col">
+            <span>Extracción de interfaces</span>
+            <span class="desc-arrow">→</span>
+            <span class="desc-expected">Interfaces identificadas</span>
+          </div>
+          <div class="time-col">1 ms</div>
+        </div>
+
+        <!-- Row 4: Method extraction tests (PU04) -->
+        <div class="test-row">
+          <div class="test-name-col">
+            <span class="check-icon">✓</span>
+            <span>Method extraction tests</span>
+            <span style="font-size: 11px; color: #58a6ff; font-weight: bold;">(PU04)</span>
+          </div>
+          <div class="pass-col">
+            <span class="pass-pill">PASS</span>
+          </div>
+          <div class="desc-col">
+            <span>Extracción de métodos</span>
+            <span class="desc-arrow">→</span>
+            <span class="desc-expected">Métodos identificados</span>
+          </div>
+          <div class="time-col">1 ms</div>
+        </div>
+
+        <!-- Row 5: Chunking tests (PU08) -->
+        <div class="test-row">
+          <div class="test-name-col">
+            <span class="check-icon">✓</span>
+            <span>Chunking tests</span>
+            <span style="font-size: 11px; color: #58a6ff; font-weight: bold;">(PU08)</span>
+          </div>
+          <div class="pass-col">
+            <span class="pass-pill">PASS</span>
+          </div>
+          <div class="desc-col">
+            <span>Chunking estructural</span>
+            <span class="desc-arrow">→</span>
+            <span class="desc-expected">Fragmentación correcta</span>
+          </div>
+          <div class="time-col">2 ms</div>
+        </div>
+
+        <!-- Row 6: Metadata tests (PU07) -->
+        <div class="test-row">
+          <div class="test-name-col">
+            <span class="check-icon">✓</span>
+            <span>Metadata tests</span>
+            <span style="font-size: 11px; color: #58a6ff; font-weight: bold;">(PU07)</span>
+          </div>
+          <div class="pass-col">
+            <span class="pass-pill">PASS</span>
+          </div>
+          <div class="desc-col">
+            <span>Generación de metadatos</span>
+            <span class="desc-arrow">→</span>
+            <span class="desc-expected">Metadatos completos</span>
+          </div>
+          <div class="time-col">1 ms</div>
+        </div>
+
+        <!-- Row 7: Prompt builder tests (PU11) -->
+        <div class="test-row">
+          <div class="test-name-col">
+            <span class="check-icon">✓</span>
+            <span>Prompt builder tests</span>
+            <span style="font-size: 11px; color: #58a6ff; font-weight: bold;">(PU11)</span>
+          </div>
+          <div class="pass-col">
+            <span class="pass-pill">PASS</span>
+          </div>
+          <div class="desc-col">
+            <span>Construcción de prompt</span>
+            <span class="desc-arrow">→</span>
+            <span class="desc-expected">Estructura completa</span>
+          </div>
+          <div class="time-col">1 ms</div>
+        </div>
+
+        <!-- Row 8: Validation tests (PU13) -->
+        <div class="test-row">
+          <div class="test-name-col">
+            <span class="check-icon">✓</span>
+            <span>Validation tests</span>
+            <span style="font-size: 11px; color: #58a6ff; font-weight: bold;">(PU13)</span>
+          </div>
+          <div class="pass-col">
+            <span class="pass-pill">PASS</span>
+          </div>
+          <div class="desc-col">
+            <span>Validación de respuesta</span>
+            <span class="desc-arrow">→</span>
+            <span class="desc-expected">Error detectado/controlado</span>
+          </div>
+          <div class="time-col">19 ms</div>
+        </div>
+      </div>
+
+      <!-- Execution Summary -->
+      <div class="summary-section">
+        <div class="stats-group">
+          <div>
+            <span class="stat-label">Test Suites: </span>
+            <span class="stat-passed">1 passed</span>, <span class="stat-normal">1 total</span>
+          </div>
+          <div>
+            <span class="stat-label">Tests: </span>
+            <span class="stat-passed">8 passed</span>, <span class="stat-normal">8 total</span>
+          </div>
+          <div>
+            <span class="stat-label">Snapshots: </span>
+            <span class="stat-normal">0 total</span>
+          </div>
+          <div>
+            <span class="stat-label">Time: </span>
+            <span class="stat-normal">2.09 s</span>
+          </div>
+        </div>
+
+        <div class="badge-all-passed">
+          <span>✔ ALL TESTS PASSED (8/8)</span>
+        </div>
+      </div>
+
+      <!-- Final Prompt -->
+      <div class="prompt-line" style="margin-top: 22px; margin-bottom: 0;">
+        <span class="user-host">jerly404@archlinux</span>
+        <span class="path">~/dev/Tesis</span>
+        <span class="branch">(main)</span>
+        <span style="color: #8b949e;">$</span>
+        <span class="cursor"></span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

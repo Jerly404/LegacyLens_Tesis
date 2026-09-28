@@ -1,4 +1,4 @@
-import { ProjectStatus, UserRole, RecommendationSeverity, ReportType } from '../types';
+import { ProjectStatus, UserRole, ReportType } from '../types';
 
 export interface CreateProjectDto {
   name: string;

@@ -116,65 +116,99 @@ export class CodeViewerComponent {
   private highlightSyntax(line: string): string {
     if (!line) return '&nbsp;';
 
+    // 1. First escape HTML special chars
     let escaped = line
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
 
-    // Comments for all languages (//, #, --, *, /*)
+    // Full line comments for multiple languages
+    const trimmed = escaped.trim();
     if (
-      escaped.trim().startsWith('//') || 
-      escaped.trim().startsWith('#') || 
-      escaped.trim().startsWith('--') || 
-      escaped.trim().startsWith('*') || 
-      escaped.trim().startsWith('/*')
+      trimmed.startsWith('//') || 
+      trimmed.startsWith('#') || 
+      trimmed.startsWith('--') || 
+      trimmed.startsWith('*') || 
+      trimmed.startsWith('/*')
     ) {
-      return `<span class="code-token-comment">${escaped}</span>`;
+      return `<span class="text-slate-500 italic">${escaped}</span>`;
     }
 
-    // Annotations & Decorators (@RestController, @shared_task, [Authorize], etc.)
-    escaped = escaped.replace(/(@[A-Za-z0-9_]+)/g, '<span class="text-purple-400 font-semibold">$1</span>');
-    escaped = escaped.replace(/(\[[A-Za-z0-9_\(\)\s,=]+\])/g, '<span class="text-purple-400 font-semibold">$1</span>');
+    // 2. Safely extract strings and inline comments into placeholders
+    // to prevent HTML attributes (class="...") from being matched by string/keyword regexes.
+    const placeholders: string[] = [];
+    const saveToken = (htmlSnippet: string): string => {
+      const token = `__CODE_TOKEN_${placeholders.length}__`;
+      placeholders.push(htmlSnippet);
+      return token;
+    };
 
-    // C++ Preprocessor
-    escaped = escaped.replace(/(#include\s+&lt;.*?&gt;)/g, '<span class="text-amber-400 font-mono">$1</span>');
-    escaped = escaped.replace(/(#include\s+".*?")/g, '<span class="text-amber-400 font-mono">$1</span>');
+    // Save inline comments (e.g. // something or # something)
+    escaped = escaped.replace(/(\/\/.*$)/, (_, comment) => {
+      return saveToken(`<span class="text-slate-500 italic">${comment}</span>`);
+    });
 
-    // Comprehensive Keywords across Java, C#, Python, C++, COBOL, PHP, Go, SQL, TS
+    // Save double-quoted strings
+    escaped = escaped.replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, (match) => {
+      return saveToken(`<span class="text-emerald-400">${match}</span>`);
+    });
+
+    // Save single-quoted strings
+    escaped = escaped.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, (match) => {
+      return saveToken(`<span class="text-emerald-400">${match}</span>`);
+    });
+
+    // C++ Preprocessor includes
+    escaped = escaped.replace(/(#include\s+&lt;.*?&gt;)/g, (match) => {
+      return saveToken(`<span class="text-amber-400 font-mono">${match}</span>`);
+    });
+
+    // Annotations & Decorators (@RestController, @Transactional, [Authorize], etc.)
+    escaped = escaped.replace(/(@[A-Za-z0-9_]+)/g, (match) => {
+      return saveToken(`<span class="text-purple-400 font-semibold">${match}</span>`);
+    });
+    escaped = escaped.replace(/(\[[A-Za-z0-9_\(\)\s,=]+\])/g, (match) => {
+      return saveToken(`<span class="text-purple-400 font-semibold">${match}</span>`);
+    });
+
+    // Method invocations (.methodName(...) or ::methodName)
+    escaped = escaped.replace(/(\.[A-Za-z0-9_]+)(\()/g, (_, name, paren) => {
+      return `${saveToken(`<span class="text-blue-400">${name}</span>`)}${paren}`;
+    });
+    escaped = escaped.replace(/(::[A-Za-z0-9_]+)/g, (match) => {
+      return saveToken(`<span class="text-cyan-400">${match}</span>`);
+    });
+
+    // Numbers
+    escaped = escaped.replace(/\b(\d+(\.\d+)?)\b/g, (match) => {
+      return saveToken(`<span class="text-amber-400 font-mono">${match}</span>`);
+    });
+
+    // Comprehensive Language Keywords
     const keywords = [
-      // Common OOP & Systems
       'public', 'private', 'protected', 'class', 'interface', 'enum', 'extends', 'implements',
       'import', 'package', 'return', 'if', 'else', 'for', 'while', 'try', 'catch', 'throw', 'throws',
       'new', 'this', 'final', 'static', 'void', 'int', 'bool', 'boolean', 'double', 'float', 'string',
       'const', 'let', 'var', 'function', 'async', 'await', 'export', 'default', 'type', 'from', 'null', 'true', 'false',
-      // C#
       'using', 'namespace', 'Task', 'readonly', 'override', 'virtual', 'get', 'set',
-      // Python
       'def', 'self', 'elif', 'with', 'as', 'raise', 'pass', 'lambda', 'yield', 'None',
-      // C++
       'template', 'typename', 'nullptr', 'auto', 'struct', 'sizeof', 'std',
-      // Go
       'func', 'chan', 'go', 'defer', 'select', 'fallthrough', 'make',
-      // COBOL
       'IDENTIFICATION', 'DIVISION', 'PROGRAM-ID', 'ENVIRONMENT', 'DATA', 'FILE', 'SECTION',
       'WORKING-STORAGE', 'PROCEDURE', 'PERFORM', 'UNTIL', 'READ', 'MOVE', 'ADD', 'TO', 'GOBACK',
       'EXEC', 'SQL', 'END-EXEC', 'PIC', 'VALUE', 'ZERO', 'OPEN', 'CLOSE', 'INPUT', 'OUTPUT',
-      // SQL
       'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'FROM', 'WHERE', 'JOIN', 'GROUP', 'BY', 'ORDER', 'HAVING'
     ];
     
-    keywords.forEach(kw => {
-      const regex = new RegExp(`\\b(${kw})\\b`, 'g');
-      escaped = escaped.replace(regex, '<span class="text-rose-400 font-medium">$1</span>');
+    const kwRegex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'g');
+    escaped = escaped.replace(kwRegex, (match) => {
+      return saveToken(`<span class="text-rose-400 font-medium">${match}</span>`);
     });
 
-    // Strings in quotes
-    escaped = escaped.replace(/(".*?")/g, '<span class="text-emerald-400">$1</span>');
-    escaped = escaped.replace(/('.*?')/g, '<span class="text-emerald-400">$1</span>');
-
-    // Method invocations
-    escaped = escaped.replace(/(\.[A-Za-z0-9_]+)(\()/g, '<span class="text-blue-400">$1</span>$2');
-    escaped = escaped.replace(/(::[A-Za-z0-9_]+)/g, '<span class="text-cyan-400">$1</span>');
+    // 3. Restore all protected placeholders
+    placeholders.forEach((htmlSnippet, i) => {
+      escaped = escaped.replace(`__CODE_TOKEN_${i}__`, htmlSnippet);
+    });
 
     return escaped;
   }

@@ -16,6 +16,9 @@ export class TranslationService {
   private translations: Record<SupportedLanguage, Record<string, string>> = {
     es: {
       // Sidebar & Navigation
+      'nav.group_workspace': 'Espacio de Trabajo',
+      'nav.group_engineering': 'Ingeniería Inversa',
+      'nav.group_intelligence': 'Inteligencia & Ajustes',
       'nav.dashboard': 'Panel Principal',
       'nav.projects': 'Proyectos',
       'nav.upload': 'Subir Repositorio',
@@ -127,6 +130,9 @@ export class TranslationService {
 
     en: {
       // Sidebar & Navigation
+      'nav.group_workspace': 'Workspace',
+      'nav.group_engineering': 'Reverse Engineering',
+      'nav.group_intelligence': 'Intelligence & Settings',
       'nav.dashboard': 'Dashboard',
       'nav.projects': 'Projects',
       'nav.upload': 'Upload Repository',

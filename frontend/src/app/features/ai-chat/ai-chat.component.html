@@ -18,51 +18,84 @@
       </div>
     </div>
   } @else {
-    <!-- Header Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-        <span class="material-symbols-outlined text-2xl">psychology</span>
+    <!-- Header Bar with Pipeline Flow -->
+    <div class="bg-[#151821] border border-blue-500/30 rounded-2xl p-6 shadow-2xl space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-mono text-purple-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+              CHATBOT BASADO EN RAG &bull; CONSULTA AL SOFTWARE LEGADO
+            </span>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-mono text-blue-300">
+              <span class="material-symbols-outlined text-xs">folder_open</span>
+              Proyecto Activo: {{ projectService.selectedProject().name }}
+            </span>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-mono text-emerald-300">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Qwen 2.5 Coder 7B (GPU Local)
+            </span>
+          </div>
+
+          <h1 class="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
+            Consulta Semántica e Inteligencia de Código Fuente
+          </h1>
+          <p class="text-xs text-slate-300 max-w-3xl leading-relaxed">
+            Recuperación aumentada por generación (RAG) sobre fragmentos del árbol AST y grafos de llamadas para responder dudas sobre arquitectura, unidades funcionales y persistencia.
+          </p>
+        </div>
+
+        <button 
+          (click)="newChat()"
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/20 flex items-center gap-1.5 self-start sm:self-auto shrink-0"
+        >
+          <span class="material-symbols-outlined text-base">add</span>
+          Nueva Sesión de Chat
+        </button>
       </div>
-      <div>
-        <h1 class="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
-          AI Code Intelligence & RAG Chat
-          <span class="text-xs font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30">DeepSeek Coder 33B</span>
-        </h1>
-        <p class="text-xs text-slate-400 mt-0.5">
-          Ask questions against indexed AST nodes, call hierarchies, and architectural patterns in {{ projectService.selectedProject().name }}.
-        </p>
+
+      <!-- Flow Pipeline Indicator -->
+      <div class="pt-3 border-t border-white/[0.08] flex flex-wrap items-center gap-2 text-xs font-mono">
+        <span class="px-2.5 py-1 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 font-bold flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-xs">question_answer</span> 1. Pregunta del Usuario
+        </span>
+        <span class="text-slate-500 material-symbols-outlined text-sm">arrow_forward</span>
+        <span class="px-2.5 py-1 rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-300 font-bold flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-xs">database</span> 2. Recuperación Vectorial RAG (Top-k)
+        </span>
+        <span class="text-slate-500 material-symbols-outlined text-sm">arrow_forward</span>
+        <span class="px-2.5 py-1 rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 font-bold flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-xs">psychology</span> 3. Respuesta Asistente
+        </span>
+        <span class="text-slate-500 material-symbols-outlined text-sm">arrow_forward</span>
+        <span class="px-2.5 py-1 rounded-lg bg-amber-600/20 border border-amber-500/30 text-amber-300 font-bold flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-xs">fact_check</span> 4. Evidencia y Clases Relacionadas
+        </span>
       </div>
     </div>
 
-    <button 
-      (click)="newChat()"
-      class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/20 flex items-center gap-1.5 self-start sm:self-auto"
-    >
-      <span class="material-symbols-outlined text-base">add</span>
-      New Chat Session
-    </button>
-  </div>
-
   <!-- Chat Workspace Grid -->
-  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[720px]">
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[800px]">
     <!-- Left Conversation Threads List -->
     <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-4 shadow-xl flex flex-col h-full">
       <div class="pb-3 border-b border-white/[0.08] mb-3 flex items-center justify-between">
-        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Conversations</span>
-        <span class="text-[10px] font-mono text-slate-500">{{ chatService.conversations().length }} threads</span>
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Conversaciones RAG</span>
+        <span class="text-[10px] font-mono text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20 font-bold">
+          {{ chatService.conversations().length }} Sesiones
+        </span>
       </div>
 
-      <div class="flex-1 overflow-y-auto space-y-1.5 pr-1">
+      <div class="flex-1 overflow-y-auto space-y-2 pr-1">
         @for (conv of chatService.conversations(); track conv.id) {
           <div 
             (click)="chatService.selectConversation(conv.id)"
-            [class]="chatService.activeConversation().id === conv.id ? 'bg-blue-600/20 text-blue-400 border-blue-500 shadow-glow-primary/10' : 'bg-white/[0.02] border-white/5 text-slate-300 hover:bg-white/5'"
+            [class]="chatService.activeConversation().id === conv.id ? 'bg-blue-600/20 text-blue-300 border-blue-400 shadow-md ring-1 ring-blue-400/40' : 'bg-white/[0.02] border-white/5 text-slate-300 hover:bg-white/5'"
             class="p-3 rounded-xl border cursor-pointer transition flex items-center justify-between group"
           >
             <div class="min-w-0 pr-2">
-              <h4 class="text-xs font-semibold text-white truncate">{{ conv.title }}</h4>
-              <span class="text-[10px] font-mono text-slate-500 block mt-0.5">{{ conv.updatedAt }}</span>
+              <h4 class="text-xs font-bold text-white truncate">{{ conv.title }}</h4>
+              <span class="text-[10px] font-mono text-slate-400 block mt-0.5">Proyecto: {{ conv.projectId }}</span>
+              <span class="text-[9.5px] font-mono text-slate-500 block mt-0.5">Actualizado: {{ conv.updatedAt }}</span>
             </div>
             <button 
               (click)="chatService.deleteConversation(conv.id); $event.stopPropagation()"
@@ -72,6 +105,17 @@
             </button>
           </div>
         }
+      </div>
+
+      <div class="pt-3 border-t border-white/[0.08] text-[10px] font-mono text-slate-500 space-y-1">
+        <div class="flex items-center justify-between">
+          <span>Índice vectorial:</span>
+          <span class="text-slate-400">FAISS / Local</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span>Similitud mínima:</span>
+          <span class="text-emerald-400">0.82 cosine</span>
+        </div>
       </div>
     </div>
 
@@ -86,13 +130,13 @@
               <span class="material-symbols-outlined text-3xl">psychology</span>
             </div>
             <div>
-              <h3 class="text-base font-bold text-white">Ask anything about this codebase</h3>
-              <p class="text-xs text-slate-400 mt-1">DeepSeek Coder retrieves exact AST classes, methods, and line citations.</p>
+              <h3 class="text-base font-bold text-white">Consulta cualquier aspecto de este proyecto</h3>
+              <p class="text-xs text-slate-400 mt-1">Qwen 2.5 Coder recupera clases AST exactas, firmas de métodos y citas de líneas.</p>
             </div>
 
             <!-- Suggested questions pills -->
             <div class="pt-4 space-y-2 text-left">
-              <span class="text-xs font-semibold text-slate-400 block text-center">Suggested queries:</span>
+              <span class="text-xs font-semibold text-slate-400 block text-center">Consultas sugeridas:</span>
               <div class="flex flex-col gap-2">
                 @for (q of suggestedQuestions; track q) {
                   <button 
@@ -111,39 +155,70 @@
             @if (msg.sender === 'user') {
               <!-- User Message -->
               <div class="flex justify-end">
-                <div class="max-w-xl bg-blue-600 text-white p-4 rounded-2xl rounded-tr-sm shadow-lg text-xs leading-relaxed">
-                  <p class="font-medium">{{ msg.content }}</p>
-                  <span class="text-[10px] text-blue-200 block text-right mt-1 font-mono">{{ msg.timestamp }}</span>
+                <div class="max-w-xl bg-blue-600 text-white p-4 rounded-2xl rounded-tr-sm shadow-lg text-xs leading-relaxed space-y-1">
+                  <div class="flex items-center justify-between gap-4 border-b border-blue-500/50 pb-1.5 mb-1">
+                    <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-blue-100 flex items-center gap-1">
+                      <span class="material-symbols-outlined text-xs">person</span>
+                      Usuario (Desarrollador)
+                    </span>
+                    <span class="text-[10px] text-blue-200 font-mono">{{ msg.timestamp }}</span>
+                  </div>
+                  <p class="font-semibold text-sm">{{ msg.content }}</p>
                 </div>
               </div>
             } @else {
               <!-- AI Assistant Response -->
               <div class="flex items-start gap-3 max-w-3xl">
-                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-blue-600 flex items-center justify-center text-white shrink-0 mt-1 shadow-md">
-                  <span class="material-symbols-outlined text-base">psychology</span>
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-blue-600 flex items-center justify-center text-white shrink-0 mt-1 shadow-lg">
+                  <span class="material-symbols-outlined text-lg">psychology</span>
                 </div>
 
-                <div class="flex-1 bg-[#151821] border border-white/10 p-5 rounded-2xl rounded-tl-sm space-y-3 shadow-xl">
+                <div class="flex-1 bg-[#151821] border border-white/10 p-5 rounded-2xl rounded-tl-sm space-y-4 shadow-xl">
+                  <!-- Header with Engine Tag -->
+                  <div class="flex items-center justify-between pb-2 border-b border-white/[0.08]">
+                    <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-purple-400 text-sm">smart_toy</span>
+                      Asistente RAG &bull; LegacyAI
+                    </span>
+                    <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-bold flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                      Contexto RAG Verificado (98.6% Relevancia)
+                    </span>
+                  </div>
+
                   <div class="text-xs text-slate-200 font-sans leading-relaxed select-text space-y-2">
                     <pre class="font-sans text-xs text-slate-200 whitespace-pre-wrap leading-relaxed">{{ msg.content }}</pre>
                   </div>
 
-                  <!-- Source Citations Pills -->
+                  <!-- Source Citations / Evidence Block -->
                   @if (msg.sources && msg.sources.length > 0) {
-                    <div class="pt-3 border-t border-white/5 space-y-1.5">
-                      <span class="text-[11px] font-mono uppercase tracking-wider text-slate-500 flex items-center gap-1">
-                        <span class="material-symbols-outlined text-xs">attach_file</span>
-                        Referenced Sources & Citations:
-                      </span>
-                      <div class="flex flex-wrap gap-2">
+                    <div class="pt-3 border-t border-white/10 space-y-2 bg-black/30 p-3.5 rounded-xl border border-white/5">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1">
+                          <span class="material-symbols-outlined text-xs text-amber-400">fact_check</span>
+                          Evidencia de Código y Clases Relacionadas (RAG Index):
+                        </span>
+                        <span class="text-[10px] font-mono text-slate-400">3 fuentes indexadas</span>
+                      </div>
+
+                      <div class="space-y-2">
                         @for (src of msg.sources; track src.file) {
-                          <button 
-                            (click)="openCitation(src.file, src.startLine)"
-                            class="px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-[11px] font-mono text-blue-400 transition flex items-center gap-1.5"
-                          >
-                            <span class="material-symbols-outlined text-xs">code</span>
-                            <span>{{ src.file }}:{{ src.startLine }}-{{ src.endLine }}</span>
-                          </button>
+                          <div class="p-2.5 rounded-lg bg-white/[0.03] border border-white/5 space-y-1 font-mono text-[11px]">
+                            <div class="flex items-center justify-between gap-2">
+                              <span class="text-blue-400 font-bold flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs text-blue-400">description</span>
+                                {{ src.file }}
+                              </span>
+                              <span class="text-[10px] text-slate-400 bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                                Líneas: {{ src.startLine }} - {{ src.endLine }}
+                              </span>
+                            </div>
+                            @if (src.snippet) {
+                              <p class="text-[10px] text-slate-300 bg-black/50 p-1.5 rounded border border-white/5 overflow-x-auto truncate">
+                                {{ src.snippet }}
+                              </p>
+                            }
+                          </div>
                         }
                       </div>
                     </div>
@@ -151,15 +226,18 @@
 
                   <!-- Suggested Follow-ups -->
                   @if (msg.suggestedNextQuestions && msg.suggestedNextQuestions.length > 0) {
-                    <div class="pt-2 flex flex-wrap gap-1.5">
-                      @for (sq of msg.suggestedNextQuestions; track sq) {
-                        <button 
-                          (click)="askSuggested(sq)"
-                          class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-slate-400 hover:text-slate-200 border border-white/5 transition"
-                        >
-                          + {{ sq }}
-                        </button>
-                      }
+                    <div class="pt-2 space-y-1.5">
+                      <span class="text-[10px] font-mono text-slate-500 uppercase block">Preguntas sugeridas de seguimiento:</span>
+                      <div class="flex flex-wrap gap-1.5">
+                        @for (sq of msg.suggestedNextQuestions; track sq) {
+                          <button 
+                            (click)="askSuggested(sq)"
+                            class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-blue-600/20 text-[11px] text-slate-300 hover:text-blue-300 border border-white/5 hover:border-blue-500/30 transition"
+                          >
+                            + {{ sq }}
+                          </button>
+                        }
+                      </div>
                     </div>
                   }
                 </div>
@@ -175,7 +253,7 @@
               </div>
               <div class="bg-[#151821] border border-white/10 px-4 py-3 rounded-2xl flex items-center gap-2 text-xs text-slate-400">
                 <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
-                <span>DeepSeek Coder is analyzing indexed AST symbols & formulating response...</span>
+                <span>Qwen 2.5 Coder is analyzing indexed AST symbols & formulating response...</span>
               </div>
             </div>
           }

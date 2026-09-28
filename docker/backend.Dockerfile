@@ -18,4 +18,4 @@ COPY --from=builder /app/shared/dist ./shared/dist
 COPY --from=builder /app/backend/dist ./backend/dist
 COPY --from=builder /app/backend/prisma ./backend/prisma
 EXPOSE 3000
-CMD ["node", "backend/dist/src/main.js"]
+CMD ["node", "backend/dist/backend/src/main.js"]

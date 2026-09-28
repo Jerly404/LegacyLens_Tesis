@@ -2,6 +2,88 @@
   <!-- Toast Floating Container -->
   <app-toast></app-toast>
 
+  <!-- Mobile Drawer Overlay -->
+  @if (mobileDrawerOpen()) {
+    <div class="fixed inset-0 z-50 md:hidden flex">
+      <div class="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity" (click)="toggleMobileDrawer()"></div>
+      <aside class="relative w-72 max-w-xs bg-[#151821] border-r border-white/10 flex flex-col h-full z-10 shadow-2xl">
+        <div class="h-16 flex items-center justify-between px-4 border-b border-white/[0.08]">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white">
+              <span class="material-symbols-outlined text-lg">psychology</span>
+            </div>
+            <span class="font-extrabold text-sm tracking-tight text-white">
+              Legacy<span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">AI</span>
+            </span>
+          </div>
+          <button (click)="toggleMobileDrawer()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5">
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+
+        <nav class="flex-1 px-3 py-4 space-y-4 overflow-y-auto">
+          <div class="space-y-1">
+            <span class="px-3 text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold block mb-1">
+              {{ 'nav.group_workspace' | translate }}
+            </span>
+            <a (click)="toggleMobileDrawer()" routerLink="/dashboard" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs">
+              <span class="material-symbols-outlined text-lg">dashboard</span>
+              <span>{{ 'nav.dashboard' | translate }}</span>
+            </a>
+            <a (click)="toggleMobileDrawer()" routerLink="/projects" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs">
+              <span class="material-symbols-outlined text-lg">folder</span>
+              <span>{{ 'nav.projects' | translate }}</span>
+            </a>
+            <a (click)="toggleMobileDrawer()" routerLink="/upload" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs">
+              <span class="material-symbols-outlined text-lg">upload_file</span>
+              <span>{{ 'nav.upload' | translate }}</span>
+            </a>
+          </div>
+
+          <div class="space-y-1 pt-2 border-t border-white/5">
+            <span class="px-3 text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold block mb-1">
+              {{ 'nav.group_engineering' | translate }}
+            </span>
+            <a (click)="toggleMobileDrawer()" routerLink="/project-overview" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs">
+              <span class="material-symbols-outlined text-lg">code</span>
+              <span>{{ 'nav.overview' | translate }}</span>
+            </a>
+            <a (click)="toggleMobileDrawer()" routerLink="/architecture" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs">
+              <span class="material-symbols-outlined text-lg">account_tree</span>
+              <span>{{ 'nav.architecture' | translate }}</span>
+            </a>
+            <a (click)="toggleMobileDrawer()" routerLink="/uml" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs">
+              <span class="material-symbols-outlined text-lg">schema</span>
+              <span>{{ 'nav.diagrams' | translate }}</span>
+            </a>
+            <a (click)="toggleMobileDrawer()" routerLink="/documentation" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs">
+              <span class="material-symbols-outlined text-lg">description</span>
+              <span>{{ 'nav.documentation' | translate }}</span>
+            </a>
+          </div>
+
+          <div class="space-y-1 pt-2 border-t border-white/5">
+            <span class="px-3 text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold block mb-1">
+              {{ 'nav.group_intelligence' | translate }}
+            </span>
+            <a (click)="toggleMobileDrawer()" routerLink="/ai-chat" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs">
+              <span class="material-symbols-outlined text-lg">psychology</span>
+              <span>{{ 'nav.chat' | translate }}</span>
+            </a>
+            <a (click)="toggleMobileDrawer()" routerLink="/reports" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs">
+              <span class="material-symbols-outlined text-lg">analytics</span>
+              <span>{{ 'nav.reports' | translate }}</span>
+            </a>
+            <a (click)="toggleMobileDrawer()" routerLink="/settings" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs">
+              <span class="material-symbols-outlined text-lg">settings</span>
+              <span>{{ 'nav.settings' | translate }}</span>
+            </a>
+          </div>
+        </nav>
+      </aside>
+    </div>
+  }
+
   <div class="flex flex-1 relative overflow-hidden">
     <!-- Desktop Sidebar -->
     <aside 
@@ -35,117 +117,150 @@
       </div>
 
       <!-- Navigation Links -->
-      <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto scrollbar-none">
-        <a 
-          routerLink="/dashboard" 
-          routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
-        >
-          <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">dashboard</span>
-          @if (sidebarOpen()) { <span>{{ 'nav.dashboard' | translate }}</span> }
-        </a>
-
-        <a 
-          routerLink="/projects" 
-          routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
-        >
-          <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">folder</span>
-          @if (sidebarOpen()) { <span>{{ 'nav.projects' | translate }}</span> }
-        </a>
-
-        <a 
-          routerLink="/upload" 
-          routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
-        >
-          <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">upload_file</span>
-          @if (sidebarOpen()) { <span>{{ 'nav.upload' | translate }}</span> }
-        </a>
-
-        <div class="pt-3 pb-1 border-t border-white/5">
+      <nav class="flex-1 px-3 py-4 space-y-4 overflow-y-auto scrollbar-none">
+        <!-- GROUP 1: Workspace / Plataforma -->
+        <div class="space-y-1">
           @if (sidebarOpen()) {
-            <span class="px-3 text-[10px] font-mono uppercase tracking-wider text-slate-500">Reverse Engineering</span>
+            <span class="px-3 text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold block mb-1">
+              {{ 'nav.group_workspace' | translate }}
+            </span>
           }
+
+          <a 
+            routerLink="/dashboard" 
+            routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
+            [title]="!sidebarOpen() ? ('nav.dashboard' | translate) : ''"
+          >
+            <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">dashboard</span>
+            @if (sidebarOpen()) { <span>{{ 'nav.dashboard' | translate }}</span> }
+          </a>
+
+          <a 
+            routerLink="/projects" 
+            routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
+            [title]="!sidebarOpen() ? ('nav.projects' | translate) : ''"
+          >
+            <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">folder</span>
+            @if (sidebarOpen()) { <span>{{ 'nav.projects' | translate }}</span> }
+          </a>
+
+          <a 
+            routerLink="/upload" 
+            routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
+            [title]="!sidebarOpen() ? ('nav.upload' | translate) : ''"
+          >
+            <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">upload_file</span>
+            @if (sidebarOpen()) { <span>{{ 'nav.upload' | translate }}</span> }
+          </a>
         </div>
 
-        <a 
-          routerLink="/analysis-progress" 
-          routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
-        >
-          <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">speed</span>
-          @if (sidebarOpen()) { <span>{{ 'nav.analysis' | translate }}</span> }
-        </a>
-
-        <a 
-          routerLink="/project-overview" 
-          routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
-        >
-          <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">code</span>
-          @if (sidebarOpen()) { <span>{{ 'nav.overview' | translate }}</span> }
-        </a>
-
-        <a 
-          routerLink="/architecture" 
-          routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
-        >
-          <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">account_tree</span>
-          @if (sidebarOpen()) { <span>{{ 'nav.architecture' | translate }}</span> }
-        </a>
-
-        <a 
-          routerLink="/documentation" 
-          routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
-        >
-          <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">description</span>
-          @if (sidebarOpen()) { <span>{{ 'nav.documentation' | translate }}</span> }
-        </a>
-
-        <a 
-          routerLink="/uml" 
-          routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
-        >
-          <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">schema</span>
-          @if (sidebarOpen()) { <span>{{ 'nav.diagrams' | translate }}</span> }
-        </a>
-
-        <div class="pt-3 pb-1 border-t border-white/5">
+        <!-- GROUP 2: Reverse Engineering / Ingeniería Inversa -->
+        <div class="space-y-1 pt-2 border-t border-white/5">
           @if (sidebarOpen()) {
-            <span class="px-3 text-[10px] font-mono uppercase tracking-wider text-slate-500">Intelligence & Export</span>
+            <span class="px-3 text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold block mb-1">
+              {{ 'nav.group_engineering' | translate }}
+            </span>
           }
+
+          @if (isAnalyzing()) {
+            <a 
+              routerLink="/analysis-progress" 
+              routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
+              class="flex items-center justify-between px-3 py-2 rounded-xl text-blue-400 bg-blue-500/10 border border-blue-500/20 transition text-xs group animate-pulse"
+              [title]="!sidebarOpen() ? ('nav.analysis' | translate) : ''"
+            >
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-lg text-blue-400">speed</span>
+                @if (sidebarOpen()) { <span>{{ 'nav.analysis' | translate }}</span> }
+              </div>
+              @if (sidebarOpen()) {
+                <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+              }
+            </a>
+          }
+
+          <a 
+            routerLink="/project-overview" 
+            routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
+            [title]="!sidebarOpen() ? ('nav.overview' | translate) : ''"
+          >
+            <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">code</span>
+            @if (sidebarOpen()) { <span>{{ 'nav.overview' | translate }}</span> }
+          </a>
+
+          <a 
+            routerLink="/architecture" 
+            routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
+            [title]="!sidebarOpen() ? ('nav.architecture' | translate) : ''"
+          >
+            <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">account_tree</span>
+            @if (sidebarOpen()) { <span>{{ 'nav.architecture' | translate }}</span> }
+          </a>
+
+          <a 
+            routerLink="/uml" 
+            routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
+            [title]="!sidebarOpen() ? ('nav.diagrams' | translate) : ''"
+          >
+            <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">schema</span>
+            @if (sidebarOpen()) { <span>{{ 'nav.diagrams' | translate }}</span> }
+          </a>
+
+          <a 
+            routerLink="/documentation" 
+            routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
+            [title]="!sidebarOpen() ? ('nav.documentation' | translate) : ''"
+          >
+            <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">description</span>
+            @if (sidebarOpen()) { <span>{{ 'nav.documentation' | translate }}</span> }
+          </a>
         </div>
 
-        <a 
-          routerLink="/ai-chat" 
-          routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
-        >
-          <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">chat</span>
-          @if (sidebarOpen()) { <span>{{ 'nav.chat' | translate }}</span> }
-        </a>
+        <!-- GROUP 3: Intelligence & Management / Inteligencia & Ajustes -->
+        <div class="space-y-1 pt-2 border-t border-white/5">
+          @if (sidebarOpen()) {
+            <span class="px-3 text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold block mb-1">
+              {{ 'nav.group_intelligence' | translate }}
+            </span>
+          }
 
-        <a 
-          routerLink="/reports" 
-          routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
-        >
-          <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">analytics</span>
-          @if (sidebarOpen()) { <span>{{ 'nav.reports' | translate }}</span> }
-        </a>
+          <a 
+            routerLink="/ai-chat" 
+            routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
+            [title]="!sidebarOpen() ? ('nav.chat' | translate) : ''"
+          >
+            <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">psychology</span>
+            @if (sidebarOpen()) { <span>{{ 'nav.chat' | translate }}</span> }
+          </a>
 
-        <a 
-          routerLink="/settings" 
-          routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
-        >
-          <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">settings</span>
-          @if (sidebarOpen()) { <span>{{ 'nav.settings' | translate }}</span> }
-        </a>
+          <a 
+            routerLink="/reports" 
+            routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
+            [title]="!sidebarOpen() ? ('nav.reports' | translate) : ''"
+          >
+            <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">analytics</span>
+            @if (sidebarOpen()) { <span>{{ 'nav.reports' | translate }}</span> }
+          </a>
+
+          <a 
+            routerLink="/settings" 
+            routerLinkActive="bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-blue-400 border-l-2 border-blue-500 font-semibold" 
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition text-xs group"
+            [title]="!sidebarOpen() ? ('nav.settings' | translate) : ''"
+          >
+            <span class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">settings</span>
+            @if (sidebarOpen()) { <span>{{ 'nav.settings' | translate }}</span> }
+          </a>
+        </div>
       </nav>
 
       <!-- Sidebar Footer User Profile -->
@@ -181,18 +296,30 @@
           </button>
 
           <!-- Active Project Context Switcher -->
-          <div class="flex items-center gap-2 bg-[#0E1017] border border-white/10 px-3 py-1.5 rounded-xl text-xs max-w-xs sm:max-w-md">
-            <span class="material-symbols-outlined text-blue-400 text-base shrink-0">deployed_code</span>
-            <select 
-              [value]="projectService.selectedProject().id"
-              (change)="switchProject($event)"
-              class="bg-transparent text-white text-xs font-medium focus:outline-none cursor-pointer truncate max-w-[180px] sm:max-w-[240px]"
-            >
-              @for (proj of projectService.projects(); track proj.id) {
-                <option [value]="proj.id" class="bg-[#151821] text-white">{{ proj.name }}</option>
-              }
-            </select>
-          </div>
+          @if (projectService.hasProjects()) {
+            <div class="flex items-center gap-2 bg-[#0E1017] border border-white/10 px-3 py-1.5 rounded-xl text-xs max-w-xs sm:max-w-md shadow-inner">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse"></span>
+              <span class="material-symbols-outlined text-blue-400 text-base shrink-0">deployed_code</span>
+              <select 
+                [value]="projectService.selectedProject().id"
+                (change)="switchProject($event)"
+                class="bg-transparent text-white text-xs font-medium focus:outline-none cursor-pointer truncate max-w-[180px] sm:max-w-[240px]"
+              >
+                @for (proj of projectService.projects(); track proj.id) {
+                  <option [value]="proj.id" class="bg-[#151821] text-white">{{ proj.name }}</option>
+                }
+              </select>
+            </div>
+          } @else {
+            <div class="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl text-xs text-slate-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+              <span>{{ translationService.isSpanish() ? 'Sin proyecto activo' : 'No active project' }}</span>
+              <a routerLink="/upload" class="ml-1 text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-0.5">
+                <span class="material-symbols-outlined text-xs">add</span>
+                <span>{{ translationService.isSpanish() ? 'Subir' : 'Upload' }}</span>
+              </a>
+            </div>
+          }
         </div>
 
         <!-- Right Section: Language Toggle, AI Status & Notifications -->

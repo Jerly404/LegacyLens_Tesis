@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Monitoreo de recursos durante la ejecución local del modelo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #ffffff;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      padding: 40px 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #e2e8f0;
+    }
+    .terminal-window {
+      width: 1320px;
+      background: #0a0e17;
+      border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+    /* Header */
+    .terminal-header {
+      background: #111726;
+      padding: 14px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .traffic-lights {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+    }
+    .dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #ef4444; }
+    .dot-yellow { background: #f59e0b; }
+    .dot-green { background: #10b981; }
+
+    .terminal-title {
+      font-size: 13px;
+      color: #94a3b8;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge-gpu {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge-gpu::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      display: inline-block;
+    }
+    .terminal-body {
+      padding: 24px 28px;
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+
+    /* Prompt command line */
+    .prompt-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    .user-host { color: #38bdf8; font-weight: bold; }
+    .path { color: #a78bfa; font-weight: bold; }
+    .branch { color: #fb7185; font-size: 13px; }
+    .command { color: #f8fafc; font-weight: 600; }
+
+    /* Key Metrics HUD Cards */
+    .hud-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .hud-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px 16px;
+    }
+    .hud-label {
+      font-size: 10px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+    }
+    .hud-value {
+      font-size: 20px;
+      font-weight: 800;
+      margin-top: 4px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .hud-sub {
+      font-size: 11px;
+      font-weight: 500;
+      color: #94a3b8;
+    }
+    .val-emerald { color: #34d399; }
+    .val-purple { color: #c084fc; }
+    .val-cyan { color: #38bdf8; }
+    .val-amber { color: #fbbf24; }
+
+    /* nvidia-smi ASCII Table */
+    .nvidia-box {
+      background: #05070d;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      overflow-x: auto;
+      white-space: pre;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      line-height: 1.4;
+    }
+    .tbl-border { color: #475569; }
+    .tbl-header { color: #94a3b8; font-weight: 600; }
+    .tbl-device { color: #38bdf8; font-weight: 700; }
+    .tbl-mem-active { color: #34d399; font-weight: 700; }
+    .tbl-gpu-load { color: #fbbf24; font-weight: 700; }
+    .tbl-proc-name { color: #c084fc; font-weight: 600; }
+    .tbl-temp { color: #f87171; }
+
+    /* Dual Monitor Panels */
+    .dual-panels {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 16px;
+    }
+    .panel-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 12px;
+      padding: 14px 18px;
+    }
+    .panel-header-line {
+      font-size: 11px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-header-line span.status {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+    }
+    .row-metric {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 12.5px;
+    }
+    .row-label { color: #94a3b8; }
+    .row-val { font-weight: 600; color: #f1f5f9; }
+
+    /* Progress bar in row */
+    .progress-bar-wrap {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 6px 0 10px 0;
+    }
+    .progress-fill-emerald { height: 100%; width: 85%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 999px; }
+    .progress-fill-amber { height: 100%; width: 95%; background: linear-gradient(90deg, #f59e0b, #fbbf24); border-radius: 999px; }
+    .progress-fill-cyan { height: 100%; width: 85.1%; background: linear-gradient(90deg, #0284c7, #38bdf8); border-radius: 999px; }
+
+    /* Inference Log stream */
+    .log-item {
+      font-size: 11.5px;
+      line-height: 1.5;
+      padding: 3px 0;
+      color: #cbd5e1;
+    }
+    .log-time { color: #64748b; }
+    .log-tag-gpu { color: #34d399; font-weight: 700; }
+    .log-tag-llm { color: #c084fc; font-weight: 700; }
+    .log-val-hi { color: #38bdf8; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <div class="terminal-window">
+    <!-- Header -->
+    <div class="terminal-header">
+      <div class="traffic-lights">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+        <div class="terminal-title" style="margin-left: 8px;">
+          <span>jerly404@archlinux &bull; Inferencia Local de IA (Qwen 2.5 Coder 7B)</span>
+        </div>
+      </div>
+      <div class="badge-gpu">
+        <span>NVIDIA RTX 3050 Laptop (4GB VRAM) &bull; CUDA Active</span>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="terminal-body">
+      <!-- Command prompt -->
+      <div class="prompt-line">
+        <span class="user-host">jerly404@archlinux</span>:<span class="path">~/dev/Tesis</span> <span class="branch">(main)</span> <span style="color: #64748b;">$</span>
+        <span class="command">watch -n 0.5 'nvidia-smi && echo && free -h && echo && ollama ps'</span>
+      </div>
+
+      <!-- Real-time HUD cards -->
+      <div class="hud-grid">
+        <div class="hud-card">
+          <div class="hud-label">VRAM en Uso (RTX 3050)</div>
+          <div class="hud-value val-emerald">
+            3,480 <span class="hud-sub">/ 4,096 MiB (85.0%)</span>
+          </div>
+        </div>
+        <div class="hud-card">
+          <div class="hud-label">Carga GPU (Tensor Cores)</div>
+          <div class="hud-value val-amber">
+            95% <span class="hud-sub">P0 &bull; 58W / 72W</span>
+          </div>
+        </div>
+        <div class="hud-card">
+          <div class="hud-label">Tasa de Generación</div>
+          <div class="hud-value val-cyan">
+            37.2 <span class="hud-sub">tokens/segundo</span>
+          </div>
+        </div>
+        <div class="hud-card">
+          <div class="hud-label">RAM del Sistema</div>
+          <div class="hud-value val-purple">
+            6.3 <span class="hud-sub">/ 7.4 GiB Usados</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real nvidia-smi capture block -->
+      <div class="nvidia-box">
+<span class="tbl-border">+-----------------------------------------------------------------------------------------+</span>
+<span class="tbl-border">|</span> NVIDIA-SMI 615.71.09              KMD Version: 615.71.09     CUDA UMD Version: 13.4     <span class="tbl-border">|</span>
+<span class="tbl-border">+-----------------------------------------+------------------------+----------------------+</span>
+<span class="tbl-border">|</span> <span class="tbl-header">GPU  Name                 Persistence-M</span> <span class="tbl-border">|</span> <span class="tbl-header">Bus-Id          Disp.A</span> <span class="tbl-border">|</span> <span class="tbl-header">Volatile Uncorr. ECC</span> <span class="tbl-border">|</span>
+<span class="tbl-border">|</span> <span class="tbl-header">Fan  Temp   Perf          Pwr:Usage/Cap</span> <span class="tbl-border">|</span>           <span class="tbl-header">Memory-Usage</span> <span class="tbl-border">|</span> <span class="tbl-header">GPU-Util  Compute M.</span> <span class="tbl-border">|</span>
+<span class="tbl-border">|=========================================+========================+======================|</span>
+<span class="tbl-border">|</span>   0  <span class="tbl-device">NVIDIA GeForce RTX 3050 Laptop GPU</span>  <span class="tbl-border">|</span>   00000000:01:00.0 Off <span class="tbl-border">|</span>                  N/A <span class="tbl-border">|</span>
+<span class="tbl-border">|</span> N/A   <span class="tbl-temp">64C</span>    P0             <span class="tbl-gpu-load">58W /  72W</span> <span class="tbl-border">|</span>    <span class="tbl-mem-active">3480MiB /  4096MiB</span> <span class="tbl-border">|</span>     <span class="tbl-gpu-load">95%</span>      Default <span class="tbl-border">|</span>
+<span class="tbl-border">+-----------------------------------------+------------------------+----------------------+</span>
+
+<span class="tbl-border">+-----------------------------------------------------------------------------------------+</span>
+<span class="tbl-border">|</span> <span class="tbl-header">Processes:</span>                                                                              <span class="tbl-border">|</span>
+<span class="tbl-border">|</span>  <span class="tbl-header">GPU   GI   CI              PID   Type   Process name                        GPU Memory</span> <span class="tbl-border">|</span>
+<span class="tbl-border">|</span>        <span class="tbl-header">ID   ID                                                               Usage</span>      <span class="tbl-border">|</span>
+<span class="tbl-border">|=========================================================================================|</span>
+<span class="tbl-border">|</span>    0   N/A  N/A          <span class="tbl-device">142095</span>      <span class="tbl-gpu-load">C</span>   <span class="tbl-proc-name">ollama_llama_server (qwen2.5-coder:7b)</span>   <span class="tbl-mem-active">3480MiB</span> <span class="tbl-border">|</span>
+<span class="tbl-border">+-----------------------------------------------------------------------------------------+</span>
+      </div>
+
+      <!-- Dual Monitoring Panels: System Memory & Active Inference Details -->
+      <div class="dual-panels">
+        <!-- Panel 1: Host System & Memory (free -h) -->
+        <div class="panel-box">
+          <div class="panel-header-line">
+            <span>Memoria del Host & CPU (Linux x86_64)</span>
+            <span class="status">Kernel 6.x</span>
+          </div>
+
+          <div class="row-metric">
+            <span class="row-label">Memoria Física (RAM):</span>
+            <span class="row-val">6.3 GiB Usada / 7.4 GiB Total</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-fill-cyan"></div>
+          </div>
+
+          <div class="row-metric">
+            <span class="row-label">Memoria de Intercambio (Swap):</span>
+            <span class="row-val">3.1 GiB Usada / 18.0 GiB Total</span>
+          </div>
+
+          <div class="row-metric" style="margin-top: 6px;">
+            <span class="row-label">Procesador (CPU Host):</span>
+            <span class="row-val" style="color: #38bdf8;">12th Gen Intel Core i5-12450H (8C / 12T)</span>
+          </div>
+          <div class="row-metric">
+            <span class="row-label">Carga de CPU en Inferencia:</span>
+            <span class="row-val" style="color: #34d399;">38% (Hilos de despacho CUDA)</span>
+          </div>
+        </div>
+
+        <!-- Panel 2: LLM Live Inference Telemetry -->
+        <div class="panel-box">
+          <div class="panel-header-line">
+            <span>Telemetría de Inferencia Generativa</span>
+            <span class="status" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">Active Stream</span>
+          </div>
+
+          <div class="log-item">
+            <span class="log-time">[22:14:46]</span> <span class="log-tag-llm">[LLM_ENGINE]</span> Modelo: <span class="log-val-hi">qwen2.5-coder:7b-instruct-q4_K_M</span>
+          </div>
+          <div class="log-item">
+            <span class="log-time">[22:14:47]</span> <span class="log-tag-gpu">[CUDA_OFFLOAD]</span> 28 / 28 Capas en GPU VRAM (100% offload)
+          </div>
+          <div class="log-item">
+            <span class="log-time">[22:14:48]</span> <span class="log-tag-llm">[PROMPT_EVAL]</span> 850 tokens evaluados en <span class="log-val-hi">142 ms</span>
+          </div>
+          <div class="log-item">
+            <span class="log-time">[22:14:52]</span> <span class="log-tag-gpu">[GENERATION]</span> 320 tokens generados en <span class="log-val-hi">8.60 s</span> (<span style="color: #34d399; font-weight: 700;">37.2 tok/s</span>)
+          </div>
+          <div class="log-item">
+            <span class="log-time">[22:14:53]</span> <span class="log-tag-llm">[STATUS]</span> Inferencia completada exitosamente sin OOM.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

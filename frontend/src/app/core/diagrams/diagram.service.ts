@@ -13,6 +13,9 @@ export class DiagramService {
   getDiagram(type: UMLType, projectId?: string): Observable<UMLDiagram> {
     const targetProject = projectId ? this.projectService.projects().find(p => p.id === projectId || p.slug === projectId) : this.projectService.selectedProject();
     const projectName = targetProject?.name || 'Enterprise System';
+    const isEcommerce = (projectName || '').toLowerCase().includes('ecommerce') || 
+                        (projectName || '').toLowerCase().includes('order') || 
+                        (targetProject?.mainLanguage || '').toLowerCase() === 'java';
 
     const diagramsMap: Record<UMLType, UMLDiagram> = {
       architecture: {
@@ -21,7 +24,54 @@ export class DiagramService {
         type: 'architecture',
         title: `Fullstack System Architecture — ${projectName}`,
         description: 'End-to-end multi-tier topology showing Client Apps, Ingress Gateway, Backend Domain Services, Database Clusters, and Message Brokers.',
-        mermaidCode: `graph TB
+        mermaidCode: isEcommerce ? `graph TB
+    subgraph ClientLayer ["Client & Presentation Tier"]
+        StoreWeb["Storefront Web Client (Angular SPA)"]
+        MobileApp["Mobile Apps (iOS / Android)"]
+        PartnerAPI["Marketplace Integrations & Webhooks"]
+    end
+
+    subgraph IngressGateway ["Security & Ingress Layer"]
+        LoadBalancer["NGINX Ingress / Load Balancer (SSL Termination)"]
+        AuthFilter["JWT / OAuth2 Security Gateway & Rate Limiter"]
+    end
+
+    subgraph BackendCore ["Backend Application Tier (Spring Boot 2.7)"]
+        OrderController["REST API: OrderController.java"]
+        OrderService["Domain Service: OrderService.java (@Transactional)"]
+        OrderRepository["Data Access: OrderRepository.java (Spring Data JPA)"]
+    end
+
+    subgraph PersistenceTier ["Data & Caching Tier"]
+        PostgreSQLDB[("PostgreSQL 16: orders & order_items")]
+        RedisCache[("Redis 7: Catalog & Session Cache")]
+    end
+
+    subgraph MessagingTier ["Async Event & Queue Infrastructure"]
+        KafkaBroker[("Kafka Event Broker: OrderPlacedEvent")]
+    end
+
+    subgraph ExternalIntegrations ["External Cloud Services"]
+        PaymentGateway["Stripe / Payment Gateway"]
+        LogisticsAPI["Shipping & Fulfillment Provider"]
+        OllamaLocal["Ollama Local AI Daemon (11434)"]
+    end
+
+    StoreWeb --> LoadBalancer
+    MobileApp --> LoadBalancer
+    PartnerAPI --> LoadBalancer
+
+    LoadBalancer --> AuthFilter
+    AuthFilter --> OrderController
+
+    OrderController --> OrderService
+    OrderService --> OrderRepository
+    OrderRepository --> PostgreSQLDB
+    OrderService --> RedisCache
+    OrderService --> KafkaBroker
+    OrderService --> PaymentGateway
+    OrderService --> LogisticsAPI
+    OrderService --> OllamaLocal` : `graph TB
     subgraph ClientLayer ["Client & Presentation Tier"]
         WebApp["Web Client (Angular 20 SPA)"]
         MobileApp["Mobile Apps (iOS / Android)"]
@@ -83,7 +133,43 @@ export class DiagramService {
         type: 'database',
         title: `Entity-Relationship Database Schema (ERD) — ${projectName}`,
         description: 'Relational database schema with primary keys, foreign keys, cardinality relationships, and data types.',
-        mermaidCode: `erDiagram
+        mermaidCode: isEcommerce ? `erDiagram
+    CUSTOMERS ||--o{ ORDERS : "places"
+    ORDERS ||--|{ ORDER_ITEMS : "contains"
+    PRODUCTS ||--o{ ORDER_ITEMS : "referenced_by"
+
+    CUSTOMERS {
+        uuid id PK "Primary Key"
+        varchar email "Unique Customer Email"
+        varchar full_name "Customer Full Name"
+        varchar shipping_address "Shipping Address"
+        timestamp created_at "Registration Timestamp"
+    }
+
+    ORDERS {
+        uuid id PK "Primary Key"
+        uuid customer_id FK "References CUSTOMERS(id)"
+        decimal total_amount "Order Total Amount"
+        varchar status "PENDING | PROCESSING | CONFIRMED | CANCELLED"
+        timestamp created_at "Order Date"
+    }
+
+    ORDER_ITEMS {
+        uuid id PK "Primary Key"
+        uuid order_id FK "References ORDERS(id)"
+        uuid product_id FK "References PRODUCTS(id)"
+        varchar product_sku "SKU Code"
+        integer quantity "Purchased Units"
+        decimal unit_price "Unit Sale Price"
+    }
+
+    PRODUCTS {
+        uuid id PK "Primary Key"
+        varchar sku "Unique Product SKU"
+        varchar name "Catalog Product Name"
+        decimal price "Current Price"
+        integer stock_quantity "Available Stock Units"
+    }` : `erDiagram
     USERS ||--o{ ACCOUNTS : "owns"
     USERS ||--o{ AUDIT_LOGS : "triggers"
     USERS ||--o{ USER_ROLES : "assigned"
@@ -210,7 +296,46 @@ export class DiagramService {
         type: 'class',
         title: `Domain & Service Class Diagram — ${projectName}`,
         description: 'Reverse-engineered OOP class hierarchy with attributes, methods, visibility modifiers, and interface implementations.',
-        mermaidCode: `classDiagram
+        mermaidCode: isEcommerce ? `classDiagram
+    class OrderController {
+        -OrderService orderService
+        +createOrder(Order request) ResponseEntity
+        +getOrder(UUID orderId) ResponseEntity
+        +getCustomerOrders(UUID customerId) ResponseEntity
+    }
+    class OrderService {
+        -OrderRepository orderRepository
+        +processOrderCheckout(Order order) Order
+        +findOrderById(UUID orderId) Optional
+        +getOrdersByCustomer(UUID customerId) List
+    }
+    class OrderRepository {
+        <<interface>>
+        +findByCustomerId(UUID customerId) List
+        +findByStatus(String status) List
+        +save(Order order) Order
+        +findById(UUID orderId) Optional
+    }
+    class Order {
+        +UUID id
+        +UUID customerId
+        +BigDecimal totalAmount
+        +String status
+        +List~OrderItem~ items
+        +LocalDateTime createdAt
+    }
+    class OrderItem {
+        +UUID id
+        +Order order
+        +UUID productId
+        +String productSku
+        +Integer quantity
+        +BigDecimal unitPrice
+    }
+
+    OrderController --> OrderService : delegates to
+    OrderService --> OrderRepository : persists via
+    Order "1" *-- "many" OrderItem : contains (cascade = ALL)` : `classDiagram
     class AuthController {
         -AuthService authService
         -JwtTokenUtil tokenUtil
@@ -279,7 +404,41 @@ export class DiagramService {
         type: 'sequence',
         title: `End-to-End Transaction Sequence Flow — ${projectName}`,
         description: 'Chronological execution flow showing interactions between Client, Controller, Service, Database, and Broker.',
-        mermaidCode: `sequenceDiagram
+        mermaidCode: isEcommerce ? `sequenceDiagram
+    autonumber
+    actor Customer as Storefront Client
+    participant Gateway as API Gateway & Auth Guard
+    participant Ctrl as OrderController
+    participant Srv as OrderService
+    participant Repo as OrderRepository
+    participant DB as PostgreSQL Database
+    participant Cache as Redis Cache
+    participant Broker as Kafka Broker
+
+    Customer->>Gateway: POST /api/v1/orders/checkout
+    Gateway->>Gateway: Validate Bearer JWT & Rate Limit
+    Gateway->>Ctrl: Forward Order Payload
+    Ctrl->>Srv: processOrderCheckout(order)
+    
+    Note over Srv,DB: Transaction BEGIN [@Transactional]
+    Srv->>Cache: Check Inventory & SKU Price
+    Cache-->>Srv: Valid Stock Available
+    Srv->>Srv: Loop items & sum totalAmount with BigDecimal
+    
+    Srv->>Repo: save(order)
+    Repo->>DB: INSERT INTO orders (id, customer_id, total_amount, status)
+    Repo->>DB: INSERT INTO order_items (id, order_id, product_sku, qty, price)
+    DB-->>Repo: Saved Entities (status = PROCESSING)
+    Repo-->>Srv: Persisted Order Entity
+    
+    Srv->>Broker: publishEvent("OrderPlacedEvent", orderPayload)
+    Broker-->>Srv: ACK
+    
+    Srv->>DB: COMMIT Transaction
+    DB-->>Srv: Transaction Committed
+    
+    Srv-->>Ctrl: Return Created Order Entity
+    Ctrl-->>Customer: 200 OK (Order JSON with UUID)` : `sequenceDiagram
     autonumber
     actor Client as Web / Mobile Client
     participant Gateway as API Gateway & Auth Guard

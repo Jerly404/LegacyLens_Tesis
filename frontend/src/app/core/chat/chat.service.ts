@@ -12,73 +12,135 @@ export class ChatService {
 
   private initialConversations: ChatConversation[] = [
     {
-      id: 'conv-1',
-      projectId: 'proj-banking-core',
-      title: 'Authentication & Password Flow',
-      createdAt: '2026-08-25 09:10',
-      updatedAt: '2026-08-25 09:15',
+      id: 'conv-usuarios',
+      projectId: 'ecommerce-order-service',
+      title: 'Registro de Usuarios & Persistencia',
+      createdAt: '10:42',
+      updatedAt: '10:43',
       messages: [
         {
           id: 'msg-1',
           sender: 'user',
-          content: 'How does authentication work in this legacy codebase?',
-          timestamp: '09:10'
+          content: '¿Qué clase se encarga de registrar usuarios?',
+          timestamp: '10:42'
         },
         {
           id: 'msg-2',
           sender: 'assistant',
-          content: `Authentication is orchestrated by **\`AuthController\`** delegating directly to **\`AuthService\`** and verified via custom Spring Security filters:
+          content: `De acuerdo con el contexto recuperado desde el índice vectorial del proyecto activo (**ecommerce-order-service**), la clase encargada del registro de nuevos usuarios en el sistema es **\`UsuarioService\`** (ubicada en \`src/services/UsuarioService.java\`).
 
-1. The client sends user credentials to \`POST /api/v1/auth/login\`.
-2. \`AuthService.validateCredentials\` executes an SQL lookup on the \`USERS\` table via \`UserRepository\`.
-3. The password hash is verified with a legacy SHA-1 algorithm (\`legacyPasswordVerify\`).
-4. Once verified, \`JwtTokenUtil\` issues an HMAC-SHA256 bearer token with embedded user roles.
-
-### Security Warning:
-The password verification routine relies on unsalted or static-salted SHA-1, which does not meet modern cryptographic standards (NIST SP 800-63B). Upgrading to BCrypt or Argon2id is highly recommended.`,
-          timestamp: '09:11',
+### Flujo de Ejecución y Reglas de Negocio Identificadas:
+1. **Método Principal**: La operación se ejecuta en el método **\`registrarUsuario(UsuarioRegistroDTO dto)\`**, delimitado bajo la anotación transaccional **\`@Transactional\`** para garantizar la atomicidad en la base de datos PostgreSQL.
+2. **Validación de Unicidad**: Antes de persistir, consulta a **\`UsuarioRepository.existsByEmail(dto.getEmail())\`**; si el correo ya se encuentra registrado, interrumpe el flujo lanzando \`EmailAlreadyExistsException\`.
+3. **Cifrado de Credenciales**: Las contraseñas en texto plano se encriptan de forma segura mediante el componente inyectado **\`PasswordEncoder\`** utilizando el algoritmo BCrypt (\`passwordEncoder.encode(dto.getPassword())\`).
+4. **Persistencia Relacional**: La entidad de dominio \`Usuario\` se almacena invocando a la interfaz de acceso a datos **\`UsuarioRepository.save(usuario)\`** (Spring Data JPA).
+5. **Notificación Asíncrona**: Tras el guardado exitoso, despacha un evento de notificación invocando a \`NotificacionService.enviarEmailBienvenida(usuarioGuardado)\`.`,
+          timestamp: '10:43',
           sources: [
-            { file: 'src/controllers/AuthController.java', startLine: 24, endLine: 35, snippet: 'boolean isValid = authService.validateCredentials(request.getUsername(), request.getPassword());' },
-            { file: 'src/services/AuthService.java', startLine: 18, endLine: 32, snippet: 'return legacyPasswordVerify(rawPassword, user.getPasswordHash());' }
+            { 
+              file: 'src/services/UsuarioService.java', 
+              startLine: 18, 
+              endLine: 44, 
+              snippet: 'public UsuarioResponseDTO registrarUsuario(UsuarioRegistroDTO dto) { ... usuarioRepository.save(usuario); }' 
+            },
+            { 
+              file: 'src/repositories/UsuarioRepository.java', 
+              startLine: 12, 
+              endLine: 28, 
+              snippet: 'boolean existsByEmail(String email); Optional<Usuario> findByEmail(String email);' 
+            },
+            { 
+              file: 'src/models/Usuario.java', 
+              startLine: 14, 
+              endLine: 36, 
+              snippet: '@Entity @Table(name = "usuarios") public class Usuario { ... }' 
+            }
           ],
           suggestedNextQuestions: [
-            'How can I refactor AuthService to use BCryptPasswordEncoder?',
-            'Where are user roles and permissions persisted?',
-            'How does token refresh work?'
+            '¿Qué validaciones de formato se aplican en UsuarioRegistroDTO?',
+            '¿Cómo maneja UsuarioService el rollback transaccional ante fallos?',
+            '¿Cuáles son todas las dependencias inyectadas en UsuarioService?'
           ]
         }
       ]
     },
     {
-      id: 'conv-2',
-      projectId: 'proj-banking-core',
-      title: 'Database Transactions & Locks',
-      createdAt: '2026-08-25 09:30',
-      updatedAt: '2026-08-25 09:35',
+      id: 'conv-ordenes',
+      projectId: 'ecommerce-order-service',
+      title: 'Procesamiento Transaccional de Órdenes',
+      createdAt: '09:30',
+      updatedAt: '09:35',
       messages: [
         {
           id: 'msg-3',
           sender: 'user',
-          content: 'Where is the database connection defined and how are transactions handled?',
+          content: '¿Cómo garantiza OrderService la atomicidad durante el checkout de pedidos?',
           timestamp: '09:30'
         },
         {
           id: 'msg-4',
           sender: 'assistant',
-          content: `The database configuration and transaction strategy are structured as follows:
-
-- **Connection Pool**: Configured in \`config/application.properties\` targeting Oracle 19c RAC via JDBC (\`jdbc:oracle:thin:@//oracle-db.internal:1521/FINCORE\`).
-- **Transaction Isolation**: \`TransactionService.processTransfer\` uses \`@Transactional(isolation = Isolation.SERIALIZABLE, rollbackFor = Exception.class)\`.
-- **Concurrency Locking**: Pessimistic database row locks are acquired via \`SELECT ... FOR UPDATE\` queries on the \`ACCOUNTS\` table to prevent double-spending during concurrent transfer requests.`,
+          content: `El procesamiento transaccional de compras en **\`OrderService.java\`** se encuentra protegido por la anotación \`@Transactional\` de Spring:
+- **Cálculo Monetario**: Acumula subtotales con precisión usando \`BigDecimal\` para prevenir errores de punto flotante.
+- **Persistencia en Cascada**: El repositorio \`OrderRepository\` guarda el agregado \`Order\` y sus \`OrderItem\` en una única transacción atómica en PostgreSQL.`,
           timestamp: '09:31',
           sources: [
-            { file: 'config/application.properties', startLine: 1, endLine: 5, snippet: 'spring.datasource.url=jdbc:oracle:thin:@//oracle-db.internal:1521/FINCORE' },
-            { file: 'src/services/TransactionService.java', startLine: 22, endLine: 36, snippet: '@Transactional(isolation = Isolation.SERIALIZABLE, rollbackFor = Exception.class)' }
+            { file: 'src/services/OrderService.java', startLine: 20, endLine: 45, snippet: '@Transactional public Order processOrderCheckout(Order order) { ... }' },
+            { file: 'src/repositories/OrderRepository.java', startLine: 8, endLine: 25, snippet: 'public interface OrderRepository extends JpaRepository<Order, UUID>' }
           ],
           suggestedNextQuestions: [
-            'Does SERIALIZABLE isolation cause database deadlocks?',
-            'What tables are touched during a transfer?',
-            'How is the IBM MQ event dispatched?'
+            '¿Qué ocurre si falla la pasarela de pagos externa?',
+            '¿Existen bloqueos optimistas en la entidad Order?'
+          ]
+        }
+      ]
+    },
+    {
+      id: 'conv-sin-evidencia',
+      projectId: 'ecommerce-order-service',
+      title: 'Consulta sobre Pasarela Stripe (Sin Evidencia)',
+      createdAt: '11:15',
+      updatedAt: '11:16',
+      messages: [
+        {
+          id: 'msg-5',
+          sender: 'user',
+          content: '¿Cómo se procesan los reembolsos con la pasarela Stripe en el módulo de pagos?',
+          timestamp: '11:15'
+        },
+        {
+          id: 'msg-6',
+          sender: 'assistant',
+          content: `Tras consultar el índice vectorial RAG y el análisis del código fuente del proyecto activo (**ecommerce-order-service**):
+
+> ⚠️ **Ausencia de Evidencia en el Código Fuente**:
+> No se identificaron clases, interfaces ni dependencias asociadas a la pasarela **Stripe** en los paquetes del proyecto (\`com.ecommerce.*\`).
+
+### Detalle del Hallazgo:
+1. **Pasarelas Encontradas**: El módulo de pagos únicamente implementa la interfaz interna **\`PaymentProcessor\`** mediante una simulación en memoria (**\`MockPaymentGateway.java\`**).
+2. **Dependencias Maven**: El archivo descriptor **\`pom.xml\`** no incluye librerías SDK externas de Stripe (\`stripe-java\`) ni pasarelas comerciales similares.
+3. **Control Anti-Alucinación**: Siguiendo el protocolo estricto de anclaje contextual (*grounding*), el sistema no infiere ni inventa métodos, endpoints ni credenciales de configuración inexistentes.
+
+💡 *Sugerencia arquitectónica*: Para incorporar esta funcionalidad, se requeriría añadir la dependencia oficial en el \`pom.xml\` e implementar un adaptador que extienda de \`PaymentProcessor\`.`,
+          timestamp: '11:16',
+          sources: [
+            { 
+              file: 'src/config/PaymentConfig.java', 
+              startLine: 1, 
+              endLine: 22, 
+              snippet: '// Configuración local de pagos - Solo simulación MockPaymentGateway' 
+            },
+            { 
+              file: 'pom.xml', 
+              startLine: 40, 
+              endLine: 65, 
+              snippet: '<dependencies><!-- No stripe-java SDK declared --></dependencies>' 
+            }
+          ],
+          suggestedNextQuestions: [
+            '¿Cuáles son los métodos definidos en la interfaz PaymentProcessor?',
+            '¿Cómo se maneja el estado de un pedido cuando el pago simulado falla?',
+            '¿Qué excepciones transaccionales están configuradas en OrderService?'
           ]
         }
       ]
@@ -86,7 +148,7 @@ The password verification routine relies on unsalted or static-salted SHA-1, whi
   ];
 
   private conversationsSignal = signal<ChatConversation[]>(this.initialConversations);
-  private activeConversationId = signal<string>('conv-1');
+  private activeConversationId = signal<string>('conv-sin-evidencia');
   private isGeneratingSignal = signal<boolean>(false);
 
   conversations = this.conversationsSignal.asReadonly();

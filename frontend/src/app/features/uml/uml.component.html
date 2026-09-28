@@ -18,38 +18,67 @@
       </div>
     </div>
   } @else {
-    <!-- Header Banner -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
-      <div>
-        <div class="flex items-center gap-2">
-          <h1 class="text-3xl font-extrabold tracking-tight text-white">Arquitectura & Diagramas UML</h1>
-          <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs font-mono font-bold">
-            {{ projectService.selectedProject().name }}
-          </span>
+    <!-- Header Banner with Pipeline Flow -->
+    <div class="bg-[#151821] border border-blue-500/30 rounded-2xl p-6 shadow-2xl relative overflow-hidden space-y-4">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <div class="flex flex-wrap items-center gap-2 mb-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-mono text-purple-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+              INGENIERÍA INVERSA &bull; DIAGRAMAS UML
+            </span>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-mono text-blue-300">
+              <span class="material-symbols-outlined text-xs">folder_open</span>
+              Proyecto: {{ projectService.selectedProject().name }}
+            </span>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-mono text-emerald-300">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Generación Automática por IA (Qwen 2.5 Coder 7B)
+            </span>
+          </div>
+
+          <h1 class="text-2xl md:text-3xl font-extrabold text-white flex items-center gap-2">
+            Diagrama UML Generado a partir del Código Fuente
+          </h1>
+          <p class="text-xs text-slate-300 max-w-3xl leading-relaxed mt-1">
+            Visualización arquitectónica derivada automáticamente mediante análisis de sintaxis abstracta (AST) y resolución estática de tipos, sin intervención ni modelado manual.
+          </p>
         </div>
-        <p class="text-xs text-slate-400 mt-1">
-          Topología interactiva de sistemas, esquemas relacionales ERD y modelos de clases extraídos del código fuente.
-        </p>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <button 
+            (click)="regenerate()" 
+            [disabled]="isRegenerating()"
+            class="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-200 border border-purple-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 disabled:opacity-50 shadow-lg"
+          >
+            <span class="material-symbols-outlined text-base" [class.animate-spin]="isRegenerating()">auto_fix_high</span>
+            {{ isRegenerating() ? 'Regenerando...' : 'Regenerar Diagrama' }}
+          </button>
+        </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        <button 
-          (click)="regenerate()" 
-          [disabled]="isRegenerating()"
-          class="px-4 py-2 bg-purple-600/15 hover:bg-purple-600/25 text-purple-300 border border-purple-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
-        >
-          <span class="material-symbols-outlined text-base" [class.animate-spin]="isRegenerating()">auto_fix_high</span>
-          {{ isRegenerating() ? 'Regenerando...' : 'Regenerar Diagrama' }}
-        </button>
+      <!-- Flow Pipeline Indicator -->
+      <div class="pt-3 border-t border-white/[0.08] flex flex-wrap items-center gap-2 text-xs font-mono">
+        <span class="px-2.5 py-1 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 font-bold flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-xs">code</span> 1. Elementos Detectados (AST)
+        </span>
+        <span class="text-slate-500 material-symbols-outlined text-sm">arrow_forward</span>
+        <span class="px-2.5 py-1 rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-300 font-bold flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-xs">sync_alt</span> 2. Inferencia de Relaciones & Multiplicidades
+        </span>
+        <span class="text-slate-500 material-symbols-outlined text-sm">arrow_forward</span>
+        <span class="px-2.5 py-1 rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 font-bold flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-xs">schema</span> 3. Diagrama Renderizado en la Interfaz
+        </span>
       </div>
     </div>
 
-    <!-- Tabs Selector (8 Complete Diagram Types) -->
+    <!-- Tabs Selector -->
     <div class="flex items-center gap-2 overflow-x-auto bg-[#151821] p-1.5 rounded-2xl border border-white/[0.08] text-xs font-medium scrollbar-thin">
       @for (tab of tabs; track tab.type) {
         <button 
           (click)="loadDiagram(tab.type)"
-          [class]="activeType() === tab.type ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30 font-bold' : 'text-slate-400 hover:text-white hover:bg-white/[0.03]'"
+          [class]="activeType() === tab.type ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold' : 'text-slate-400 hover:text-white hover:bg-white/[0.03]'"
           class="px-3.5 py-2 rounded-xl transition flex items-center gap-2 shrink-0"
         >
           <span class="material-symbols-outlined text-base">{{ tab.icon }}</span>
@@ -58,14 +87,112 @@
       }
     </div>
 
-    <!-- Diagram Viewer Viewport -->
-    @if (currentDiagram(); as diag) {
-      <div class="h-[680px]">
-        <app-diagram-viewer
-          [definition]="diag.mermaidCode"
-          [title]="diag.title"
-        ></app-diagram-viewer>
+    <!-- Main Workspace Grid: Elementos & Relaciones (Left) + Diagram Viewport (Right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Left Panel: Elementos Detectados & Relaciones (4 Cols) -->
+      <div class="lg:col-span-4 space-y-4">
+        <!-- Subcard 1: Elementos Detectados -->
+        <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-4 shadow-xl space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-white/[0.08]">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-blue-400 text-base">data_object</span>
+              Elementos Detectados
+            </h3>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20 font-bold">
+              {{ detectedElements.length }} Clases AST
+            </span>
+          </div>
+
+          <div class="space-y-2">
+            @for (elem of detectedElements; track elem.id) {
+              <div 
+                (click)="selectElement(elem.id)"
+                class="p-2.5 rounded-xl border transition cursor-pointer text-left space-y-1"
+                [class]="selectedElementId() === elem.id 
+                  ? 'bg-blue-600/15 border-blue-400 shadow-md ring-1 ring-blue-400/40' 
+                  : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04]'"
+              >
+                <div class="flex items-center justify-between gap-1">
+                  <span class="text-xs font-bold text-white font-mono flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs text-blue-400">class</span>
+                    {{ elem.name }}
+                  </span>
+                  <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border" [class]="elem.badgeClass">
+                    {{ elem.stereotype }}
+                  </span>
+                </div>
+
+                <div class="text-[10px] text-slate-400 flex items-center justify-between font-mono">
+                  <span>{{ elem.type }}</span>
+                  <span class="text-slate-500">{{ elem.membersCount }}</span>
+                </div>
+
+                <div class="text-[9.5px] font-mono text-slate-500 truncate">
+                  {{ elem.file }}
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Subcard 2: Relaciones Inferidas -->
+        <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-4 shadow-xl space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-white/[0.08]">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-emerald-400 text-base">sync_alt</span>
+              Relaciones Estructurales
+            </h3>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-bold">
+              {{ detectedRelations.length }} Vínculos
+            </span>
+          </div>
+
+          <div class="space-y-2">
+            @for (rel of detectedRelations; track rel.source + rel.target) {
+              <div class="p-2.5 rounded-xl bg-white/[0.02] border border-white/5 space-y-1">
+                <div class="flex items-center justify-between text-[11px] font-mono font-bold">
+                  <span class="text-white">{{ rel.source }}</span>
+                  <span class="text-slate-500">&rarr;</span>
+                  <span class="text-white">{{ rel.target }}</span>
+                </div>
+
+                <div class="flex items-center justify-between text-[10px] font-mono">
+                  <span class="text-slate-300">{{ rel.type }}</span>
+                  <span class="px-1.5 py-0.2 rounded bg-white/5 font-bold" [class]="rel.badgeClass">{{ rel.multiplicity }}</span>
+                </div>
+
+                <div class="text-[9px] font-mono text-slate-500 truncate pt-0.5">
+                  {{ rel.evidence }}
+                </div>
+              </div>
+            }
+          </div>
+        </div>
       </div>
-    }
+
+      <!-- Right Panel: Diagram Viewer Viewport (8 Cols) -->
+      <div class="lg:col-span-8 flex flex-col space-y-3">
+        @if (currentDiagram(); as diag) {
+          <div class="h-[730px] rounded-2xl overflow-hidden border border-white/[0.08] shadow-2xl flex flex-col bg-[#151821]">
+            <app-diagram-viewer
+              [definition]="diag.mermaidCode"
+              [title]="diag.title"
+            ></app-diagram-viewer>
+          </div>
+
+          <!-- Bottom Status Bar -->
+          <div class="bg-[#11131B] border border-white/[0.08] rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-slate-400">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span class="text-slate-300">Trazabilidad: 5 clases AST &bull; 4 relaciones &bull; 100% Derivado del software analizado</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-purple-300 font-semibold">Motor: Parser AST + Qwen 2.5 Coder 7B</span>
+              <span class="text-slate-500">Render: Vectorial SVG</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
   }
 </div>

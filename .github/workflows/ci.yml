@@ -28,6 +28,12 @@ jobs:
     - name: Lint codebase
       run: npm run lint:all
 
+    - name: Run Backend Tests
+      run: npm run test:backend
+
+    - name: Run Frontend Tests
+      run: npm run test:frontend
+
     - name: Build Backend
       run: npm run build:backend
 

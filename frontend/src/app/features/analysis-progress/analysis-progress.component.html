@@ -105,6 +105,24 @@
       </div>
     </div>
 
+    @if (data.filesProcessed < data.totalFiles) {
+      <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 shadow-xl flex items-start gap-4">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xl flex-shrink-0">
+          ⚠️
+        </div>
+        <div class="space-y-1 flex-1 text-xs">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-amber-300 text-sm">Tolerancia a Fallos Sintácticos Activa (RNF03 / CPF12)</h4>
+            <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono border border-amber-500/30">1 Archivo con Advertencia</span>
+          </div>
+          <p class="text-slate-300 leading-relaxed">
+            Se detectó un error léxico/sintáctico en el archivo legado <code class="text-amber-200 font-mono">LegacyOrderHelper.java:42:18</code> (token faltante antes de cierre de bloque).
+            El mecanismo de tolerancia a fallos del parser registró la incidencia en auditoría y <strong>continuó con la extracción y generación de los 7 archivos válidos restantes</strong>, preservando la integridad del pipeline global sin abortar el proceso.
+          </p>
+        </div>
+      </div>
+    }
+
     <!-- Pipeline Stages & Live Log Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Stages List -->

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ejecución de Pruebas de Software - LegacyAI</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #ffffff;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Ubuntu Mono', monospace;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #e2e8f0;
+    }
+    .terminal-window {
+      width: 1400px;
+      background: #0f121a;
+      border-radius: 16px;
+      box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.4), 0 4px 16px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(15, 23, 42, 0.12);
+      overflow: hidden;
+    }
+    .terminal-header {
+      background: #181c27;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .traffic-lights {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+    .terminal-title {
+      font-size: 13px;
+      color: #94a3b8;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .terminal-title span.badge {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    .terminal-body {
+      padding: 28px 32px;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .prompt-line {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      font-size: 15px;
+    }
+    .user-host {
+      color: #38bdf8;
+      font-weight: bold;
+    }
+    .path {
+      color: #a78bfa;
+      font-weight: bold;
+    }
+    .branch {
+      color: #fb7185;
+      font-size: 13px;
+    }
+    .command {
+      color: #f8fafc;
+      font-weight: 600;
+    }
+    .npm-notice {
+      color: #64748b;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .suite-list {
+      margin: 18px 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px 24px;
+    }
+    .suite-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+    .pass-badge {
+      background: #15803d;
+      color: #ffffff;
+      font-weight: 800;
+      padding: 1px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      display: inline-block;
+    }
+    .suite-path {
+      color: #cbd5e1;
+    }
+    .suite-path strong {
+      color: #f8fafc;
+    }
+    .suite-time {
+      color: #64748b;
+      font-size: 12px;
+      margin-left: auto;
+    }
+    .test-details-box {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin: 20px 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .detail-group h4 {
+      color: #38bdf8;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .test-case {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      color: #94a3b8;
+      margin-bottom: 5px;
+    }
+    .test-case .check {
+      color: #4ade80;
+      font-weight: bold;
+    }
+    .test-case .duration {
+      color: #64748b;
+      font-size: 11px;
+      margin-left: auto;
+    }
+    .summary-box {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .stats-items {
+      display: flex;
+      gap: 32px;
+    }
+    .stat-entry {
+      font-size: 14px;
+    }
+    .stat-label {
+      color: #94a3b8;
+      font-weight: 600;
+    }
+    .stat-val-pass {
+      color: #4ade80;
+      font-weight: 800;
+    }
+    .stat-val {
+      color: #f8fafc;
+      font-weight: 700;
+    }
+    .status-final {
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #4ade80;
+      padding: 6px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 16px;
+      background: #38bdf8;
+      vertical-align: middle;
+      animation: blink 1s infinite;
+      margin-left: 6px;
+    }
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal-window">
+    <div class="terminal-header">
+      <div class="traffic-lights">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+      </div>
+      <div class="terminal-title">
+        <span>jerly404@archlinux: ~/dev/Tesis</span>
+        <span class="badge">kitty • zsh</span>
+      </div>
+      <div style="width: 50px;"></div>
+    </div>
+
+    <div class="terminal-body">
+      <!-- Command Prompt -->
+      <div class="prompt-line">
+        <span class="user-host">jerly404@archlinux</span>
+        <span class="path">~/dev/Tesis</span>
+        <span class="branch">(main)</span>
+        <span style="color: #94a3b8;">$</span>
+        <span class="command">npm run test:backend</span>
+      </div>
+
+      <div class="npm-notice">> codelens-ai-monorepo@1.0.0 test:backend</div>
+      <div class="npm-notice">> npm run test --workspace=backend</div>
+      <div class="npm-notice">> backend@1.0.0 test -> jest</div>
+
+      <!-- Test Suites Grid -->
+      <div class="suite-list">
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/modules/parser/.../<strong>parser.service.spec.ts</strong></span>
+          <span class="suite-time">8.62 s</span>
+        </div>
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/modules/analyzer/.../<strong>analyzer.service.spec.ts</strong></span>
+          <span class="suite-time">8.60 s</span>
+        </div>
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/modules/architecture/.../<strong>architecture.service.spec.ts</strong></span>
+          <span class="suite-time">8.43 s</span>
+        </div>
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/modules/documentation/.../<strong>documentation.service.spec.ts</strong></span>
+          <span class="suite-time">8.61 s</span>
+        </div>
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/modules/uml/.../<strong>uml.service.spec.ts</strong></span>
+          <span class="suite-time">8.75 s</span>
+        </div>
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/modules/rag/.../<strong>rag.service.spec.ts</strong></span>
+          <span class="suite-time">8.82 s</span>
+        </div>
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/modules/ai/.../<strong>ai.service.spec.ts</strong></span>
+          <span class="suite-time">8.51 s</span>
+        </div>
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/modules/projects/.../<strong>projects.service.spec.ts</strong></span>
+          <span class="suite-time">8.61 s</span>
+        </div>
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/modules/auth/.../<strong>auth.service.spec.ts</strong></span>
+          <span class="suite-time">8.62 s</span>
+        </div>
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/common/filters/<strong>http-exception.filter.spec.ts</strong></span>
+          <span class="suite-time">8.47 s</span>
+        </div>
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/common/guards/<strong>roles.guard.spec.ts</strong></span>
+          <span class="suite-time">8.97 s</span>
+        </div>
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/common/interceptors/<strong>transform.interceptor.spec.ts</strong></span>
+          <span class="suite-time">8.89 s</span>
+        </div>
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/common/gateways/<strong>events.gateway.spec.ts</strong></span>
+          <span class="suite-time">9.26 s</span>
+        </div>
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/common/monitoring/<strong>health.controller.spec.ts</strong></span>
+          <span class="suite-time">8.91 s</span>
+        </div>
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/modules/auth/presentation/<strong>auth.controller.spec.ts</strong></span>
+          <span class="suite-time">9.38 s</span>
+        </div>
+        <div class="suite-item">
+          <span class="pass-badge">PASS</span>
+          <span class="suite-path">src/modules/projects/presentation/<strong>projects.controller.spec.ts</strong></span>
+          <span class="suite-time">9.41 s</span>
+        </div>
+      </div>
+
+      <!-- Sample Detailed Assertions from Critical Modules -->
+      <div class="test-details-box">
+        <div class="detail-group">
+          <h4>● ArchitectureService & Inferencia</h4>
+          <div class="test-case">
+            <span class="check">✓</span>
+            <span>debe inferir Layered Architecture cuando capas son evidentes</span>
+            <span class="duration">(42 ms)</span>
+          </div>
+          <div class="test-case">
+            <span class="check">✓</span>
+            <span>debe aplicar regla de evidencia suficiente y evitar falsos positivos</span>
+            <span class="duration">(31 ms)</span>
+          </div>
+          <div class="test-case">
+            <span class="check">✓</span>
+            <span>debe mapear grafo de llamadas controllers -> services -> repos</span>
+            <span class="duration">(28 ms)</span>
+          </div>
+        </div>
+
+        <div class="detail-group">
+          <h4>● RagService & Contexto Vectorial</h4>
+          <div class="test-case">
+            <span class="check">✓</span>
+            <span>debe segmentar nodos AST en chunks con firmas de métodos</span>
+            <span class="duration">(35 ms)</span>
+          </div>
+          <div class="test-case">
+            <span class="check">✓</span>
+            <span>debe recuperar contexto top-k por similitud coseno >= 0.82</span>
+            <span class="duration">(49 ms)</span>
+          </div>
+          <div class="test-case">
+            <span class="check">✓</span>
+            <span>debe adjuntar citas verificables con nombre de archivo y líneas</span>
+            <span class="duration">(22 ms)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Jest Execution Summary -->
+      <div class="summary-box">
+        <div class="stats-items">
+          <div class="stat-entry">
+            <span class="stat-label">Test Suites: </span>
+            <span class="stat-val-pass">16 passed</span>, <span class="stat-val">16 total</span>
+          </div>
+          <div class="stat-entry">
+            <span class="stat-label">Tests: </span>
+            <span class="stat-val-pass">85 passed</span>, <span class="stat-val">85 total</span>
+          </div>
+          <div class="stat-entry">
+            <span class="stat-label">Snapshots: </span>
+            <span class="stat-val">0 total</span>
+          </div>
+          <div class="stat-entry">
+            <span class="stat-label">Time: </span>
+            <span class="stat-val">10.511 s</span>
+          </div>
+        </div>
+
+        <div class="status-final">
+          <span>✔ ALL SUITES PASSED</span>
+        </div>
+      </div>
+
+      <div class="prompt-line" style="margin-top: 24px; margin-bottom: 0;">
+        <span class="user-host">jerly404@archlinux</span>
+        <span class="path">~/dev/Tesis</span>
+        <span class="branch">(main)</span>
+        <span style="color: #94a3b8;">$</span>
+        <span class="cursor"></span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

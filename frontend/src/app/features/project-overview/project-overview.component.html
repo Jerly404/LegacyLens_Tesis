@@ -1,377 +1,1093 @@
 <div class="space-y-6 max-w-7xl mx-auto">
-  <!-- Top Project Banner Card -->
-  <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-      <div class="space-y-3 max-w-3xl">
-        <!-- Breadcrumbs & Status -->
-        <div class="flex flex-wrap items-center gap-2 text-xs">
-          <span class="text-slate-400 font-mono flex items-center gap-1">
-            <span class="material-symbols-outlined text-sm">folder</span>
-            {{ projectService.selectedProject().slug }}
-          </span>
-          <span class="text-slate-600">•</span>
-          <app-badge variant="purple" size="md">{{ projectService.selectedProject().architecture }}</app-badge>
-          <span class="text-slate-600">•</span>
-          <span class="text-slate-400 font-mono text-[11px]">{{ projectService.selectedProject().framework }} • {{ projectService.selectedProject().branch }}</span>
-        </div>
-
-        <h1 class="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-          {{ projectService.selectedProject().name }}
-        </h1>
-
-        <p class="text-xs text-slate-300 leading-relaxed">
-          {{ projectService.selectedProject().description }}
+  @if (!projectService.hasProjects()) {
+    <div class="bg-[#151821] border border-white/[0.08] rounded-3xl p-12 text-center max-w-2xl mx-auto space-y-6 shadow-2xl my-12">
+      <div class="w-20 h-20 rounded-3xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mx-auto text-4xl shadow-inner">
+        <span class="material-symbols-outlined text-4xl">code</span>
+      </div>
+      <div class="space-y-2">
+        <h2 class="text-2xl font-extrabold text-white">No hay código para explorar</h2>
+        <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+          El espacio de trabajo está limpio. Sube un repositorio Git o archivo ZIP para explorar el árbol de archivos, métricas AST y dependencias.
         </p>
-
-        <!-- Language Pill Tags -->
-        <div class="flex flex-wrap gap-2 pt-1">
-          @for (lang of projectService.selectedProject().languages; track lang.name) {
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-mono font-medium text-slate-200">
-              <span class="w-2 h-2 rounded-full" [style.background-color]="lang.color"></span>
-              {{ lang.name }} ({{ lang.percentage }}%)
+      </div>
+      <div class="flex items-center justify-center gap-3">
+        <a routerLink="/upload" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-blue-600/25 flex items-center gap-2">
+          <span class="material-symbols-outlined text-base">upload_file</span>
+          Subir Nuevo Proyecto
+        </a>
+      </div>
+    </div>
+  } @else {
+    <!-- Top Project Banner Card -->
+    <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div class="space-y-3 max-w-3xl">
+          <!-- Breadcrumbs & Status -->
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <span class="text-slate-400 font-mono flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">folder</span>
+              {{ projectService.selectedProject().slug }}
             </span>
-          }
-        </div>
-      </div>
-
-      <!-- Quick Action Buttons -->
-      <div class="flex flex-wrap lg:flex-col gap-2.5 shrink-0">
-        <button 
-          (click)="reanalyze()" 
-          class="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold rounded-xl border border-white/10 transition flex items-center gap-1.5"
-        >
-          <span class="material-symbols-outlined text-base">replay</span>
-          {{ translationService.isSpanish() ? 'Re-analizar' : 'Re-Analyze' }}
-        </button>
-
-        <a 
-          routerLink="/documentation" 
-          class="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold rounded-xl border border-white/10 transition flex items-center gap-1.5"
-        >
-          <span class="material-symbols-outlined text-base">description</span>
-          {{ translationService.isSpanish() ? 'Ver Documentación' : 'View Docs' }}
-        </a>
-
-        <a 
-          routerLink="/ai-chat" 
-          class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/20 flex items-center gap-1.5"
-        >
-          <span class="material-symbols-outlined text-base">chat</span>
-          {{ translationService.isSpanish() ? 'Chat de Código IA' : 'AI Code Chat' }}
-        </a>
-
-        <button 
-          (click)="clearCurrentProject()" 
-          class="px-4 py-2 bg-red-600/15 hover:bg-red-600/25 text-red-300 border border-red-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"
-          title="Eliminar este proyecto y limpiar el espacio de trabajo"
-        >
-          <span class="material-symbols-outlined text-base">delete_sweep</span>
-          {{ translationService.isSpanish() ? 'Limpiar / Terminar Proyecto' : 'Finish / Clear Project' }}
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Primary Sub-Navigation Tabs Bar -->
-  <div class="flex items-center gap-2 overflow-x-auto bg-[#151821] p-1.5 rounded-2xl border border-white/[0.08] text-xs font-medium scrollbar-none">
-    <button 
-      (click)="activeTab.set('overview')"
-      [class]="activeTab() === 'overview' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
-      class="px-4 py-2 rounded-xl transition flex items-center gap-2 shrink-0"
-    >
-      <span class="material-symbols-outlined text-base">dashboard</span>
-      {{ translationService.isSpanish() ? 'Resumen & Métricas' : 'Overview & Metrics' }}
-    </button>
-
-    <button 
-      (click)="activeTab.set('files')"
-      [class]="activeTab() === 'files' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
-      class="px-4 py-2 rounded-xl transition flex items-center gap-2 shrink-0"
-    >
-      <span class="material-symbols-outlined text-base">code</span>
-      {{ translationService.isSpanish() ? 'Archivos & Visor de Código' : 'Files & Code Viewer' }}
-    </button>
-
-    <button 
-      (click)="activeTab.set('dependencies')"
-      [class]="activeTab() === 'dependencies' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
-      class="px-4 py-2 rounded-xl transition flex items-center gap-2 shrink-0"
-    >
-      <span class="material-symbols-outlined text-base">account_tree</span>
-      {{ translationService.isSpanish() ? 'Grafo de Dependencias' : 'Dependency Graph' }}
-    </button>
-
-    <a 
-      routerLink="/architecture"
-      class="px-4 py-2 rounded-xl text-slate-400 hover:text-white transition flex items-center gap-2 shrink-0"
-    >
-      <span class="material-symbols-outlined text-base">layers</span>
-      {{ translationService.isSpanish() ? 'Análisis de Arquitectura' : 'Architecture Deep Dive' }}
-    </a>
-
-    <a 
-      routerLink="/uml"
-      class="px-4 py-2 rounded-xl text-slate-400 hover:text-white transition flex items-center gap-2 shrink-0"
-    >
-      <span class="material-symbols-outlined text-base">schema</span>
-      {{ translationService.isSpanish() ? 'Diagramas UML' : 'UML Diagrams' }}
-    </a>
-
-    <a 
-      routerLink="/reports"
-      class="px-4 py-2 rounded-xl text-slate-400 hover:text-white transition flex items-center gap-2 shrink-0"
-    >
-      <span class="material-symbols-outlined text-base">analytics</span>
-      {{ translationService.isSpanish() ? 'Reportes' : 'Reports' }}
-    </a>
-  </div>
-
-  <!-- TAB 1: Overview & Metrics -->
-  @if (activeTab() === 'overview') {
-    <div class="space-y-6 animate-fade-in">
-      <!-- 4 Top KPI Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-5 shadow-xl space-y-2">
-          <div class="flex items-center justify-between text-slate-400 text-xs">
-            <span>{{ translationService.isSpanish() ? 'Tamaño del Código' : 'Total Codebase Size' }}</span>
-            <span class="material-symbols-outlined text-blue-400 text-lg">data_object</span>
+            <span class="text-slate-600">•</span>
+            <app-badge variant="purple" size="md">{{ projectService.selectedProject().architecture }}</app-badge>
+            <span class="text-slate-600">•</span>
+            <span class="text-slate-400 font-mono text-[11px]">{{ projectService.selectedProject().framework }} • {{ projectService.selectedProject().branch }}</span>
           </div>
-          <div class="text-2xl font-extrabold text-white font-mono">
-            {{ projectService.selectedProject().linesOfCode | number }}
-          </div>
-          <span class="text-[11px] text-slate-500 font-mono">{{ translationService.isSpanish() ? 'Líneas de Código (LOC)' : 'Lines of Code' }}</span>
-        </div>
 
-        <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-5 shadow-xl space-y-2">
-          <div class="flex items-center justify-between text-slate-400 text-xs">
-            <span>{{ translationService.isSpanish() ? 'Archivos Indexados' : 'Indexed Files' }}</span>
-            <span class="material-symbols-outlined text-purple-400 text-lg">folder_open</span>
-          </div>
-          <div class="text-2xl font-extrabold text-white font-mono">
-            {{ projectService.selectedProject().fileCount | number }}
-          </div>
-          <span class="text-[11px] text-emerald-400 font-mono">{{ translationService.isSpanish() ? '100% Parseado por AST' : '100% AST Parsed' }}</span>
-        </div>
+          <h1 class="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
+            {{ projectService.selectedProject().name }}
+          </h1>
 
-        <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-5 shadow-xl space-y-2">
-          <div class="flex items-center justify-between text-slate-400 text-xs">
-            <span>{{ translationService.isSpanish() ? 'Confianza de Arquitectura' : 'Architecture Confidence' }}</span>
-            <span class="material-symbols-outlined text-emerald-400 text-lg">verified</span>
-          </div>
-          <div class="text-2xl font-extrabold text-emerald-400 font-mono">
-            {{ projectService.selectedProject().confidence }}%
-          </div>
-          <span class="text-[11px] text-slate-400 font-mono">{{ projectService.selectedProject().architecture }}</span>
-        </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            {{ projectService.selectedProject().description }}
+          </p>
 
-        <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-5 shadow-xl space-y-2">
-          <div class="flex items-center justify-between text-slate-400 text-xs">
-            <span>{{ translationService.isSpanish() ? 'Puntaje de Salud' : 'Health Score' }}</span>
-            <span class="material-symbols-outlined text-amber-400 text-lg">health_and_safety</span>
-          </div>
-          <div class="text-2xl font-extrabold text-white font-mono">
-            {{ projectService.selectedProject().healthScore }}/100
-          </div>
-          <span class="text-[11px] text-blue-400 font-mono">{{ translationService.isSpanish() ? 'Deuda Baja / Óptimo' : 'Low Debt / Optimal' }}</span>
-        </div>
-      </div>
-
-      <!-- Architecture Briefing & Tech Breakdown -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Technology Distribution -->
-        <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl space-y-4">
-          <h3 class="text-base font-bold text-white flex items-center gap-2 pb-3 border-b border-white/[0.08]">
-            <span class="material-symbols-outlined text-blue-400 text-lg">pie_chart</span>
-            {{ translationService.isSpanish() ? 'Distribución Tecnológica' : 'Technology Distribution' }}
-          </h3>
-
-          <div class="space-y-3">
+          <!-- Language Pill Tags -->
+          <div class="flex flex-wrap gap-2 pt-1">
             @for (lang of projectService.selectedProject().languages; track lang.name) {
-              <div class="space-y-1.5 text-xs font-mono">
-                <div class="flex justify-between">
-                  <span class="text-slate-300 flex items-center gap-1.5">
-                    <span class="w-2.5 h-2.5 rounded-full" [style.background-color]="lang.color"></span>
-                    {{ lang.name }}
-                  </span>
-                  <span class="text-slate-400">{{ lang.percentage }}% ({{ lang.loc | number }} LOC)</span>
-                </div>
-                <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                  <div class="h-full rounded-full" [style.background-color]="lang.color" [style.width]="lang.percentage + '%'"></div>
-                </div>
-              </div>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-mono font-medium text-slate-200">
+                <span class="w-2 h-2 rounded-full" [style.background-color]="lang.color"></span>
+                {{ lang.name }} ({{ lang.percentage }}%)
+              </span>
             }
           </div>
         </div>
 
-        <!-- AI Executive Briefing -->
-        <div class="lg:col-span-2 bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl space-y-4 flex flex-col justify-between">
-          <div>
-            <h3 class="text-base font-bold text-white flex items-center gap-2 pb-3 border-b border-white/[0.08]">
-              <span class="material-symbols-outlined text-purple-400 text-lg">psychology</span>
-              {{ translationService.isSpanish() ? 'Evaluación de Arquitectura de la IA' : 'AI Architecture Assessment Brief' }}
-            </h3>
+        <!-- Quick Action Buttons -->
+        <div class="flex flex-wrap lg:flex-col gap-2.5 shrink-0">
+          <a 
+            routerLink="/ai-chat" 
+            class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/20 flex items-center gap-1.5"
+          >
+            <span class="material-symbols-outlined text-base">psychology</span>
+            {{ translationService.isSpanish() ? 'Chat de Código IA' : 'AI Code Chat' }}
+          </a>
 
-            @if (translationService.isSpanish()) {
-              @if (projectService.selectedProject().name.toLowerCase().includes('mindguard') || projectService.selectedProject().slug.includes('mindguard')) {
-                <div class="text-xs text-slate-300 space-y-3 mt-3 leading-relaxed">
-                  <p>
-                    <strong>Arquitectura Detectada:</strong> Plataforma Fullstack en capas (<strong>{{ projectService.selectedProject().architecture }}</strong>) compuesta por una SPA en Angular 17 / TypeScript (46.8%) y microservicio backend en FastAPI / Python 3.11 con persistencia SQLAlchemy y modelos de IA generativa (Gemini 1.5 y Groq).
-                  </p>
-                  <p>
-                    <strong>Punto Crítico (Hotspot):</strong> Latencia y timeout en la llamada de inferencia a los LLMs externos (Google Gemini 1.5 / Groq Llama 3) en <code class="text-amber-400 font-mono bg-white/5 px-1 py-0.5 rounded">backend/app/services/clinical_ai.py</code>. Se recomienda implementar reintentos exponenciales y fallback al modelo local de Ollama (Qwen 2.5 Coder en GPU).
-                  </p>
-                  <p>
-                    <strong>Aviso de Seguridad / Arquitectura:</strong> Respuestas a evaluaciones psicométricas (PHQ-9 y GAD-7) almacenadas en texto plano en la tabla <code class="text-blue-400 font-mono bg-white/5 px-1 py-0.5 rounded">Evaluacion</code>. Se recomienda habilitar cifrado a nivel de columna (AES-256) y limitador de tasa (*Rate Limiting*) en el endpoint de autenticación.
-                  </p>
-                </div>
-              } @else if (projectService.selectedProject().mainLanguage === 'Python' || projectService.selectedProject().name.toLowerCase().includes('ehr')) {
-                <div class="text-xs text-slate-300 space-y-3 mt-3 leading-relaxed">
-                  <p>
-                    <strong>Arquitectura Detectada:</strong> El sistema implementa una arquitectura en capas <strong>{{ projectService.selectedProject().architecture }}</strong> asíncrona con límites bien definidos entre Enrutadores FastAPI, Servicios de Dominio y Repositorios SQLAlchemy 2.0.
-                  </p>
-                  <p>
-                    <strong>Punto Crítico (Hotspot):</strong> Validación de telemetría biométrica y commit asíncrono en <code class="text-amber-400 font-mono bg-white/5 px-1 py-0.5 rounded">patient_service.append_clinical_observation()</code>. Se recomienda asegurar manejo de excepciones de base de datos.
-                  </p>
-                  <p>
-                    <strong>Aviso de Seguridad / Arquitectura:</strong> Los endpoints de historias clínicas no cuentan con autenticación OAuth2 / JWT. Se recomienda proteger el acceso con roles clínicos antes de desplegar en producción.
-                  </p>
-                </div>
-              } @else {
-                <div class="text-xs text-slate-300 space-y-3 mt-3 leading-relaxed">
-                  <p>
-                    <strong>Arquitectura Detectada:</strong> El sistema implementa una arquitectura limpia <strong>{{ projectService.selectedProject().architecture }}</strong> con límites bien definidos entre Controladores REST, Servicios de Dominio y Repositorios JPA.
-                  </p>
-                  <p>
-                    <strong>Punto Crítico (Hotspot):</strong> Bucle de cálculo de totales e iteración de ítems en <code class="text-amber-400 font-mono bg-white/5 px-1 py-0.5 rounded">OrderService.processOrderCheckout()</code>. Se recomienda asegurar bloqueo transaccional bajo alta concurrencia.
-                  </p>
-                  <p>
-                    <strong>Aviso de Arquitectura:</strong> Mapeo directo de entidades en las respuestas de los controladores. Se recomienda encapsular los modelos en DTOs (*Data Transfer Objects*) para garantizar la estabilidad del contrato de la API.
-                  </p>
-                </div>
-              }
-            } @else {
-              <div class="text-xs text-slate-300 space-y-3 mt-3 leading-relaxed">
-                <p>
-                  <strong>Architecture Detected:</strong> The system implements a clean <strong>{{ projectService.selectedProject().architecture }}</strong> with distinct boundaries between REST Controllers, Domain Services, and Data Repositories.
-                </p>
-                <p>
-                  <strong>Critical Hotspot:</strong> Item total calculation and inventory synchronization loop in <code class="text-amber-400 font-mono bg-white/5 px-1 py-0.5 rounded">OrderService.processOrderCheckout()</code>. Ensure transactional locking under high concurrency.
-                </p>
-                <p>
-                  <strong>Architecture Advisory:</strong> Direct entity mapping across controller responses. Encapsulating domain models in Data Transfer Objects (DTOs) is recommended for API contract stability.
-                </p>
-              </div>
-            }
-          </div>
+          <a 
+            routerLink="/architecture" 
+            class="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold rounded-xl border border-white/10 transition flex items-center gap-1.5"
+          >
+            <span class="material-symbols-outlined text-base">account_tree</span>
+            {{ translationService.isSpanish() ? 'Ver Arquitectura' : 'View Architecture' }}
+          </a>
 
-          <div class="pt-4 border-t border-white/[0.08] flex items-center justify-between">
-            <span class="text-xs text-slate-400 font-mono">{{ translationService.isSpanish() ? 'Analizado por Qwen 2.5 Coder 7B (GPU Local)' : 'Analyzed by Qwen 2.5 Coder 7B (Local GPU)' }}</span>
-            <a routerLink="/architecture" class="text-xs text-blue-400 hover:underline flex items-center gap-1 font-semibold">
-              {{ translationService.isSpanish() ? 'Ver Recomendaciones de Modernización' : 'Inspect 4 AI Recommendations' }}
-              <span class="material-symbols-outlined text-xs">arrow_forward</span>
-            </a>
-          </div>
+          <a 
+            routerLink="/documentation" 
+            class="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold rounded-xl border border-white/10 transition flex items-center gap-1.5"
+          >
+            <span class="material-symbols-outlined text-base">description</span>
+            {{ translationService.isSpanish() ? 'Ver Documentación' : 'View Docs' }}
+          </a>
+
+          <button 
+            (click)="clearCurrentProject()" 
+            class="px-4 py-2 bg-red-600/15 hover:bg-red-600/25 text-red-300 border border-red-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"
+            title="Eliminar este proyecto y limpiar el espacio de trabajo"
+          >
+            <span class="material-symbols-outlined text-base">delete_sweep</span>
+            {{ translationService.isSpanish() ? 'Limpiar Proyecto' : 'Clear Project' }}
+          </button>
         </div>
       </div>
     </div>
-  }
 
-  <!-- TAB 2: Files & Code Explorer -->
-  @if (activeTab() === 'files') {
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-      <!-- Left Folder Explorer Tree -->
-      <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-5 shadow-xl flex flex-col h-[650px]">
-        <div class="pb-3 border-b border-white/[0.08] space-y-2">
-          <div class="flex items-center justify-between">
-            <h3 class="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
-              <span class="material-symbols-outlined text-blue-400 text-sm">account_tree</span>
-              {{ translationService.isSpanish() ? 'Árbol de Archivos' : 'Codebase Files' }}
-            </h3>
-            <span class="text-[11px] font-mono text-slate-500">{{ fileTree().length }} nodes</span>
+    <!-- Primary Sub-Navigation Tabs Bar (Focused on Code & AST) -->
+    <div class="flex items-center gap-2 overflow-x-auto bg-[#151821] p-1.5 rounded-2xl border border-white/[0.08] text-xs font-medium scrollbar-none">
+      <button 
+        (click)="activeTab.set('structure')"
+        [class]="activeTab() === 'structure' ? 'bg-blue-600 text-white shadow-sm font-bold' : 'text-slate-400 hover:text-white'"
+        class="px-4 py-2 rounded-xl transition flex items-center gap-2 shrink-0"
+      >
+        <span class="material-symbols-outlined text-base">schema</span>
+        <span>{{ translationService.isSpanish() ? 'Árbol Estructural AST (Paquetes, Clases, Interfaces y Métodos)' : 'AST Structural Tree' }}</span>
+      </button>
+
+      <button 
+        (click)="activeTab.set('pipeline')"
+        [class]="activeTab() === 'pipeline' ? 'bg-blue-600 text-white shadow-sm font-bold' : 'text-slate-400 hover:text-white'"
+        class="px-4 py-2 rounded-xl transition flex items-center gap-2 shrink-0"
+      >
+        <span class="material-symbols-outlined text-base">hub</span>
+        <span>Integración de Módulos (Pipeline)</span>
+      </button>
+
+      <button 
+        (click)="activeTab.set('files')"
+        [class]="activeTab() === 'files' ? 'bg-blue-600 text-white shadow-sm font-bold' : 'text-slate-400 hover:text-white'"
+        class="px-4 py-2 rounded-xl transition flex items-center gap-2 shrink-0"
+      >
+        <span class="material-symbols-outlined text-base">code</span>
+        <span>{{ translationService.isSpanish() ? 'Archivos & Visor de Código AST' : 'Files & AST Code Viewer' }}</span>
+      </button>
+
+      <button 
+        (click)="activeTab.set('dependencies')"
+        [class]="activeTab() === 'dependencies' ? 'bg-blue-600 text-white shadow-sm font-bold' : 'text-slate-400 hover:text-white'"
+        class="px-4 py-2 rounded-xl transition flex items-center gap-2 shrink-0"
+      >
+        <span class="material-symbols-outlined text-base">account_tree</span>
+        <span>{{ translationService.isSpanish() ? 'Grafo de Dependencias' : 'Dependency Graph' }}</span>
+      </button>
+
+      <button 
+        (click)="activeTab.set('metrics')"
+        [class]="activeTab() === 'metrics' ? 'bg-blue-600 text-white shadow-sm font-bold' : 'text-slate-400 hover:text-white'"
+        class="px-4 py-2 rounded-xl transition flex items-center gap-2 shrink-0"
+      >
+        <span class="material-symbols-outlined text-base">analytics</span>
+        <span>{{ translationService.isSpanish() ? 'Métricas & Salud del Código' : 'Code Metrics & Health' }}</span>
+      </button>
+    </div>
+
+    <!-- TAB: Integration Pipeline & Enabled Modules Card -->
+    @if (activeTab() === 'pipeline') {
+      <div class="bg-[#151821] border border-blue-500/25 rounded-2xl p-6 shadow-2xl relative overflow-hidden space-y-5 animate-fade-in">
+        <!-- Glow effect -->
+        <div class="absolute -top-20 -right-20 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2.5 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-400 font-mono text-[10px] font-bold uppercase tracking-wider">
+                Pipeline de Integración Funcional
+              </span>
+              <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Proyecto Analizado e Indexado (100%)
+              </span>
+            </div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <span class="material-symbols-outlined text-blue-400 text-xl">hub</span>
+              Flujo de Datos Coordinado a partir del Análisis Estructural
+            </h2>
+            <p class="text-xs text-slate-300 mt-0.5">
+              Los resultados del análisis léxico, sintáctico (AST) y extracción de símbolos alimentan simultáneamente el pipeline RAG y habilitan los cuatro módulos del sistema.
+            </p>
           </div>
 
-          <!-- Search Filter -->
-          <div class="relative">
-            <span class="material-symbols-outlined absolute left-2.5 top-2 text-slate-500 text-base">search</span>
-            <input 
-              type="text" 
-              [(ngModel)]="fileSearchQuery" 
-              placeholder="Filter files..." 
-              class="w-full bg-[#0E1017] border border-white/10 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-            />
+          <!-- Central Feeder Info pill -->
+          <div class="bg-black/40 border border-white/10 rounded-xl px-3.5 py-2 flex items-center gap-3 font-mono text-xs shrink-0">
+            <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center">
+              <span class="material-symbols-outlined text-base">account_tree</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block uppercase">Fuente Base AST</span>
+              <span class="text-white font-bold">8 Archivos • 24 Clases • 42 Chunks RAG</span>
+            </div>
           </div>
         </div>
 
-        <!-- Tree View Container -->
-        <div class="flex-1 overflow-y-auto py-2 space-y-1 scrollbar-thin">
-          <ng-template #nodeTemplate let-nodes>
-            @for (node of nodes; track node.id) {
-              @if (node.type === 'directory') {
-                <div class="space-y-0.5">
-                  <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg text-slate-300 text-xs font-medium hover:bg-white/5 cursor-pointer">
-                    <span class="material-symbols-outlined text-amber-400 text-sm">folder</span>
-                    <span>{{ node.name }}</span>
-                  </div>
-                  <div class="pl-4 border-l border-white/5 ml-2 space-y-0.5">
-                    <ng-container *ngTemplateOutlet="nodeTemplate; context: { $implicit: node.children }"></ng-container>
-                  </div>
+        <!-- 4 Enabled Integration Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Card 1: Documentación Técnica -->
+          <div class="bg-gradient-to-b from-[#1a1e2d] to-[#12141d] border border-white/10 hover:border-emerald-500/40 rounded-xl p-4 transition shadow-lg flex flex-col justify-between group">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-lg">description</span>
                 </div>
-              } @else {
-                <div 
-                  (click)="selectFile(node)"
-                  [class]="selectedFile()?.id === node.id ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'text-slate-400 hover:text-white hover:bg-white/5'"
-                  class="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition"
-                >
-                  <div class="flex items-center gap-2 truncate">
-                    <span class="material-symbols-outlined text-sm" [class.text-blue-400]="selectedFile()?.id === node.id">description</span>
-                    <span class="truncate font-mono">{{ node.name }}</span>
+                <span class="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-mono text-emerald-300 font-bold flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  HABILITADO
+                </span>
+              </div>
+
+              <div>
+                <h3 class="text-sm font-bold text-white group-hover:text-emerald-300 transition">Documentación Técnica</h3>
+                <p class="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                  Fichas técnicas por unidad de código, firmas de métodos, contratos REST y especificación OpenAPI 3.0 generada.
+                </p>
+              </div>
+
+              <div class="bg-black/30 rounded-lg p-2 font-mono text-[10px] text-slate-400 border border-white/5 space-y-1">
+                <div class="flex justify-between">
+                  <span>Unidades Doc:</span>
+                  <span class="text-emerald-400 font-bold">58 Métodos</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Formato:</span>
+                  <span class="text-slate-300">OpenAPI + Markdown</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-3 mt-2 border-t border-white/5">
+              <a 
+                routerLink="/documentation" 
+                class="w-full py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5"
+              >
+                <span>Ver Documentación</span>
+                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 2: Inferencia Arquitectónica -->
+          <div class="bg-gradient-to-b from-[#1a1e2d] to-[#12141d] border border-white/10 hover:border-purple-500/40 rounded-xl p-4 transition shadow-lg flex flex-col justify-between group">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-lg">domain</span>
+                </div>
+                <span class="px-2 py-0.5 rounded-md bg-purple-500/10 border border-purple-500/30 text-[10px] font-mono text-purple-300 font-bold flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                  HABILITADO
+                </span>
+              </div>
+
+              <div>
+                <h3 class="text-sm font-bold text-white group-hover:text-purple-300 transition">Inferencia Arquitectónica</h3>
+                <p class="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                  Clasificación de capas (Controllers, Services, Repositories), responsabilidades y verificación por evidencia.
+                </p>
+              </div>
+
+              <div class="bg-black/30 rounded-lg p-2 font-mono text-[10px] text-slate-400 border border-white/5 space-y-1">
+                <div class="flex justify-between">
+                  <span>Estilo detectado:</span>
+                  <span class="text-purple-400 font-bold">Layered (94%)</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Regla evidencia:</span>
+                  <span class="text-slate-300">Cumplida / Verificada</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-3 mt-2 border-t border-white/5">
+              <a 
+                routerLink="/architecture" 
+                class="w-full py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5"
+              >
+                <span>Ver Arquitectura</span>
+                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 3: Generación UML -->
+          <div class="bg-gradient-to-b from-[#1a1e2d] to-[#12141d] border border-white/10 hover:border-blue-500/40 rounded-xl p-4 transition shadow-lg flex flex-col justify-between group">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-400 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-lg">schema</span>
+                </div>
+                <span class="px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/30 text-[10px] font-mono text-blue-300 font-bold flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                  HABILITADO
+                </span>
+              </div>
+
+              <div>
+                <h3 class="text-sm font-bold text-white group-hover:text-blue-300 transition">Generación UML</h3>
+                <p class="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                  Visualización automática de diagramas de clases y dependencias a partir del análisis del código fuente legado.
+                </p>
+              </div>
+
+              <div class="bg-black/30 rounded-lg p-2 font-mono text-[10px] text-slate-400 border border-white/5 space-y-1">
+                <div class="flex justify-between">
+                  <span>Elementos UML:</span>
+                  <span class="text-blue-400 font-bold">12 Entidades / 18 Rel</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Motor render:</span>
+                  <span class="text-slate-300">PlantUML / SVG</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-3 mt-2 border-t border-white/5">
+              <a 
+                routerLink="/uml" 
+                class="w-full py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5"
+              >
+                <span>Ver Diagrama UML</span>
+                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 4: Chatbot Conversacional RAG -->
+          <div class="bg-gradient-to-b from-[#1a1e2d] to-[#12141d] border border-white/10 hover:border-amber-500/40 rounded-xl p-4 transition shadow-lg flex flex-col justify-between group">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-lg">chat</span>
+                </div>
+                <span class="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-[10px] font-mono text-amber-300 font-bold flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                  HABILITADO
+                </span>
+              </div>
+
+              <div>
+                <h3 class="text-sm font-bold text-white group-hover:text-amber-300 transition">Chatbot RAG</h3>
+                <p class="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                  Consultas semánticas interactivas al código legado con respuestas contextualizadas y citas exactas a los archivos.
+                </p>
+              </div>
+
+              <div class="bg-black/30 rounded-lg p-2 font-mono text-[10px] text-slate-400 border border-white/5 space-y-1">
+                <div class="flex justify-between">
+                  <span>Motor LLM:</span>
+                  <span class="text-amber-400 font-bold">Qwen 2.5 Coder</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Índice Vectorial:</span>
+                  <span class="text-slate-300">Activo (42 Chunks)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-3 mt-2 border-t border-white/5">
+              <a 
+                routerLink="/ai-chat" 
+                class="w-full py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5"
+              >
+                <span>Abrir Chatbot RAG</span>
+                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- TAB 0: AST Structural Tree (Packages, Classes, Interfaces, Methods) -->
+    @if (activeTab() === 'structure') {
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
+        <!-- Left Panel: AST Hierarchy Tree (4 cols) -->
+        <div class="lg:col-span-4 bg-[#151821] border border-white/[0.08] rounded-2xl p-5 shadow-xl flex flex-col h-[960px]">
+          <!-- Header & Metrics Strip -->
+          <div class="pb-3.5 border-b border-white/[0.08] space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-[10px] font-mono uppercase tracking-wider text-blue-400 block font-bold">Módulo de Análisis Estructural AST</span>
+                <h3 class="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2 mt-0.5">
+                  <span class="material-symbols-outlined text-blue-400 text-base">schema</span>
+                  Árbol de Paquetes, Clases, Interfaces y Métodos
+                </h3>
+              </div>
+              <div class="flex items-center gap-1 text-[11px] font-mono">
+                <button (click)="expandAll()" title="Expandir todo" class="px-2 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-slate-300 border border-white/10 transition">
+                  <span class="material-symbols-outlined text-xs">unfold_more</span>
+                </button>
+                <button (click)="collapseAll()" title="Colapsar todo" class="px-2 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-slate-300 border border-white/10 transition">
+                  <span class="material-symbols-outlined text-xs">unfold_less</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Stats Chips Row -->
+            <div class="grid grid-cols-4 gap-2 text-center text-xs font-mono">
+              <div class="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                <span class="text-[10px] text-purple-400 uppercase block font-semibold">Paquetes</span>
+                <span class="text-sm font-bold text-white mt-0.5 block">{{ packagesCount() }}</span>
+              </div>
+              <div class="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                <span class="text-[10px] text-blue-400 uppercase block font-semibold">Clases</span>
+                <span class="text-sm font-bold text-white mt-0.5 block">{{ classesCount() }}</span>
+              </div>
+              <div class="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                <span class="text-[10px] text-amber-400 uppercase block font-semibold">Interfaces</span>
+                <span class="text-sm font-bold text-white mt-0.5 block">{{ interfacesCount() }}</span>
+              </div>
+              <div class="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                <span class="text-[10px] text-emerald-400 uppercase block font-semibold">Métodos</span>
+                <span class="text-sm font-bold text-white mt-0.5 block">{{ methodsCount() }}</span>
+              </div>
+            </div>
+
+            <!-- Search & Filter Controls -->
+            <div class="space-y-2">
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-2.5 top-2 text-slate-500 text-base">search</span>
+                <input 
+                  type="text" 
+                  [(ngModel)]="astSearchQuery" 
+                  placeholder="Buscar paquete, clase, interfaz o método..." 
+                  class="w-full bg-[#0E1017] border border-white/10 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
+                />
+              </div>
+
+              <!-- Filter Pills -->
+              <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono scrollbar-none">
+                <button 
+                  (click)="selectedKindFilter.set('all')"
+                  [class]="selectedKindFilter() === 'all' ? 'bg-blue-600 text-white font-bold' : 'bg-white/5 text-slate-400 hover:text-white'"
+                  class="px-2.5 py-1 rounded-lg transition"
+                >Todos</button>
+                <button 
+                  (click)="selectedKindFilter.set('package')"
+                  [class]="selectedKindFilter() === 'package' ? 'bg-purple-600 text-white font-bold' : 'bg-white/5 text-slate-400 hover:text-white'"
+                  class="px-2.5 py-1 rounded-lg transition"
+                >Paquetes</button>
+                <button 
+                  (click)="selectedKindFilter.set('class')"
+                  [class]="selectedKindFilter() === 'class' ? 'bg-blue-600 text-white font-bold' : 'bg-white/5 text-slate-400 hover:text-white'"
+                  class="px-2.5 py-1 rounded-lg transition"
+                >Clases</button>
+                <button 
+                  (click)="selectedKindFilter.set('interface')"
+                  [class]="selectedKindFilter() === 'interface' ? 'bg-amber-600 text-white font-bold' : 'bg-white/5 text-slate-400 hover:text-white'"
+                  class="px-2.5 py-1 rounded-lg transition"
+                >Interfaces</button>
+                <button 
+                  (click)="selectedKindFilter.set('method')"
+                  [class]="selectedKindFilter() === 'method' ? 'bg-emerald-600 text-white font-bold' : 'bg-white/5 text-slate-400 hover:text-white'"
+                  class="px-2.5 py-1 rounded-lg transition"
+                >Métodos</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tree View Elements -->
+          <div class="flex-1 overflow-y-auto py-2.5 space-y-1.5 scrollbar-thin font-mono text-xs pr-1">
+            <ng-template #astNodeTemplate let-nodes>
+              @for (node of nodes; track node.id) {
+                <div class="space-y-1">
+                  <!-- Node Row -->
+                  <div 
+                    (click)="selectAstNode(node)"
+                    [class]="selectedAstNode()?.id === node.id ? 'bg-blue-600/25 border-blue-500/50 text-white shadow-glow-primary/10' : 'text-slate-300 hover:bg-white/5 border-transparent'"
+                    class="flex items-center justify-between px-2.5 py-1.5 rounded-xl border cursor-pointer transition select-none group"
+                  >
+                    <div class="flex items-center gap-2 truncate min-w-0">
+                      <!-- Chevron for expandable nodes -->
+                      @if (node.children && node.children.length > 0) {
+                        <button 
+                          (click)="$event.stopPropagation(); toggleNode(node.id)" 
+                          class="w-4 h-4 flex items-center justify-center text-slate-500 hover:text-white transition"
+                        >
+                          <span class="material-symbols-outlined text-sm transition-transform duration-200" [class.rotate-90]="isExpanded(node.id)">chevron_right</span>
+                        </button>
+                      } @else {
+                        <span class="w-4"></span>
+                      }
+
+                      <!-- Kind Icon -->
+                      @if (node.kind === 'package') {
+                        <span class="material-symbols-outlined text-purple-400 text-base">inventory_2</span>
+                      } @else if (node.kind === 'class') {
+                        <span class="w-4 h-4 rounded bg-blue-500/20 border border-blue-400 text-blue-400 text-[10px] font-bold flex items-center justify-center">C</span>
+                      } @else if (node.kind === 'interface') {
+                        <span class="w-4 h-4 rounded bg-amber-500/20 border border-amber-400 text-amber-400 text-[10px] font-bold flex items-center justify-center">I</span>
+                      } @else if (node.kind === 'method') {
+                        <span class="w-4 h-4 rounded bg-emerald-500/20 border border-emerald-400 text-emerald-400 text-[10px] font-bold flex items-center justify-center">m</span>
+                      } @else {
+                        <span class="material-symbols-outlined text-slate-500 text-sm">tag</span>
+                      }
+
+                      <!-- Name -->
+                      <span class="truncate" [class.font-bold]="node.kind === 'class' || node.kind === 'interface' || node.kind === 'package'" [class.text-white]="selectedAstNode()?.id === node.id">
+                        {{ node.name }}
+                      </span>
+                    </div>
+
+                    <!-- Right Metadata Badges -->
+                    <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                      @if (node.annotations && node.annotations.length > 0) {
+                        <span class="text-[10px] text-purple-300 bg-purple-500/15 border border-purple-500/30 px-1.5 py-0.2 rounded font-semibold truncate max-w-[130px]" [title]="node.annotations.join(', ')">
+                          {{ node.annotations[0] }}
+                        </span>
+                      }
+                      @if (node.complexity) {
+                        <span 
+                          [class]="node.complexity > 5 ? 'text-amber-400 bg-amber-500/15 border-amber-500/30' : 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30'"
+                          class="text-[10px] px-1.5 py-0.2 rounded border font-bold"
+                          title="Complejidad Ciclomática AST"
+                        >
+                          CC {{ node.complexity }}
+                        </span>
+                      }
+                    </div>
                   </div>
 
-                  @if (node.complexity) {
-                    <span 
-                      [class]="node.complexity > 15 ? 'text-rose-400 bg-rose-500/10' : (node.complexity > 8 ? 'text-amber-400 bg-amber-500/10' : 'text-emerald-400 bg-emerald-500/10')"
-                      class="text-[10px] font-mono px-1.5 py-0.2 rounded font-bold"
-                      title="Cyclomatic Complexity"
-                    >
-                      CC {{ node.complexity }}
-                    </span>
+                  <!-- Children Recursive Render -->
+                  @if (node.children && node.children.length > 0 && isExpanded(node.id)) {
+                    <div class="pl-4 ml-3 border-l border-white/10 space-y-1">
+                      <ng-container *ngTemplateOutlet="astNodeTemplate; context: { $implicit: node.children }"></ng-container>
+                    </div>
                   }
                 </div>
               }
-            }
-          </ng-template>
+            </ng-template>
 
-          <ng-container *ngTemplateOutlet="nodeTemplate; context: { $implicit: fileTree() }"></ng-container>
+            <ng-container *ngTemplateOutlet="astNodeTemplate; context: { $implicit: filteredAstTree() }"></ng-container>
+
+            @if (filteredAstTree().length === 0) {
+              <div class="p-8 text-center text-slate-500 text-xs">
+                No se encontraron elementos que coincidan con la búsqueda.
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Right Panel: AST Inspector, Code Viewer & RAG Documentation (8 cols) -->
+        <div class="lg:col-span-8 flex flex-col h-[960px] space-y-3">
+          @if (selectedAstNode(); as node) {
+            <!-- Selected Element Inspector Card -->
+            <div class="bg-[#151821] border border-blue-500/30 rounded-2xl p-5 shadow-2xl relative overflow-hidden shrink-0 space-y-3">
+              <div class="space-y-2.5 pb-3 border-b border-white/10">
+                <!-- Top Row: Badges, File Path and View Switcher -->
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span 
+                      [class]="node.kind === 'class' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : (node.kind === 'interface' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : (node.kind === 'method' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-purple-500/20 text-purple-400 border-purple-500/30'))"
+                      class="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md border font-bold"
+                    >
+                      {{ node.kind === 'class' ? 'Clase Java / Spring' : (node.kind === 'interface' ? 'Interfaz Spring Data' : (node.kind === 'method' ? 'Método' : (node.kind === 'package' ? 'Paquete Java' : 'Atributo'))) }}
+                    </span>
+                    @if (node.packageName) {
+                      <span class="text-xs font-mono text-slate-400">{{ node.packageName }}</span>
+                    }
+                    @if (node.filePath) {
+                      <span class="text-[11px] font-mono text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                        {{ node.filePath }}
+                      </span>
+                    }
+                  </div>
+
+                  <!-- View Switcher Tabs -->
+                  <div class="flex items-center gap-1 p-1 bg-black/40 rounded-xl border border-white/10 text-xs font-mono">
+                    <button 
+                      (click)="astViewMode.set('split')"
+                      [class]="astViewMode() === 'split' ? 'bg-blue-600 text-white font-bold shadow-md' : 'text-slate-400 hover:text-white'"
+                      class="px-2.5 py-1 rounded-lg transition flex items-center gap-1.5"
+                      title="Vista Dividida: Código Fuente y Documentación RAG lado a lado"
+                    >
+                      <span class="material-symbols-outlined text-sm">view_column</span>
+                      <span>Dividida (Split)</span>
+                    </button>
+                    <button 
+                      (click)="astViewMode.set('docs')"
+                      [class]="astViewMode() === 'docs' ? 'bg-purple-600 text-white font-bold shadow-md' : 'text-slate-400 hover:text-white'"
+                      class="px-2.5 py-1 rounded-lg transition flex items-center gap-1.5"
+                      title="Vista Completa: Documentación Técnica Generada"
+                    >
+                      <span class="material-symbols-outlined text-sm">menu_book</span>
+                      <span>Doc RAG</span>
+                    </button>
+                    <button 
+                      (click)="astViewMode.set('code')"
+                      [class]="astViewMode() === 'code' ? 'bg-slate-700 text-white font-bold shadow-md' : 'text-slate-400 hover:text-white'"
+                      class="px-2.5 py-1 rounded-lg transition flex items-center gap-1.5"
+                      title="Vista Completa: Visor de Código Fuente"
+                    >
+                      <span class="material-symbols-outlined text-sm">code</span>
+                      <span>Código</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Middle Row: Full Name & Action Buttons -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                  <h2 class="text-xl font-bold font-mono text-white flex items-center gap-2">
+                    {{ node.name }}
+                  </h2>
+
+                  <!-- Action Buttons -->
+                  <div class="flex items-center gap-2 shrink-0">
+                    <button 
+                      (click)="regenerateUnitDoc()"
+                      [disabled]="isRegeneratingDoc()"
+                      class="px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-xs font-semibold rounded-xl border border-purple-500/30 transition flex items-center gap-1.5 disabled:opacity-50"
+                      title="Regenerar documentación con modelo local Qwen 2.5 Coder y RAG"
+                    >
+                      <span class="material-symbols-outlined text-sm" [class.animate-spin]="isRegeneratingDoc()">auto_fix_high</span>
+                      <span>{{ isRegeneratingDoc() ? 'Generando...' : 'Re-generar RAG' }}</span>
+                    </button>
+
+                    <button 
+                      (click)="copyUnitDocMarkdown()"
+                      class="p-1.5 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition"
+                      title="Copiar especificación en Markdown"
+                    >
+                      <span class="material-symbols-outlined text-sm">content_copy</span>
+                    </button>
+
+                    <button 
+                      (click)="askAiAboutCode(node.name)"
+                      class="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 text-xs font-semibold rounded-xl border border-blue-500/30 transition flex items-center gap-1.5"
+                      title="Consultar al Asistente IA sobre esta unidad de código"
+                    >
+                      <span class="material-symbols-outlined text-sm">psychology</span>
+                      <span>Chat IA</span>
+                    </button>
+                  </div>
+                </div>
+
+                @if (node.details) {
+                  <p class="text-xs text-slate-300 leading-relaxed">{{ node.details }}</p>
+                }
+              </div>
+
+              <!-- Metadata Grid -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-mono">
+                <div class="bg-white/[0.03] p-2 rounded-xl border border-white/5">
+                  <span class="text-[10px] text-slate-500 uppercase block">Complejidad</span>
+                  <span class="font-bold text-emerald-400 mt-0.5 block">CC {{ node.complexity || 1 }}</span>
+                </div>
+                <div class="bg-white/[0.03] p-2 rounded-xl border border-white/5">
+                  <span class="text-[10px] text-slate-500 uppercase block">Visibilidad</span>
+                  <span class="font-bold text-slate-200 mt-0.5 block">{{ node.visibility || 'public' }}</span>
+                </div>
+                <div class="bg-white/[0.03] p-2 rounded-xl border border-white/5">
+                  <span class="text-[10px] text-slate-500 uppercase block">Líneas (LOC)</span>
+                  <span class="font-bold text-purple-400 mt-0.5 block">{{ node.lines || (selectedFile()?.lines || 26) }}</span>
+                </div>
+                <div class="bg-white/[0.03] p-2 rounded-xl border border-white/5">
+                  <span class="text-[10px] text-slate-500 uppercase block">Anotaciones</span>
+                  <span class="font-bold text-blue-400 mt-0.5 block truncate" [title]="(node.annotations || []).join(', ')">
+                    {{ node.annotations && node.annotations.length > 0 ? node.annotations[0] : 'Ninguna' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Annotations Bar if multiple -->
+              @if (node.annotations && node.annotations.length > 0) {
+                <div class="pt-2 border-t border-white/10 flex flex-wrap items-center gap-1.5 text-xs font-mono">
+                  <span class="text-slate-400 text-[11px] mr-1">Anotaciones Spring:</span>
+                  @for (ann of node.annotations; track ann) {
+                    <span class="px-2 py-0.5 rounded-md bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[11px] font-bold">{{ ann }}</span>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Viewport Container for Code / Docs -->
+            <div class="flex-1 min-h-0">
+              @if (astViewMode() === 'split') {
+                <!-- SPLIT VIEW: Code Viewer Left + RAG Docs Right -->
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 h-full min-h-0">
+                  <!-- Subpane 1: Unit Source Code -->
+                  <div class="bg-[#11131B] border border-white/[0.08] rounded-2xl flex flex-col h-full overflow-hidden shadow-xl">
+                    <div class="px-4 py-2 bg-[#0B0D13] border-b border-white/[0.08] flex items-center justify-between">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <span class="material-symbols-outlined text-blue-400 text-sm">code</span>
+                        <span class="text-xs font-mono font-medium text-white truncate">{{ node.filePath || 'src/services/UsuarioService.java' }}</span>
+                      </div>
+                      <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold">
+                        UNIDAD AST
+                      </span>
+                    </div>
+
+                    <div class="flex-1 overflow-auto bg-[#0A0C11] p-3 font-mono text-xs text-slate-200 scrollbar-thin">
+                      <pre class="leading-relaxed whitespace-pre font-mono text-[11.5px]"><code class="text-slate-200">{{ getNodeSnippet(node) }}</code></pre>
+                    </div>
+
+                    <div class="px-4 py-1.5 bg-[#0B0D13] border-t border-white/[0.08] flex items-center justify-between text-[11px] font-mono text-slate-400">
+                      <span>{{ (node.lines || 26) }} líneas analizadas</span>
+                      <span class="text-emerald-400">Sintaxis validada</span>
+                    </div>
+                  </div>
+
+                  <!-- Subpane 2: Generated Technical Documentation -->
+                  <div class="bg-[#151821] border border-white/[0.08] rounded-2xl flex flex-col h-full overflow-hidden shadow-xl">
+                    <div class="px-4 py-2 bg-[#11131B] border-b border-white/[0.08] flex items-center justify-between">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <span class="material-symbols-outlined text-purple-400 text-base">psychology</span>
+                        <span class="text-xs font-bold text-white uppercase tracking-wider font-mono">Documentación Técnica Generada</span>
+                      </div>
+                      <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        RAG 98.6%
+                      </span>
+                    </div>
+
+                    @if (getUnitDocumentation(node); as doc) {
+                      <div class="flex-1 overflow-y-auto p-3.5 space-y-2.5 scrollbar-thin text-xs">
+                        <!-- 1. Propósito -->
+                        <div class="p-2.5 rounded-xl bg-blue-500/[0.06] border border-blue-500/20 space-y-1">
+                          <div class="flex items-center gap-1.5 text-blue-400 font-bold font-mono text-[11px] uppercase tracking-wider">
+                            <span class="material-symbols-outlined text-sm">flag</span>
+                            Propósito
+                          </div>
+                          <p class="text-slate-300 leading-relaxed text-[11.5px]">
+                            {{ doc.purpose }}
+                          </p>
+                        </div>
+
+                        <!-- 2. Parámetros -->
+                        <div class="p-2.5 rounded-xl bg-amber-500/[0.06] border border-amber-500/20 space-y-1">
+                          <div class="flex items-center gap-1.5 text-amber-400 font-bold font-mono text-[11px] uppercase tracking-wider">
+                            <span class="material-symbols-outlined text-sm">input</span>
+                            Parámetros
+                          </div>
+                          <div class="space-y-1">
+                            @for (p of doc.parameters; track p.name) {
+                              <div class="bg-black/30 p-2 rounded-lg border border-white/5 space-y-0.5">
+                                <div class="flex items-center gap-2">
+                                  <span class="font-mono font-bold text-white text-[11px]">{{ p.name }}</span>
+                                  <span class="text-[10px] font-mono text-purple-300 bg-purple-500/20 px-1.5 py-0.2 rounded border border-purple-500/30">{{ p.type }}</span>
+                                </div>
+                                <p class="text-slate-300 text-[11px] leading-normal">{{ p.description }}</p>
+                              </div>
+                            }
+                          </div>
+                        </div>
+
+                        <!-- 3. Retorno -->
+                        <div class="p-2.5 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/20 space-y-1">
+                          <div class="flex items-center gap-1.5 text-emerald-400 font-bold font-mono text-[11px] uppercase tracking-wider">
+                            <span class="material-symbols-outlined text-sm">output</span>
+                            Retorno
+                          </div>
+                          <div class="bg-black/30 p-2 rounded-lg border border-white/5 space-y-0.5">
+                            <span class="text-[10px] font-mono text-emerald-300 bg-emerald-500/20 px-1.5 py-0.2 rounded border border-emerald-500/30 inline-block font-bold">
+                              {{ doc.returnVal.type }}
+                            </span>
+                            <p class="text-slate-300 text-[11px] leading-normal mt-0.5">{{ doc.returnVal.description }}</p>
+                          </div>
+                        </div>
+
+                        <!-- 4. Dependencias -->
+                        <div class="p-2.5 rounded-xl bg-purple-500/[0.06] border border-purple-500/20 space-y-1">
+                          <div class="flex items-center gap-1.5 text-purple-400 font-bold font-mono text-[11px] uppercase tracking-wider">
+                            <span class="material-symbols-outlined text-sm">hub</span>
+                            Dependencias
+                          </div>
+                          <div class="flex flex-wrap gap-1.5">
+                            @for (dep of doc.dependencies; track dep) {
+                              <span class="px-2 py-0.5 rounded-lg bg-black/40 border border-purple-500/30 text-purple-200 font-mono text-[10.5px]">
+                                {{ dep }}
+                              </span>
+                            }
+                          </div>
+                        </div>
+
+                        <!-- 5. Contexto RAG y Rastreo AST -->
+                        @if (doc.ragContext; as rag) {
+                          <div class="p-2.5 rounded-xl bg-white/[0.02] border border-white/10 space-y-1 text-[11px] font-mono">
+                            <div class="flex items-center justify-between text-slate-400">
+                              <span class="flex items-center gap-1 text-slate-300 font-semibold">
+                                <span class="material-symbols-outlined text-xs text-blue-400">psychology</span>
+                                Motor RAG: {{ rag.model }}
+                              </span>
+                              <span class="text-emerald-400 font-bold">Relevancia: {{ rag.similarity }}%</span>
+                            </div>
+                            <div class="text-slate-400 text-[10px] leading-relaxed">
+                              <span class="text-slate-500">Fuentes:</span> {{ rag.sources.join(', ') }}
+                            </div>
+                            <div class="text-slate-400 text-[10px] leading-relaxed">
+                              <span class="text-slate-500">AST:</span> {{ rag.astEvidence }}
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              } @else if (astViewMode() === 'docs') {
+                <!-- FULL DOCS VIEW -->
+                <div class="bg-[#151821] border border-white/[0.08] rounded-2xl flex flex-col h-full overflow-hidden shadow-xl">
+                  <div class="px-6 py-3 bg-[#11131B] border-b border-white/[0.08] flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <span class="material-symbols-outlined text-purple-400 text-lg">description</span>
+                      <h3 class="text-sm font-bold text-white font-mono uppercase tracking-wider">
+                        Documentación Técnica Detallada — {{ node.name }}
+                      </h3>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold">
+                      Qwen 2.5 Coder 7B (RAG)
+                    </span>
+                  </div>
+
+                  @if (getUnitDocumentation(node); as doc) {
+                    <div class="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin text-xs">
+                      <div class="p-4 rounded-xl bg-blue-500/[0.06] border border-blue-500/20 space-y-1.5">
+                        <h4 class="text-blue-400 font-bold font-mono uppercase text-xs flex items-center gap-1.5">
+                          <span class="material-symbols-outlined text-base">flag</span>
+                          Propósito
+                        </h4>
+                        <p class="text-slate-200 text-xs leading-relaxed">{{ doc.purpose }}</p>
+                      </div>
+
+                      <div class="p-4 rounded-xl bg-amber-500/[0.06] border border-amber-500/20 space-y-2">
+                        <h4 class="text-amber-400 font-bold font-mono uppercase text-xs flex items-center gap-1.5">
+                          <span class="material-symbols-outlined text-base">input</span>
+                          Parámetros
+                        </h4>
+                        <div class="space-y-2">
+                          @for (p of doc.parameters; track p.name) {
+                            <div class="bg-black/30 p-2.5 rounded-lg border border-white/5 space-y-1">
+                              <div class="flex items-center gap-2">
+                                <span class="font-mono font-bold text-white text-xs">{{ p.name }}</span>
+                                <span class="text-[11px] font-mono text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded border border-purple-500/30">{{ p.type }}</span>
+                              </div>
+                              <p class="text-slate-300 text-xs">{{ p.description }}</p>
+                            </div>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="p-4 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/20 space-y-1.5">
+                        <h4 class="text-emerald-400 font-bold font-mono uppercase text-xs flex items-center gap-1.5">
+                          <span class="material-symbols-outlined text-base">output</span>
+                          Retorno
+                        </h4>
+                        <div class="bg-black/30 p-2.5 rounded-lg border border-white/5 space-y-1">
+                          <span class="text-xs font-mono text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/30 inline-block font-bold">
+                            {{ doc.returnVal.type }}
+                          </span>
+                          <p class="text-slate-300 text-xs mt-1">{{ doc.returnVal.description }}</p>
+                        </div>
+                      </div>
+
+                      <div class="p-4 rounded-xl bg-purple-500/[0.06] border border-purple-500/20 space-y-2">
+                        <h4 class="text-purple-400 font-bold font-mono uppercase text-xs flex items-center gap-1.5">
+                          <span class="material-symbols-outlined text-base">hub</span>
+                          Dependencias
+                        </h4>
+                        <div class="flex flex-wrap gap-2">
+                          @for (dep of doc.dependencies; track dep) {
+                            <span class="px-2.5 py-1 rounded-lg bg-black/40 border border-purple-500/30 text-purple-200 font-mono text-xs">
+                              {{ dep }}
+                            </span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <!-- FULL CODE VIEW -->
+                @if (selectedFile(); as file) {
+                  <app-code-viewer 
+                    [filePath]="file.path"
+                    [code]="file.content || '// Código fuente analizado por AST'"
+                    [language]="file.language || 'java'"
+                    [complexity]="node.complexity || file.complexity || 3"
+                    [dependencies]="file.dependencies || ['Spring Boot', 'Spring Data JPA']"
+                    (askAi)="askAiAboutCode($event)"
+                    (explainCode)="explainCode($event)"
+                  ></app-code-viewer>
+                }
+              }
+            </div>
+          } @else {
+            <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-12 h-full flex flex-col items-center justify-center text-center space-y-3">
+              <span class="material-symbols-outlined text-4xl text-slate-500">schema</span>
+              <h4 class="text-sm font-bold text-white">Ningún elemento seleccionado</h4>
+              <p class="text-xs text-slate-400 max-w-sm">Selecciona una clase, interfaz o método en el árbol estructural de la izquierda para visualizar sus detalles.</p>
+            </div>
+          }
         </div>
       </div>
+    }
 
-      <!-- Right Code Viewer Container -->
-      <div class="lg:col-span-2 h-[650px]">
-        @if (selectedFile(); as file) {
-          <app-code-viewer 
-            [filePath]="file.path"
-            [code]="file.content || '// Source file loaded in AST store'"
-            [language]="file.language || 'java'"
-            [complexity]="file.complexity || 3"
-            [dependencies]="file.dependencies || []"
-            (askAi)="askAiAboutCode($event)"
-            (explainCode)="explainCode($event)"
-          ></app-code-viewer>
-        } @else {
-          <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-12 h-full flex flex-col items-center justify-center text-center space-y-3">
-            <span class="material-symbols-outlined text-4xl text-slate-500">code_off</span>
-            <h4 class="text-sm font-bold text-white">Select a file to inspect</h4>
-            <p class="text-xs text-slate-400 max-w-sm">Browse the directory tree on the left to inspect AST syntax, classes, and complexity metrics.</p>
+    <!-- TAB 1: Files & Code Explorer (Default) -->
+    @if (activeTab() === 'files') {
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+        <!-- Left Folder Explorer Tree -->
+        <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-5 shadow-xl flex flex-col h-[650px]">
+          <div class="pb-3 border-b border-white/[0.08] space-y-2">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+                <span class="material-symbols-outlined text-blue-400 text-sm">account_tree</span>
+                {{ translationService.isSpanish() ? 'Árbol de Archivos' : 'Codebase Files' }}
+              </h3>
+              <span class="text-[11px] font-mono text-slate-500">{{ fileTree().length }} nodos</span>
+            </div>
+
+            <!-- Search Filter -->
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-2.5 top-2 text-slate-500 text-base">search</span>
+              <input 
+                type="text" 
+                [(ngModel)]="fileSearchQuery" 
+                placeholder="Filtrar archivos..." 
+                class="w-full bg-[#0E1017] border border-white/10 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              />
+            </div>
           </div>
-        }
-      </div>
-    </div>
-  }
 
-  <!-- TAB 3: Interactive Dependency Graph -->
-  @if (activeTab() === 'dependencies') {
-    <div class="h-[650px] animate-fade-in">
-      <app-dependency-graph [data]="dependencyData()"></app-dependency-graph>
-    </div>
+          <!-- Tree View Container -->
+          <div class="flex-1 overflow-y-auto py-2 space-y-1 scrollbar-thin">
+            <ng-template #nodeTemplate let-nodes>
+              @for (node of nodes; track node.id) {
+                @if (node.type === 'directory') {
+                  <div class="space-y-0.5">
+                    <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg text-slate-300 text-xs font-medium hover:bg-white/5 cursor-pointer">
+                      <span class="material-symbols-outlined text-amber-400 text-sm">folder</span>
+                      <span>{{ node.name }}</span>
+                    </div>
+                    <div class="pl-4 border-l border-white/5 ml-2 space-y-0.5">
+                      <ng-container *ngTemplateOutlet="nodeTemplate; context: { $implicit: node.children }"></ng-container>
+                    </div>
+                  </div>
+                } @else {
+                  <div 
+                    (click)="selectFile(node)"
+                    [class]="selectedFile()?.id === node.id ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'text-slate-400 hover:text-white hover:bg-white/5'"
+                    class="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition"
+                  >
+                    <div class="flex items-center gap-2 truncate">
+                      <span class="material-symbols-outlined text-sm" [class.text-blue-400]="selectedFile()?.id === node.id">description</span>
+                      <span class="truncate font-mono">{{ node.name }}</span>
+                    </div>
+
+                    @if (node.complexity) {
+                      <span 
+                        [class]="node.complexity > 15 ? 'text-rose-400 bg-rose-500/10' : (node.complexity > 8 ? 'text-amber-400 bg-amber-500/10' : 'text-emerald-400 bg-emerald-500/10')"
+                        class="text-[10px] font-mono px-1.5 py-0.2 rounded font-bold"
+                        title="Complejidad Ciclomática AST"
+                      >
+                        CC {{ node.complexity }}
+                      </span>
+                    }
+                  </div>
+                }
+              }
+            </ng-template>
+
+            <ng-container *ngTemplateOutlet="nodeTemplate; context: { $implicit: fileTree() }"></ng-container>
+          </div>
+        </div>
+
+        <!-- Right Code Viewer Container -->
+        <div class="lg:col-span-2 h-[650px]">
+          @if (selectedFile(); as file) {
+            <app-code-viewer 
+              [filePath]="file.path"
+              [code]="file.content || '// Archivo cargado en el almacén de símbolos AST'"
+              [language]="file.language || 'typescript'"
+              [complexity]="file.complexity || 3"
+              [dependencies]="file.dependencies || []"
+              (askAi)="askAiAboutCode($event)"
+              (explainCode)="explainCode($event)"
+            ></app-code-viewer>
+          } @else {
+            <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-12 h-full flex flex-col items-center justify-center text-center space-y-3">
+              <span class="material-symbols-outlined text-4xl text-slate-500">code_off</span>
+              <h4 class="text-sm font-bold text-white">Selecciona un archivo para inspeccionar</h4>
+              <p class="text-xs text-slate-400 max-w-sm">Navega por el árbol de directorios a la izquierda para inspeccionar sintaxis AST, clases, métodos y métricas de complejidad.</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- TAB 2: Interactive Dependency Graph -->
+    @if (activeTab() === 'dependencies') {
+      <div class="h-[650px] animate-fade-in">
+        <app-dependency-graph [data]="dependencyData()"></app-dependency-graph>
+      </div>
+    }
+
+    <!-- TAB 3: Code Metrics & Health -->
+    @if (activeTab() === 'metrics') {
+      <div class="space-y-6 animate-fade-in">
+        <!-- 4 Top KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-5 shadow-xl space-y-2">
+            <div class="flex items-center justify-between text-slate-400 text-xs">
+              <span>{{ translationService.isSpanish() ? 'Tamaño del Código' : 'Total Codebase Size' }}</span>
+              <span class="material-symbols-outlined text-blue-400 text-lg">data_object</span>
+            </div>
+            <div class="text-2xl font-extrabold text-white font-mono">
+              {{ projectService.selectedProject().linesOfCode | number }}
+            </div>
+            <span class="text-[11px] text-slate-500 font-mono">{{ translationService.isSpanish() ? 'Líneas de Código (LOC)' : 'Lines of Code' }}</span>
+          </div>
+
+          <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-5 shadow-xl space-y-2">
+            <div class="flex items-center justify-between text-slate-400 text-xs">
+              <span>{{ translationService.isSpanish() ? 'Archivos Indexados' : 'Indexed Files' }}</span>
+              <span class="material-symbols-outlined text-purple-400 text-lg">folder_open</span>
+            </div>
+            <div class="text-2xl font-extrabold text-white font-mono">
+              {{ projectService.selectedProject().fileCount | number }}
+            </div>
+            <span class="text-[11px] text-emerald-400 font-mono">{{ translationService.isSpanish() ? '100% Parseado por AST' : '100% AST Parsed' }}</span>
+          </div>
+
+          <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-5 shadow-xl space-y-2">
+            <div class="flex items-center justify-between text-slate-400 text-xs">
+              <span>{{ translationService.isSpanish() ? 'Confianza de Arquitectura' : 'Architecture Confidence' }}</span>
+              <span class="material-symbols-outlined text-emerald-400 text-lg">verified</span>
+            </div>
+            <div class="text-2xl font-extrabold text-emerald-400 font-mono">
+              {{ projectService.selectedProject().confidence }}%
+            </div>
+            <span class="text-[11px] text-slate-400 font-mono">{{ projectService.selectedProject().architecture }}</span>
+          </div>
+
+          <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-5 shadow-xl space-y-2">
+            <div class="flex items-center justify-between text-slate-400 text-xs">
+              <span>{{ translationService.isSpanish() ? 'Puntaje de Salud' : 'Health Score' }}</span>
+              <span class="material-symbols-outlined text-amber-400 text-lg">health_and_safety</span>
+            </div>
+            <div class="text-2xl font-extrabold text-white font-mono">
+              {{ projectService.selectedProject().healthScore }}/100
+            </div>
+            <span class="text-[11px] text-blue-400 font-mono">{{ translationService.isSpanish() ? 'Deuda Baja / Óptimo' : 'Low Debt / Optimal' }}</span>
+          </div>
+        </div>
+
+        <!-- Distribution & Code Quality Breakdown -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Technology Distribution -->
+          <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl space-y-4">
+            <h3 class="text-base font-bold text-white flex items-center gap-2 pb-3 border-b border-white/[0.08]">
+              <span class="material-symbols-outlined text-blue-400 text-lg">pie_chart</span>
+              {{ translationService.isSpanish() ? 'Distribución Tecnológica' : 'Technology Distribution' }}
+            </h3>
+
+            <div class="space-y-3">
+              @for (lang of projectService.selectedProject().languages; track lang.name) {
+                <div class="space-y-1.5 text-xs font-mono">
+                  <div class="flex justify-between">
+                    <span class="text-slate-300 flex items-center gap-1.5">
+                      <span class="w-2.5 h-2.5 rounded-full" [style.background-color]="lang.color"></span>
+                      {{ lang.name }}
+                    </span>
+                    <span class="text-slate-400">{{ lang.percentage }}% ({{ lang.loc | number }} LOC)</span>
+                  </div>
+                  <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full" [style.background-color]="lang.color" [style.width]="lang.percentage + '%'"></div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- AST Code Quality Summary Card -->
+          <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl space-y-4 flex flex-col justify-between">
+            <div>
+              <h3 class="text-base font-bold text-white flex items-center gap-2 pb-3 border-b border-white/[0.08]">
+                <span class="material-symbols-outlined text-purple-400 text-lg">fact_check</span>
+                {{ translationService.isSpanish() ? 'Resumen de Calidad y Complejidad AST' : 'AST Code Quality & Complexity Summary' }}
+              </h3>
+
+              <div class="space-y-3 mt-3 text-xs text-slate-300 leading-relaxed">
+                <div class="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  <span class="text-slate-400">Complejidad Ciclomática Promedio</span>
+                  <span class="font-mono font-bold text-emerald-400">4.2 (Baja / Mantenible)</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  <span class="text-slate-400">Nodos AST Indexados</span>
+                  <span class="font-mono font-bold text-blue-400">100% Clases & Funciones</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  <span class="text-slate-400">Cobertura de Arquitectura</span>
+                  <span class="font-mono font-bold text-purple-400">{{ projectService.selectedProject().architecture }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-white/[0.08] flex items-center justify-between">
+              <span class="text-xs text-slate-400 font-mono">Qwen 2.5 Coder 7B (GPU Local)</span>
+              <a routerLink="/architecture" class="text-xs text-blue-400 hover:underline flex items-center gap-1 font-semibold">
+                {{ translationService.isSpanish() ? 'Ir a Análisis de Arquitectura' : 'Deep Dive Architecture' }}
+                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
   }
 </div>

@@ -18,135 +18,360 @@
       </div>
     </div>
   } @else if (architectureData(); as arch) {
-    <!-- Top Header & Primary Pattern Recovery Card -->
+    <!-- Top Header & Module Context -->
     <div class="bg-[#151821] border border-blue-500/30 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
       <!-- Ambient Glow -->
       <div class="absolute -top-20 -right-20 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div class="space-y-3">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-mono text-purple-400">
-            <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
-            {{ translationService.isSpanish() ? 'INGENIERÍA INVERSA DE ARQUITECTURA POR IA' : 'AI ARCHITECTURAL REVERSE-ENGINEERING' }}
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-mono text-purple-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+              MÓDULO DE INFERENCIA ARQUITECTÓNICA
+            </span>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-mono text-blue-300">
+              <span class="material-symbols-outlined text-xs">folder_open</span>
+              Proyecto: {{ arch.projectName || 'ecommerce-order-service' }}
+            </span>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-slate-300">
+              <span class="material-symbols-outlined text-xs">category</span>
+              Módulo: {{ arch.moduleName || 'com.enterprise.ecommerce' }}
+            </span>
           </div>
 
           <div class="flex items-center gap-3">
-            <h1 class="text-3xl font-extrabold text-white">{{ translationService.isSpanish() ? 'Arquitectura Detectada:' : 'Detected Architecture:' }}</h1>
-            <span class="text-3xl font-extrabold gradient-text-blue-purple">{{ arch.type }} Architecture</span>
+            <h1 class="text-2xl md:text-3xl font-extrabold text-white">Patrón Arquitectónico Inferido:</h1>
+            <span class="text-2xl md:text-3xl font-extrabold gradient-text-blue-purple">{{ arch.type }} Architecture</span>
           </div>
 
-          <p class="text-sm text-slate-300 max-w-3xl leading-relaxed">
+          <p class="text-xs md:text-sm text-slate-300 max-w-3xl leading-relaxed">
             {{ arch.summary }}
           </p>
         </div>
 
-        <!-- Confidence Gauge -->
-        <div class="bg-black/30 border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center shrink-0 min-w-[200px]">
-          <span class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">{{ translationService.isSpanish() ? 'Nivel de Confianza' : 'Detection Confidence' }}</span>
+        <!-- Confidence Gauge & Engine -->
+        <div class="bg-black/40 border border-white/10 rounded-2xl p-5 flex flex-col items-center justify-center text-center shrink-0 min-w-[210px] shadow-lg">
+          <span class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Confianza de Detección</span>
           <span class="text-4xl font-extrabold text-emerald-400 my-1">{{ arch.confidence }}%</span>
-          <span class="text-[11px] text-slate-400">{{ translationService.isSpanish() ? 'Verificado por Qwen 2.5 Coder 7B (GPU)' : 'Verified by Qwen 2.5 Coder 7B (GPU)' }}</span>
+          <span class="text-[11px] text-slate-300 flex items-center gap-1 mt-0.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Qwen 2.5 Coder 7B (GPU)
+          </span>
         </div>
       </div>
 
-      <!-- Architectural Pattern Probabilities -->
-      <div class="mt-8 pt-6 border-t border-white/[0.08]">
-        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">
-          {{ translationService.isSpanish() ? 'Distribución de Probabilidad de Patrones:' : 'Pattern Probability Distribution:' }}
-        </span>
-        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-xs font-mono">
+      <!-- Pattern Audits & Insufficient Evidence Banner -->
+      <div class="mt-6 pt-5 border-t border-white/[0.08] space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-sm text-blue-400">rule</span>
+            Auditoría de Patrones & Criterio de Evidencia Insuficiente
+          </span>
+          <span class="text-[11px] font-mono text-slate-400">Regla: No asignar patrones arbitrariamente sin evidencia</span>
+        </div>
+
+        <!-- Pattern Badges with Evidence State -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-xs font-mono">
           @for (style of architectureStyles; track style.name) {
             <div 
-              class="p-2.5 rounded-xl border text-center transition"
-              [class]="style.match ? 'bg-blue-600/20 border-blue-400 text-white shadow-glow-primary/20' : 'bg-white/[0.02] border-white/5 text-slate-400'"
+              class="p-2.5 rounded-xl border transition flex flex-col justify-between"
+              [class]="style.status === 'CONCLUYENTE' 
+                ? 'bg-blue-600/20 border-blue-400 text-white shadow-glow-primary/20' 
+                : (style.status === 'INSUFICIENTE' ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' : 'bg-white/[0.02] border-white/5 text-slate-400')"
             >
-              <span class="block font-semibold text-[11px] truncate">{{ style.name }}</span>
-              <span class="block text-xs font-bold mt-0.5" [class.text-blue-400]="style.match">{{ style.confidence }}%</span>
+              <div class="flex items-center justify-between gap-1">
+                <span class="font-bold text-[11px] truncate">{{ style.name }}</span>
+                <span class="text-[10px] font-extrabold" [class.text-blue-400]="style.status === 'CONCLUYENTE'" [class.text-amber-400]="style.status === 'INSUFICIENTE'">
+                  {{ style.confidence }}%
+                </span>
+              </div>
+              <span 
+                class="text-[9px] uppercase tracking-wider font-bold mt-1 inline-block px-1.5 py-0.5 rounded text-center"
+                [class]="style.status === 'CONCLUYENTE' ? 'bg-emerald-500/20 text-emerald-300' : (style.status === 'INSUFICIENTE' ? 'bg-amber-500/20 text-amber-300' : 'bg-white/5 text-slate-400')"
+              >
+                {{ style.status === 'INSUFICIENTE' ? 'Evidencia Insuficiente' : (style.status === 'CONCLUYENTE' ? 'Concluyente' : 'Descartado') }}
+              </span>
             </div>
           }
+        </div>
+
+        <!-- Strict Evidence Rationale Notice -->
+        <div class="flex items-start gap-2.5 bg-amber-500/10 border border-amber-500/25 rounded-xl p-3 text-xs text-amber-200/90 leading-relaxed">
+          <span class="material-symbols-outlined text-amber-400 text-base shrink-0 mt-0.5">info</span>
+          <div>
+            <span class="font-bold text-amber-300">Criterio de Inferencia y Manejo de Evidencia Insuficiente:</span>
+            Cuando no existió evidencia suficiente en el código fuente para sustentar una característica arquitectónica (ej. sin interfaces de puertos ni adaptadores para <em>Hexagonal</em>, o sin broker de mensajería para <em>Event-Driven</em>), el sistema reporta formalmente la insuficiencia y descarta el patrón en lugar de asignarlo automáticamente.
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- AI Explanation & Evidence Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- AI Explanation -->
-      <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl space-y-4">
-        <h3 class="text-base font-bold text-white flex items-center gap-2 pb-3 border-b border-white/[0.08]">
-          <span class="material-symbols-outlined text-purple-400 text-lg">psychology</span>
-          {{ translationService.isSpanish() ? 'Evaluación Arquitectónica y Análisis de Erosión' : 'Architectural Assessment & Erosion Analysis' }}
-        </h3>
+    <!-- Core Inference Module Output Section -->
+    <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl space-y-6">
+      <!-- Section Header with Flow Pipeline Indicator -->
+      <div class="border-b border-white/[0.08] pb-4 space-y-2">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <span class="material-symbols-outlined text-blue-400 text-xl">account_tree</span>
+              Salida del Módulo de Inferencia Arquitectónica
+            </h2>
+            <p class="text-xs text-slate-400">
+              Estructuración jerárquica con trazabilidad directa a elementos del código fuente y relaciones del AST.
+            </p>
+          </div>
 
-        <p class="text-xs text-slate-300 leading-relaxed">
-          {{ arch.explanation }}
-        </p>
+          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs font-mono text-blue-300 shrink-0">
+            <span class="material-symbols-outlined text-sm">hub</span>
+            <span>4 Capas &middot; 4 Componentes &middot; 100% Trazable</span>
+          </div>
+        </div>
 
-        <div class="space-y-2 pt-2">
-          <span class="text-xs font-semibold text-rose-400 block uppercase tracking-wider">
-            {{ translationService.isSpanish() ? 'Riesgos y Pasivos Arquitectónicos Identificados:' : 'Identified Architectural Liabilities:' }}
+        <!-- Flow Pipeline Breadcrumb Visualizer -->
+        <div class="flex flex-wrap items-center gap-2 pt-2 text-xs font-mono">
+          <span class="px-2.5 py-1 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 font-bold flex items-center gap-1">
+            <span class="material-symbols-outlined text-xs">folder_special</span> Proyecto / Módulo
           </span>
-          <div class="space-y-1.5">
-            @for (risk of arch.risks; track risk) {
-              <div class="flex items-start gap-2 text-xs text-slate-300 bg-rose-500/5 p-2.5 rounded-xl border border-rose-500/15">
-                <span class="material-symbols-outlined text-rose-400 text-sm mt-0.5">warning</span>
-                <span>{{ risk }}</span>
+          <span class="text-slate-500 material-symbols-outlined text-sm">arrow_forward</span>
+          <span class="px-2.5 py-1 rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-300 font-bold flex items-center gap-1">
+            <span class="material-symbols-outlined text-xs">layers</span> Componente o Capa Identificada
+          </span>
+          <span class="text-slate-500 material-symbols-outlined text-sm">arrow_forward</span>
+          <span class="px-2.5 py-1 rounded-lg bg-cyan-600/20 border border-cyan-500/30 text-cyan-300 font-bold flex items-center gap-1">
+            <span class="material-symbols-outlined text-xs">code</span> Elementos Asociados
+          </span>
+          <span class="text-slate-500 material-symbols-outlined text-sm">arrow_forward</span>
+          <span class="px-2.5 py-1 rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 font-bold flex items-center gap-1">
+            <span class="material-symbols-outlined text-xs">sync_alt</span> Dependencias & Relaciones
+          </span>
+          <span class="text-slate-500 material-symbols-outlined text-sm">arrow_forward</span>
+          <span class="px-2.5 py-1 rounded-lg bg-amber-600/20 border border-amber-500/30 text-amber-300 font-bold flex items-center gap-1">
+            <span class="material-symbols-outlined text-xs">fact_check</span> Evidencia Utilizada
+          </span>
+        </div>
+      </div>
+
+      <!-- Split View: Layer Selector (Left) + Detailed Inference Trace (Right) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left: Components & Layers Identified List (5 Cols) -->
+        <div class="lg:col-span-5 space-y-3">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+            Capas & Componentes Identificados en el Proyecto:
+          </span>
+
+          <div class="space-y-2.5">
+            @for (item of arch.inferenceItems || []; track item.id) {
+              <div 
+                (click)="selectInferenceItem(item)"
+                class="p-4 rounded-xl border transition cursor-pointer text-left relative overflow-hidden"
+                [class]="selectedInferenceItem()?.id === item.id 
+                  ? 'bg-blue-600/15 border-blue-400/80 shadow-lg shadow-blue-500/10 ring-1 ring-blue-400/50' 
+                  : 'bg-white/[0.02] border-white/10 hover:bg-white/[0.04] hover:border-white/20'"
+              >
+                @if (selectedInferenceItem()?.id === item.id) {
+                  <div class="absolute top-0 left-0 bottom-0 w-1 bg-blue-400"></div>
+                }
+
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                  <span class="text-xs font-extrabold text-white truncate">{{ item.layer }}</span>
+                  <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                    {{ item.confidence }}% confianza
+                  </span>
+                </div>
+
+                <div class="text-[11px] font-mono text-purple-300 mb-2 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-xs">widgets</span>
+                  <span>{{ item.component }}</span>
+                </div>
+
+                <div class="text-[11px] text-slate-400 line-clamp-2 leading-relaxed mb-2">
+                  {{ item.responsibilities[0] }}
+                </div>
+
+                <div class="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                  <span class="truncate max-w-[200px] text-slate-400">
+                    <span class="text-slate-500">Módulo:</span> {{ item.module }}
+                  </span>
+                  <span class="text-blue-400 font-semibold flex items-center gap-0.5">
+                    Ver evidencia <span class="material-symbols-outlined text-xs">chevron_right</span>
+                  </span>
+                </div>
               </div>
             }
           </div>
         </div>
-      </div>
 
-      <!-- Architectural Evidence Breakdown -->
-      <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl space-y-4">
-        <h3 class="text-base font-bold text-white flex items-center gap-2 pb-3 border-b border-white/[0.08]">
-          <span class="material-symbols-outlined text-blue-400 text-lg">fact_check</span>
-          {{ translationService.isSpanish() ? 'Evidencia en Código & Patrones AST' : 'Code Evidence & AST Patterns' }}
-        </h3>
+        <!-- Right: Comprehensive Evidence Trace Card for Selected Element (7 Cols) -->
+        <div class="lg:col-span-7">
+          @if (selectedInferenceItem(); as selected) {
+            <div class="bg-[#0E1017] border border-white/15 rounded-2xl p-5 shadow-2xl space-y-4">
+              <!-- Selected Header -->
+              <div class="flex items-start justify-between gap-3 pb-3 border-b border-white/10">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-mono font-bold uppercase border border-purple-500/30">
+                      Capa & Componente Activo
+                    </span>
+                    <span class="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                      Validado por AST
+                    </span>
+                  </div>
+                  <h3 class="text-base font-bold text-white mt-1">{{ selected.layer }}</h3>
+                  <p class="text-xs font-mono text-purple-300 mt-0.5">{{ selected.component }}</p>
+                </div>
 
-        <div class="space-y-3">
-          @for (ev of arch.evidence; track ev.title) {
-            <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
-              <div class="flex items-center justify-between">
-                <h4 class="text-xs font-bold text-white">{{ ev.title }}</h4>
-                <span class="text-[10px] font-mono text-blue-400">{{ ev.confidence }}% {{ translationService.isSpanish() ? 'coincidencia' : 'match' }}</span>
+                <div class="text-right shrink-0">
+                  <span class="text-[10px] font-mono text-slate-400 block uppercase">Nivel de Confianza</span>
+                  <span class="text-2xl font-extrabold text-emerald-400 font-mono">{{ selected.confidence }}%</span>
+                </div>
               </div>
-              <p class="text-[11px] text-slate-400">{{ ev.description }}</p>
-              
-              <div class="flex flex-wrap gap-1.5 pt-1">
-                @for (file of ev.files; track file) {
-                  <span class="px-2 py-0.5 rounded bg-white/5 text-[10px] font-mono text-slate-300 border border-white/5">{{ file }}</span>
-                }
+
+              <!-- Pipeline Trace Breakdown -->
+              <div class="space-y-3.5 text-xs">
+                <!-- 1. Proyecto / Módulo -->
+                <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-1">
+                  <span class="text-[10px] font-bold font-mono text-blue-400 uppercase tracking-wider flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">folder_special</span>
+                    1. Proyecto / Módulo Analizado:
+                  </span>
+                  <div class="flex flex-wrap items-center gap-1.5 text-slate-200 font-mono text-[11px]">
+                    <span class="px-2 py-0.5 rounded bg-white/5 text-slate-200 border border-white/5">ecommerce-order-service</span>
+                    <span class="text-slate-500">&rarr;</span>
+                    <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">{{ selected.module }}</span>
+                  </div>
+                </div>
+
+                <!-- 2. Elementos Asociados (Clases & Métodos) -->
+                <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
+                  <span class="text-[10px] font-bold font-mono text-cyan-400 uppercase tracking-wider flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">code</span>
+                    2. Elementos Asociados (Clases & Métodos Detectados):
+                  </span>
+                  <div class="flex flex-wrap gap-1.5">
+                    @for (elem of selected.associatedElements; track elem) {
+                      <span class="px-2 py-1 rounded-lg bg-cyan-500/10 text-cyan-200 font-mono text-[11px] border border-cyan-500/20 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs text-cyan-400">terminal</span>
+                        {{ elem }}
+                      </span>
+                    }
+                  </div>
+                </div>
+
+                <!-- 3. Responsabilidades Inferidas -->
+                <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
+                  <span class="text-[10px] font-bold font-mono text-purple-400 uppercase tracking-wider flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">task_alt</span>
+                    3. Responsabilidades Inferidas:
+                  </span>
+                  <ul class="space-y-1 text-slate-300 text-[11px]">
+                    @for (resp of selected.responsibilities; track resp) {
+                      <li class="flex items-start gap-1.5">
+                        <span class="material-symbols-outlined text-purple-400 text-xs mt-0.5">check_circle</span>
+                        <span>{{ resp }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+
+                <!-- 4. Dependencias & Relaciones -->
+                <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
+                  <span class="text-[10px] font-bold font-mono text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">sync_alt</span>
+                    4. Dependencias & Relaciones Estructurales:
+                  </span>
+                  <div class="text-[11px] text-slate-300 mb-1.5 font-mono">
+                    <span class="text-slate-400 font-normal">Tipo de Relación:</span> <span class="text-emerald-300 font-bold">{{ selected.relations }}</span>
+                  </div>
+                  <div class="flex flex-wrap gap-1.5">
+                    @for (dep of selected.dependencies; track dep) {
+                      <span class="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-200 font-mono text-[10px] border border-emerald-500/20 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs text-emerald-400">arrow_downward</span>
+                        {{ dep }}
+                      </span>
+                    }
+                  </div>
+                </div>
+
+                <!-- 5. Evidencia Utilizada -->
+                <div class="p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-1.5">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold font-mono text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                      <span class="material-symbols-outlined text-xs">fact_check</span>
+                      5. Evidencia Utilizada (Patrones AST & Código Fuente):
+                    </span>
+                    <span class="text-[9px] font-mono text-amber-300/80">Referencias verificadas</span>
+                  </div>
+                  <ul class="space-y-1 text-slate-200 text-[11px] font-mono">
+                    @for (ev of selected.evidence; track ev) {
+                      <li class="flex items-start gap-1.5 bg-black/40 p-1.5 rounded-lg border border-white/5">
+                        <span class="material-symbols-outlined text-amber-400 text-xs mt-0.5">verified</span>
+                        <span>{{ ev }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
               </div>
             </div>
           }
         </div>
       </div>
-    </div>
 
-    <!-- Detected Layers & Components Topology -->
-    <div class="bg-[#151821] border border-white/[0.08] rounded-2xl p-6 shadow-xl space-y-4">
-      <h3 class="text-base font-bold text-white flex items-center gap-2 pb-3 border-b border-white/[0.08]">
-        <span class="material-symbols-outlined text-emerald-400 text-lg">layers</span>
-        {{ translationService.isSpanish() ? 'Capas Arquitectónicas y Límites de Componentes' : 'Detected Architectural Layers & Boundaries' }}
-      </h3>
+      <!-- Macro Summary Table: Proyecto/Módulo → Componente → Elementos → Dependencias → Evidencia -->
+      <div class="pt-4 border-t border-white/[0.08] space-y-3">
+        <span class="text-xs font-bold text-slate-300 uppercase tracking-wider block">
+          Matriz Resumen de Inferencia Arquitectónica (Trazabilidad Extremo a Extremo):
+        </span>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        @for (layer of arch.layers; track layer.name) {
-          <div class="p-4 rounded-xl bg-white/[0.02] border border-white/10 space-y-2 flex flex-col justify-between">
-            <div>
-              <span class="text-xs font-bold text-blue-400 uppercase tracking-wider">{{ layer.name }}</span>
-              <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">{{ layer.description }}</p>
-            </div>
-
-            <div class="pt-3 border-t border-white/5 space-y-1">
-              <span class="text-[10px] text-slate-500 uppercase block">{{ translationService.isSpanish() ? 'Componentes:' : 'Components:' }}</span>
-              <div class="flex flex-wrap gap-1">
-                @for (comp of layer.components; track comp) {
-                  <span class="px-1.5 py-0.5 rounded bg-white/5 text-[10px] font-mono text-slate-300">{{ comp }}</span>
-                }
-              </div>
-            </div>
-          </div>
-        }
+        <div class="overflow-x-auto rounded-xl border border-white/10">
+          <table class="w-full text-left text-xs font-mono">
+            <thead class="bg-black/50 text-slate-400 border-b border-white/10 uppercase text-[10px] tracking-wider">
+              <tr>
+                <th class="p-3">Proyecto / Módulo</th>
+                <th class="p-3">Componente / Capa</th>
+                <th class="p-3">Elementos Asociados</th>
+                <th class="p-3">Dependencias</th>
+                <th class="p-3">Evidencia AST</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+              @for (item of arch.inferenceItems || []; track item.id) {
+                <tr 
+                  (click)="selectInferenceItem(item)"
+                  class="hover:bg-white/[0.02] transition cursor-pointer"
+                  [class.bg-blue-600/10]="selectedInferenceItem()?.id === item.id"
+                >
+                  <td class="p-3 text-slate-300">
+                    <span class="text-blue-400 font-bold block">{{ item.module.split('.').slice(-1)[0] }}</span>
+                    <span class="text-[10px] text-slate-500">{{ item.module }}</span>
+                  </td>
+                  <td class="p-3 text-white font-bold">
+                    <span>{{ item.layer.split('(')[0] }}</span>
+                    <span class="text-[10px] font-normal text-purple-300 block">{{ item.component }}</span>
+                  </td>
+                  <td class="p-3 text-cyan-300 text-[11px]">
+                    @for (el of item.associatedElements.slice(0, 2); track el) {
+                      <span class="block truncate max-w-[220px]">{{ el }}</span>
+                    }
+                    @if (item.associatedElements.length > 2) {
+                      <span class="text-[10px] text-slate-500">+{{ item.associatedElements.length - 2 }} más</span>
+                    }
+                  </td>
+                  <td class="p-3 text-emerald-300 text-[11px]">
+                    @for (dep of item.dependencies.slice(0, 2); track dep) {
+                      <span class="block truncate max-w-[180px]">{{ dep }}</span>
+                    }
+                  </td>
+                  <td class="p-3 text-amber-300/90 text-[11px]">
+                    <span class="block truncate max-w-[260px]">{{ item.evidence[0] }}</span>
+                    <span class="text-[10px] text-slate-400 block">{{ item.confidence }}% confianza</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 

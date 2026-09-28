@@ -21,7 +21,15 @@
           class="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-semibold rounded-xl transition"
         >
           <span class="material-symbols-outlined text-base">delete_sweep</span>
-          <span>Limpiar Todo</span>
+          <span>Limpiar Workspace</span>
+        </button>
+      } @else {
+        <button 
+          (click)="restoreDemos()"
+          class="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-semibold rounded-xl transition"
+        >
+          <span class="material-symbols-outlined text-base">restore</span>
+          <span>Restaurar Ejemplos</span>
         </button>
       }
 
@@ -278,16 +286,24 @@
         </table>
       </div>
     } @else {
-      <div class="py-12 text-center space-y-3">
-        <div class="inline-flex p-3 rounded-full bg-white/5 text-slate-500">
-          <span class="material-symbols-outlined text-3xl">folder_off</span>
+      <div class="py-12 text-center space-y-4">
+        <div class="inline-flex p-4 rounded-2xl bg-white/5 text-slate-500 border border-white/5">
+          <span class="material-symbols-outlined text-4xl">folder_off</span>
         </div>
-        <p class="text-sm font-semibold text-slate-300">No hay proyectos indexados en este momento</p>
-        <p class="text-xs text-slate-500 max-w-sm mx-auto">Sube un archivo ZIP o introduce una URL de repositorio Git para iniciar la ingeniería inversa.</p>
-        <a routerLink="/upload" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition">
-          <span class="material-symbols-outlined text-sm">upload_file</span>
-          Subir Proyecto
-        </a>
+        <div>
+          <p class="text-base font-bold text-white">No hay proyectos indexados en este momento</p>
+          <p class="text-xs text-slate-400 max-w-md mx-auto mt-1">Sube un archivo ZIP o introduce una URL de repositorio Git para iniciar la ingeniería inversa automática con agentes de IA.</p>
+        </div>
+        <div class="flex items-center justify-center gap-3 pt-2">
+          <button (click)="restoreDemos()" class="inline-flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-semibold rounded-xl transition">
+            <span class="material-symbols-outlined text-sm">restore</span>
+            Cargar Proyectos Demo
+          </button>
+          <a routerLink="/upload" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/20">
+            <span class="material-symbols-outlined text-sm">upload_file</span>
+            Subir Nuevo Proyecto
+          </a>
+        </div>
       </div>
     }
   </div>

@@ -76,6 +76,45 @@ export interface FileNode {
   dependencies?: string[];
 }
 
+export interface AstParameterDoc {
+  name: string;
+  type: string;
+  description: string;
+}
+
+export interface AstUnitDocumentation {
+  purpose: string;
+  parameters: AstParameterDoc[];
+  returnVal: {
+    type: string;
+    description: string;
+  };
+  dependencies: string[];
+  ragContext?: {
+    model: string;
+    similarity: number;
+    sources: string[];
+    astEvidence: string;
+  };
+}
+
+export interface AstElementNode {
+  id: string;
+  name: string;
+  kind: 'package' | 'class' | 'interface' | 'method' | 'field';
+  packageName?: string;
+  returnType?: string;
+  parameters?: string;
+  annotations?: string[];
+  complexity?: number;
+  lines?: number;
+  filePath?: string;
+  visibility?: 'public' | 'private' | 'protected';
+  children?: AstElementNode[];
+  details?: string;
+  documentation?: AstUnitDocumentation;
+}
+
 export interface ArchitectureEvidence {
   title: string;
   description: string;
@@ -99,9 +138,32 @@ export interface ArchitectureLayer {
   dependsOn: string[];
 }
 
+export interface ArchitectureInferenceItem {
+  id: string;
+  module: string;
+  layer: string;
+  component: string;
+  responsibilities: string[];
+  associatedElements: string[];
+  dependencies: string[];
+  relations: string;
+  evidence: string[];
+  confidence: number;
+}
+
+export interface ArchitecturePatternAudit {
+  pattern: string;
+  confidence: number;
+  status: 'CONCLUYENTE' | 'INSUFICIENTE' | 'DESCARTADO';
+  decisionRationale: string;
+  missingEvidence?: string[];
+}
+
 export interface ArchitectureAnalysis {
   id: string;
   projectId: string;
+  projectName?: string;
+  moduleName?: string;
   type: 'MVC' | 'Layered' | 'Monolithic' | 'Microservices' | 'Hexagonal' | 'Clean Architecture' | 'Event-driven';
   confidence: number;
   summary: string;
@@ -110,6 +172,8 @@ export interface ArchitectureAnalysis {
   components: ArchitectureComponent[];
   layers: ArchitectureLayer[];
   risks: string[];
+  inferenceItems?: ArchitectureInferenceItem[];
+  patternAudits?: ArchitecturePatternAudit[];
 }
 
 export type RecommendationSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
@@ -154,7 +218,7 @@ export interface UMLDiagram {
 export interface DependencyGraphNode {
   id: string;
   name: string;
-  type: 'controller' | 'service' | 'repository' | 'database' | 'external' | 'util';
+  type: 'controller' | 'service' | 'repository' | 'database' | 'external' | 'util' | 'model';
   layer: string;
   filesCount?: number;
   color?: string;

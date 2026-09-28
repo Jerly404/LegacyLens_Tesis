@@ -135,11 +135,23 @@ ollama pull qwen2.5-coder:32b
 
 ---
 
-## 7. Running Tests
+## 7. Running Tests & Quality Assurance
 
 ```bash
-# Run unit tests
-npm run test --workspace=frontend
+# 1. Run all unit tests across the entire monorepo (Backend + Frontend)
+npm run test:all
+
+# 2. Run automated quality gate (Build + Lint + Tests)
+npm run verify:all
+
+# 3. Run Backend Jest unit tests
+npm run test:backend
+
+# 4. Run Frontend Angular/Jest unit tests
+npm run test:frontend
+
+# 5. Run Linting across all workspaces
+npm run lint:all
 ```
 
 ---

@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ProjectService } from '../../core/projects/project.service';
 import { SettingsService } from '../../core/settings/settings.service';
 import { NotificationService } from '../../core/notifications/notification.service';
@@ -30,6 +30,9 @@ export class UploadComponent {
   notificationService = inject(NotificationService);
   analysisService = inject(AnalysisService);
   router = inject(Router);
+  route = inject(ActivatedRoute);
+
+  isInvalidProjectSimulated = signal<boolean>(false);
 
   currentStep = signal<number>(1);
   sourceType = signal<'git' | 'zip' | 'folder'>('git');
@@ -42,10 +45,20 @@ export class UploadComponent {
   isDetecting = signal<boolean>(false);
 
   // Project configuration
-  projectName = signal<string>('My Enterprise Repository');
-  gitRepoUrl = signal<string>('https://github.com/my-org/core-service.git');
+  projectName = signal<string>('E-Commerce Order Management Microservice');
+  gitRepoUrl = signal<string>('https://github.com/enterprise-org/ecommerce-order-service.git');
   gitBranch = signal<string>('main');
   gitToken = signal<string>('');
+
+  constructor() {
+    const errorParam = this.route.snapshot.queryParamMap.get('error');
+    const hasSearchParam = typeof window !== 'undefined' && window.location.search.includes('error=invalid_project');
+    if (errorParam === 'invalid_project' || hasSearchParam) {
+      this.isInvalidProjectSimulated.set(true);
+      this.projectName.set('Repositorio de Documentos Legales');
+      this.gitRepoUrl.set('https://github.com/empresa-demo/documentos-legales-2024.git');
+    }
+  }
 
   // Auto-detected Stack Properties
   detectedLanguage = signal<string>('Java');
@@ -145,6 +158,16 @@ export class UploadComponent {
         this.detectedBreakdown.set([
           { name: 'Go', percentage: 90, color: '#00ADD8' },
           { name: 'Protobuf', percentage: 10, color: '#555555' }
+        ]);
+      } else if (combined.includes('ecommerce') || combined.includes('shop') || combined.includes('store') || combined.includes('order')) {
+        this.projectName.set('Sample E-Commerce Order API');
+        this.detectedLanguage.set('Java');
+        this.detectedFramework.set('Spring Boot & Hibernate');
+        this.detectedArchitecture.set('Layered Architecture');
+        this.detectedBreakdown.set([
+          { name: 'Java', percentage: 78, color: '#f89820' },
+          { name: 'SQL', percentage: 14, color: '#10B981' },
+          { name: 'XML / Config', percentage: 8, color: '#A855F7' }
         ]);
       } else {
         this.projectName.set('Java Enterprise System');

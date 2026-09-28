@@ -5,6 +5,17 @@ describe('ChatService', () => {
   let service: ChatService;
 
   beforeEach(() => {
+    const mockFetch = jest.fn().mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({
+          response: 'Authentication is handled in src/controllers/AuthController.java:24.'
+        })
+      })
+    );
+    (globalThis as any).fetch = mockFetch;
+    (window as any).fetch = mockFetch;
+
     TestBed.configureTestingModule({
       providers: [ChatService]
     });

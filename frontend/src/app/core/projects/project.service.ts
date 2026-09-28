@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Project, FileNode, ProjectStatus, DependencyGraphData } from '@codelens/shared';
+import { Project, FileNode, ProjectStatus, DependencyGraphData, AstElementNode } from '@codelens/shared';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
@@ -7,21 +7,47 @@ import { delay } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class ProjectService {
-  private initialProjects: Project[] = [];
+  private initialProjects: Project[] = [
+    {
+      id: 'proj-ecommerce-java',
+      name: 'E-Commerce Order Management Microservice',
+      slug: 'ecommerce-order-service',
+      description: 'Microservicio Java/Spring Boot para procesamiento de órdenes, validación transaccional e integración relacional con Spring Data JPA.',
+      repositoryUrl: 'https://github.com/enterprise/ecommerce-order-service.git',
+      mainLanguage: 'Java',
+      framework: 'Java 11 / Spring Boot 2.7',
+      branch: 'main',
+      languages: [
+        { name: 'Java', percentage: 75, color: '#f89820', loc: 338 },
+        { name: 'SQL / DB', percentage: 15, color: '#10B981', loc: 68 },
+        { name: 'XML / Config', percentage: 10, color: '#A855F7', loc: 45 }
+      ],
+      fileCount: 8,
+      linesOfCode: 450,
+      architecture: 'Layered Architecture',
+      confidence: 96,
+      status: 'COMPLETED',
+      progress: 100,
+      lastAnalyzedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      healthScore: 94
+    }
+  ];
 
   private getSavedProjects(): Project[] {
     const saved = localStorage.getItem('legacyai_projects');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed;
         }
       } catch (e) {
         console.error('Error parsing stored projects:', e);
       }
     }
-    return [];
+    return this.initialProjects;
   }
 
   private persistProjects(list: Project[]) {
@@ -29,7 +55,7 @@ export class ProjectService {
   }
 
   private projectsSignal = signal<Project[]>(this.getSavedProjects());
-  private selectedProjectSignal = signal<Project | null>(this.getSavedProjects()[0] || null);
+  private selectedProjectSignal = signal<Project | null>(this.getSavedProjects()[0] || this.initialProjects[0]);
 
   projects = this.projectsSignal.asReadonly();
   selectedProjectSignalValue = this.selectedProjectSignal.asReadonly();
@@ -1166,6 +1192,78 @@ public class OrderService {
         return orderRepository.findByCustomerId(customerId);
     }
 }`
+              },
+              {
+                id: 'file-usuario-srv',
+                name: 'UsuarioService.java',
+                path: 'src/services/UsuarioService.java',
+                type: 'file',
+                language: 'java',
+                lines: 52,
+                size: 1980,
+                complexity: 3,
+                dependencies: ['UsuarioRepository', 'Usuario', 'UsuarioRegistroDTO', 'PasswordEncoder', 'NotificacionService', 'Transactional'],
+                content: `package com.enterprise.ecommerce.services;
+
+import com.enterprise.ecommerce.repositories.UsuarioRepository;
+import com.enterprise.ecommerce.models.Usuario;
+import com.enterprise.ecommerce.dtos.UsuarioRegistroDTO;
+import com.enterprise.ecommerce.dtos.UsuarioResponseDTO;
+import com.enterprise.ecommerce.exceptions.EmailAlreadyExistsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.Optional;
+
+@Service
+public class UsuarioService {
+
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final NotificacionService notificacionService;
+
+    public UsuarioService(
+            UsuarioRepository usuarioRepository,
+            PasswordEncoder passwordEncoder,
+            NotificacionService notificacionService) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.notificacionService = notificacionService;
+    }
+
+    /**
+     * Registra un nuevo usuario en la plataforma con validación y cifrado BCrypt.
+     * Documentado automáticamente mediante IA y contexto RAG.
+     */
+    @Transactional
+    public UsuarioResponseDTO registrarUsuario(UsuarioRegistroDTO dto) {
+        if (usuarioRepository.existsByEmail(dto.getEmail())) {
+            throw new EmailAlreadyExistsException("El email ya se encuentra registrado: " + dto.getEmail());
+        }
+
+        String passwordHash = passwordEncoder.encode(dto.getPassword());
+        Usuario usuario = new Usuario();
+        usuario.setNombre(dto.getNombre());
+        usuario.setEmail(dto.getEmail());
+        usuario.setPasswordHash(passwordHash);
+        usuario.setRol(dto.getRol() != null ? dto.getRol() : "CLIENTE");
+
+        Usuario usuarioGuardado = usuarioRepository.save(usuario);
+        notificacionService.enviarEmailBienvenida(usuarioGuardado.getEmail());
+
+        return new UsuarioResponseDTO(
+            usuarioGuardado.getId(),
+            usuarioGuardado.getNombre(),
+            usuarioGuardado.getEmail(),
+            usuarioGuardado.getRol(),
+            usuarioGuardado.getFechaRegistro()
+        );
+    }
+
+    public Optional<Usuario> buscarPorEmail(String email) {
+        return usuarioRepository.findByEmail(email);
+    }
+}`
               }
             ]
           },
@@ -1198,6 +1296,30 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findByCustomerId(UUID customerId);
     List<Order> findByStatus(String status);
 }`
+              },
+              {
+                id: 'file-usuario-repo',
+                name: 'UsuarioRepository.java',
+                path: 'src/repositories/UsuarioRepository.java',
+                type: 'file',
+                language: 'java',
+                lines: 16,
+                size: 610,
+                complexity: 1,
+                dependencies: ['Usuario', 'JpaRepository'],
+                content: `package com.enterprise.ecommerce.repositories;
+
+import com.enterprise.ecommerce.models.Usuario;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
+    Optional<Usuario> findByEmail(String email);
+    boolean existsByEmail(String email);
+}`
               }
             ]
           },
@@ -1207,6 +1329,56 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
             path: 'src/models',
             type: 'directory',
             children: [
+              {
+                id: 'file-usuario-model',
+                name: 'Usuario.java',
+                path: 'src/models/Usuario.java',
+                type: 'file',
+                language: 'java',
+                lines: 42,
+                size: 1350,
+                complexity: 1,
+                content: `package com.enterprise.ecommerce.models;
+
+import javax.persistence.*;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Entity
+@Table(name = "usuarios")
+public class Usuario {
+
+    @Id
+    @GeneratedValue
+    private UUID id;
+
+    @Column(nullable = false)
+    private String nombre;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(nullable = false)
+    private String passwordHash;
+
+    @Column(nullable = false)
+    private String rol;
+
+    private LocalDateTime fechaRegistro = LocalDateTime.now();
+
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public String getRol() { return rol; }
+    public void setRol(String rol) { this.rol = rol; }
+    public LocalDateTime getFechaRegistro() { return fechaRegistro; }
+}`
+              },
               {
                 id: 'file-order-model',
                 name: 'Order.java',
@@ -1247,6 +1419,52 @@ public class Order {
     private List<OrderItem> items = new ArrayList<>();
 
     private LocalDateTime createdAt = LocalDateTime.now();
+}
+`
+              },
+              {
+                id: 'file-order-item-model',
+                name: 'OrderItem.java',
+                path: 'src/models/OrderItem.java',
+                type: 'file',
+                language: 'java',
+                lines: 36,
+                size: 916,
+                complexity: 1,
+                content: `package com.enterprise.ecommerce.models;
+
+import javax.persistence.*;
+import java.math.BigDecimal;
+import java.util.UUID;
+
+@Entity
+@Table(name = "order_items")
+public class OrderItem {
+
+    @Id
+    @GeneratedValue
+    private UUID id;
+
+    @Column(nullable = false)
+    private UUID productId;
+
+    @Column(nullable = false)
+    private Integer quantity;
+
+    @Column(nullable = false)
+    private BigDecimal unitPrice;
+
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public UUID getProductId() { return productId; }
+    public void setProductId(UUID productId) { this.productId = productId; }
+
+    public Integer getQuantity() { return quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+
+    public BigDecimal getUnitPrice() { return unitPrice; }
+    public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
 }`
               }
             ]
@@ -1285,7 +1503,598 @@ Enterprise order fulfillment service connecting REST clients, PostgreSQL data st
     ];
   }
 
+  getAstStructuralTree(projectId?: string): AstElementNode[] {
+    const targetId = projectId || this.selectedProject().id;
+    const currentProj = this.projectsSignal().find(p => p.id === targetId) || this.selectedProject();
+    const nameLower = (currentProj?.name || '').toLowerCase();
+    const langLower = (currentProj?.mainLanguage || '').toLowerCase();
+    const isEhr = nameLower.includes('ehr') || nameLower.includes('clinical') || nameLower.includes('patient');
+    const isMindguard = nameLower.includes('mindguard') || (currentProj?.slug || '').includes('mindguard') || nameLower.includes('quality');
+
+    if (isMindguard) {
+      return [
+        {
+          id: 'pkg-mg-api',
+          name: 'app.api',
+          kind: 'package',
+          packageName: 'app.api',
+          details: 'Endpoints REST y Routers FastAPI',
+          children: [
+            {
+              id: 'cls-mg-assessments',
+              name: 'assessments_router',
+              kind: 'class',
+              packageName: 'app.api',
+              annotations: ['@router.post("/submit")', '@router.get("/{id}")'],
+              filePath: 'backend/app/api/assessments.py',
+              complexity: 6,
+              lines: 110,
+              details: 'Enrutador de evaluaciones psicológicas PHQ-9 / GAD-7',
+              children: [
+                {
+                  id: 'mth-mg-submit',
+                  name: 'submit_psychological_assessment(data, db, current_user)',
+                  kind: 'method',
+                  returnType: 'AssessmentResponse',
+                  parameters: 'data: AssessmentCreate, db: Session, current_user: Usuario',
+                  annotations: ['@router.post("/submit")'],
+                  visibility: 'public',
+                  complexity: 4,
+                  filePath: 'backend/app/api/assessments.py'
+                }
+              ]
+            }
+          ]
+        }
+      ];
+    }
+
+    if (isEhr) {
+      return [
+        {
+          id: 'pkg-ehr-api',
+          name: 'src.api',
+          kind: 'package',
+          packageName: 'src.api',
+          details: 'Controladores de pacientes y registros clínicos',
+          children: [
+            {
+              id: 'cls-ehr-router',
+              name: 'patients_router',
+              kind: 'class',
+              packageName: 'src.api',
+              annotations: ['@router.get("/")', '@router.post("/")'],
+              filePath: 'src/api/patients_router.py',
+              complexity: 5,
+              lines: 48,
+              children: [
+                {
+                  id: 'mth-ehr-create',
+                  name: 'create_patient_record(dto, service)',
+                  kind: 'method',
+                  returnType: 'PatientResponse',
+                  parameters: 'dto: PatientCreate, service: PatientService',
+                  annotations: ['@router.post("/")'],
+                  visibility: 'public',
+                  complexity: 2,
+                  filePath: 'src/api/patients_router.py'
+                }
+              ]
+            }
+          ]
+        }
+      ];
+    }
+
+    // Default & Canonical Java/Spring Boot AST Structural Hierarchy (E-Commerce Order Management Microservice)
+    return [
+      {
+        id: 'pkg-controllers',
+        name: 'com.enterprise.ecommerce.controllers',
+        kind: 'package',
+        packageName: 'com.enterprise.ecommerce.controllers',
+        details: 'Capa Web / API REST (Spring Web MVC)',
+        children: [
+          {
+            id: 'cls-order-ctrl',
+            name: 'OrderController',
+            kind: 'class',
+            packageName: 'com.enterprise.ecommerce.controllers',
+            annotations: ['@RestController', '@RequestMapping("/api/v1/orders")'],
+            filePath: 'src/controllers/OrderController.java',
+            complexity: 4,
+            lines: 36,
+            details: 'Controlador REST con inyección de dependencias para OrderService',
+            children: [
+              {
+                id: 'mth-order-checkout',
+                name: 'createOrder(Order request)',
+                kind: 'method',
+                returnType: 'ResponseEntity<Order>',
+                parameters: '@RequestBody Order request',
+                annotations: ['@PostMapping("/checkout")'],
+                visibility: 'public',
+                complexity: 2,
+                filePath: 'src/controllers/OrderController.java',
+                details: 'Procesa la creación y checkout de órdenes validadas'
+              },
+              {
+                id: 'mth-order-get',
+                name: 'getOrder(UUID orderId)',
+                kind: 'method',
+                returnType: 'ResponseEntity<Order>',
+                parameters: '@PathVariable UUID orderId',
+                annotations: ['@GetMapping("/{orderId}")'],
+                visibility: 'public',
+                complexity: 2,
+                filePath: 'src/controllers/OrderController.java',
+                details: 'Consulta orden por clave primaria UUID'
+              },
+              {
+                id: 'mth-order-by-customer',
+                name: 'getCustomerOrders(UUID customerId)',
+                kind: 'method',
+                returnType: 'ResponseEntity<List<Order>>',
+                parameters: '@PathVariable UUID customerId',
+                annotations: ['@GetMapping("/customer/{customerId}")'],
+                visibility: 'public',
+                complexity: 1,
+                filePath: 'src/controllers/OrderController.java',
+                details: 'Recupera historial de pedidos por cliente'
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'pkg-services',
+        name: 'com.enterprise.ecommerce.services',
+        kind: 'package',
+        packageName: 'com.enterprise.ecommerce.services',
+        details: 'Capa de Lógica de Negocio y Transacciones (Spring Service)',
+        children: [
+          {
+            id: 'cls-usuario-srv',
+            name: 'UsuarioService',
+            kind: 'class',
+            packageName: 'com.enterprise.ecommerce.services',
+            annotations: ['@Service'],
+            filePath: 'src/services/UsuarioService.java',
+            complexity: 4,
+            lines: 52,
+            details: 'Servicio de orquestación de cuentas, registro y validaciones de usuario',
+            children: [
+              {
+                id: 'mth-usuario-registrar',
+                name: 'registrarUsuario(UsuarioRegistroDTO dto)',
+                kind: 'method',
+                returnType: 'UsuarioResponseDTO',
+                parameters: 'UsuarioRegistroDTO dto',
+                annotations: ['@Transactional'],
+                visibility: 'public',
+                complexity: 3,
+                lines: 26,
+                filePath: 'src/services/UsuarioService.java',
+                details: 'Registra un nuevo usuario tras validar unicidad de correo y encriptar credenciales con BCrypt',
+                documentation: {
+                  purpose: 'Registra una nueva unidad de usuario en la capa de persistencia asegurando atomicidad transaccional. Realiza validación previa de unicidad por correo electrónico, cifra credenciales sensibles mediante BCrypt, orquesta el guardado en base de datos PostgreSQL y despacha un evento asíncrono de notificación.',
+                  parameters: [
+                    {
+                      name: 'dto',
+                      type: 'UsuarioRegistroDTO',
+                      description: 'Objeto de transferencia de datos validado que encapsula nombre (no vacío), email (RFC 5322), password (mínimo 8 caracteres) y rol opcional (por defecto CLIENTE).'
+                    }
+                  ],
+                  returnVal: {
+                    type: 'UsuarioResponseDTO',
+                    description: 'Representación inmutable de la cuenta creada con su identificador UUID generado, nombre, email, rol asignado y timestamp de registro, excluyendo el hash de autenticación por seguridad.'
+                  },
+                  dependencies: [
+                    'UsuarioRepository (Spring Data JPA / PostgreSQL)',
+                    'PasswordEncoder (Spring Security Crypto / BCrypt)',
+                    'NotificacionService (Despacho asíncrono de emails)',
+                    '@Transactional (Gestor de transacciones Spring PlatformTransactionManager)'
+                  ],
+                  ragContext: {
+                    model: 'Qwen 2.5 Coder 7B (Local Ollama)',
+                    similarity: 98.6,
+                    sources: [
+                      'src/models/Usuario.java',
+                      'src/repositories/UsuarioRepository.java',
+                      'src/dtos/UsuarioRegistroDTO.java'
+                    ],
+                    astEvidence: 'Declaración del método con anotación @Transactional en línea 28; inyección por constructor de 3 beans administrados por el contenedor Spring.'
+                  }
+                }
+              },
+              {
+                id: 'mth-usuario-buscar-email',
+                name: 'buscarPorEmail(String email)',
+                kind: 'method',
+                returnType: 'Optional<Usuario>',
+                parameters: 'String email',
+                visibility: 'public',
+                complexity: 1,
+                lines: 10,
+                filePath: 'src/services/UsuarioService.java',
+                details: 'Recupera la entidad de usuario por correo electrónico indexado',
+                documentation: {
+                  purpose: 'Consulta en el repositorio relacional la entidad de usuario asociada a una dirección de correo electrónico única.',
+                  parameters: [
+                    {
+                      name: 'email',
+                      type: 'String',
+                      description: 'Dirección de correo electrónico a consultar en el índice único.'
+                    }
+                  ],
+                  returnVal: {
+                    type: 'Optional<Usuario>',
+                    description: 'Contenedor Optional con la entidad si existe, o vacío si no se encuentra registrado.'
+                  },
+                  dependencies: [
+                    'UsuarioRepository (Spring Data JPA)'
+                  ],
+                  ragContext: {
+                    model: 'Qwen 2.5 Coder 7B (Local Ollama)',
+                    similarity: 96.2,
+                    sources: ['src/repositories/UsuarioRepository.java'],
+                    astEvidence: 'Delegación directa al método derivado de Spring Data JPA.'
+                  }
+                }
+              }
+            ]
+          },
+          {
+            id: 'cls-order-srv',
+            name: 'OrderService',
+            kind: 'class',
+            packageName: 'com.enterprise.ecommerce.services',
+            annotations: ['@Service'],
+            filePath: 'src/services/OrderService.java',
+            complexity: 6,
+            lines: 42,
+            details: 'Servicio de orquestación transaccional para pedidos y líneas de orden',
+            children: [
+              {
+                id: 'mth-srv-checkout',
+                name: 'processOrderCheckout(Order order)',
+                kind: 'method',
+                returnType: 'Order',
+                parameters: 'Order order',
+                annotations: ['@Transactional'],
+                visibility: 'public',
+                complexity: 4,
+                filePath: 'src/services/OrderService.java',
+                details: 'Calcula montos totales, valida ítems y persiste con transacción activa'
+              },
+              {
+                id: 'mth-srv-find',
+                name: 'findOrderById(UUID orderId)',
+                kind: 'method',
+                returnType: 'Optional<Order>',
+                parameters: 'UUID orderId',
+                visibility: 'public',
+                complexity: 1,
+                filePath: 'src/services/OrderService.java',
+                details: 'Búsqueda por clave primaria en OrderRepository'
+              },
+              {
+                id: 'mth-srv-customer-orders',
+                name: 'getOrdersByCustomer(UUID customerId)',
+                kind: 'method',
+                returnType: 'List<Order>',
+                parameters: 'UUID customerId',
+                visibility: 'public',
+                complexity: 1,
+                filePath: 'src/services/OrderService.java',
+                details: 'Filtra pedidos asociados al identificador del cliente'
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'pkg-repositories',
+        name: 'com.enterprise.ecommerce.repositories',
+        kind: 'package',
+        packageName: 'com.enterprise.ecommerce.repositories',
+        details: 'Capa de Persistencia y Acceso a Datos (Spring Data JPA)',
+        children: [
+          {
+            id: 'iface-usuario-repo',
+            name: 'UsuarioRepository',
+            kind: 'interface',
+            packageName: 'com.enterprise.ecommerce.repositories',
+            annotations: ['@Repository'],
+            filePath: 'src/repositories/UsuarioRepository.java',
+            complexity: 1,
+            lines: 16,
+            details: 'Interfaz de repositorio Spring Data JPA para la entidad Usuario',
+            children: [
+              {
+                id: 'mth-repo-usuario-email',
+                name: 'findByEmail(String email)',
+                kind: 'method',
+                returnType: 'Optional<Usuario>',
+                parameters: 'String email',
+                visibility: 'public',
+                complexity: 1,
+                filePath: 'src/repositories/UsuarioRepository.java',
+                details: 'Derivación de consulta SQL automática por email'
+              },
+              {
+                id: 'mth-repo-usuario-exists',
+                name: 'existsByEmail(String email)',
+                kind: 'method',
+                returnType: 'boolean',
+                parameters: 'String email',
+                visibility: 'public',
+                complexity: 1,
+                filePath: 'src/repositories/UsuarioRepository.java',
+                details: 'Verificación booleana de existencia de registro'
+              }
+            ]
+          },
+          {
+            id: 'iface-order-repo',
+            name: 'OrderRepository',
+            kind: 'interface',
+            packageName: 'com.enterprise.ecommerce.repositories',
+            annotations: ['@Repository'],
+            filePath: 'src/repositories/OrderRepository.java',
+            complexity: 1,
+            lines: 14,
+            details: 'Interfaz de repositorio que extiende JpaRepository<Order, UUID>',
+            children: [
+              {
+                id: 'mth-repo-find-customer',
+                name: 'findByCustomerId(UUID customerId)',
+                kind: 'method',
+                returnType: 'List<Order>',
+                parameters: 'UUID customerId',
+                visibility: 'public',
+                complexity: 1,
+                filePath: 'src/repositories/OrderRepository.java',
+                details: 'Derivación de consulta SQL automática por Spring Data JPA'
+              },
+              {
+                id: 'mth-repo-find-status',
+                name: 'findByStatus(String status)',
+                kind: 'method',
+                returnType: 'List<Order>',
+                parameters: 'String status',
+                visibility: 'public',
+                complexity: 1,
+                filePath: 'src/repositories/OrderRepository.java',
+                details: 'Derivación de consulta filtrada por estado de la orden'
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'pkg-models',
+        name: 'com.enterprise.ecommerce.models',
+        kind: 'package',
+        packageName: 'com.enterprise.ecommerce.models',
+        details: 'Capa de Dominio y Entidades Relacionales (JPA / Hibernate)',
+        children: [
+          {
+            id: 'cls-usuario-entity',
+            name: 'Usuario',
+            kind: 'class',
+            packageName: 'com.enterprise.ecommerce.models',
+            annotations: ['@Entity', '@Table(name = "usuarios")'],
+            filePath: 'src/models/Usuario.java',
+            complexity: 1,
+            lines: 42,
+            details: 'Entidad de usuario con credenciales encriptadas y rol',
+            children: [
+              {
+                id: 'fld-usuario-id',
+                name: 'id: UUID',
+                kind: 'field',
+                returnType: 'UUID',
+                annotations: ['@Id', '@GeneratedValue'],
+                visibility: 'private',
+                filePath: 'src/models/Usuario.java',
+                details: 'Clave primaria autogenerada (UUID)'
+              },
+              {
+                id: 'fld-usuario-email',
+                name: 'email: String',
+                kind: 'field',
+                returnType: 'String',
+                annotations: ['@Column(nullable = false, unique = true)'],
+                visibility: 'private',
+                filePath: 'src/models/Usuario.java',
+                details: 'Correo electrónico único para autenticación'
+              },
+              {
+                id: 'fld-usuario-rol',
+                name: 'rol: String',
+                kind: 'field',
+                returnType: 'String',
+                annotations: ['@Column(nullable = false)'],
+                visibility: 'private',
+                filePath: 'src/models/Usuario.java',
+                details: 'Rol de autorización en el sistema'
+              }
+            ]
+          },
+          {
+            id: 'cls-order-entity',
+            name: 'Order',
+            kind: 'class',
+            packageName: 'com.enterprise.ecommerce.models',
+            annotations: ['@Entity', '@Table(name = "orders")'],
+            filePath: 'src/models/Order.java',
+            complexity: 2,
+            lines: 48,
+            details: 'Entidad raíz del agregado Order con relación 1:N hacia OrderItem',
+            children: [
+              {
+                id: 'fld-order-id',
+                name: 'id: UUID',
+                kind: 'field',
+                returnType: 'UUID',
+                annotations: ['@Id', '@GeneratedValue'],
+                visibility: 'private',
+                filePath: 'src/models/Order.java',
+                details: 'Clave primaria autogenerada (UUID)'
+              },
+              {
+                id: 'fld-order-customer',
+                name: 'customerId: UUID',
+                kind: 'field',
+                returnType: 'UUID',
+                annotations: ['@Column(nullable = false)'],
+                visibility: 'private',
+                filePath: 'src/models/Order.java',
+                details: 'Identificador del cliente'
+              },
+              {
+                id: 'fld-order-total',
+                name: 'totalAmount: BigDecimal',
+                kind: 'field',
+                returnType: 'BigDecimal',
+                annotations: ['@Column(nullable = false)'],
+                visibility: 'private',
+                filePath: 'src/models/Order.java',
+                details: 'Monto total acumulado de la orden'
+              },
+              {
+                id: 'fld-order-status',
+                name: 'status: String',
+                kind: 'field',
+                returnType: 'String',
+                annotations: ['@Column(nullable = false)'],
+                visibility: 'private',
+                filePath: 'src/models/Order.java',
+                details: 'Estado actual del ciclo de vida (PROCESSING, COMPLETED)'
+              },
+              {
+                id: 'fld-order-items',
+                name: 'items: List<OrderItem>',
+                kind: 'field',
+                returnType: 'List<OrderItem>',
+                annotations: ['@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)'],
+                visibility: 'private',
+                filePath: 'src/models/Order.java',
+                details: 'Colección de ítems relacionados en cascada'
+              }
+            ]
+          },
+          {
+            id: 'cls-order-item-entity',
+            name: 'OrderItem',
+            kind: 'class',
+            packageName: 'com.enterprise.ecommerce.models',
+            annotations: ['@Entity', '@Table(name = "order_items")'],
+            filePath: 'src/models/OrderItem.java',
+            complexity: 1,
+            lines: 36,
+            details: 'Entidad detalle de ítem de pedido con precio unitario y cantidad',
+            children: [
+              {
+                id: 'mth-item-get-id',
+                name: 'getId() / setId(UUID id)',
+                kind: 'method',
+                returnType: 'UUID / void',
+                visibility: 'public',
+                complexity: 1,
+                filePath: 'src/models/OrderItem.java'
+              },
+              {
+                id: 'mth-item-prod-id',
+                name: 'getProductId() / setProductId(UUID productId)',
+                kind: 'method',
+                returnType: 'UUID / void',
+                visibility: 'public',
+                complexity: 1,
+                filePath: 'src/models/OrderItem.java'
+              },
+              {
+                id: 'mth-item-qty',
+                name: 'getQuantity() / setQuantity(Integer quantity)',
+                kind: 'method',
+                returnType: 'Integer / void',
+                visibility: 'public',
+                complexity: 1,
+                filePath: 'src/models/OrderItem.java'
+              },
+              {
+                id: 'mth-item-price',
+                name: 'getUnitPrice() / setUnitPrice(BigDecimal unitPrice)',
+                kind: 'method',
+                returnType: 'BigDecimal / void',
+                visibility: 'public',
+                complexity: 1,
+                filePath: 'src/models/OrderItem.java'
+              }
+            ]
+          }
+        ]
+      }
+    ];
+  }
+
   getDependencyGraph(projectId?: string): DependencyGraphData {
+    const proj = this.selectedProject();
+    const nameLower = (proj?.name || '').toLowerCase();
+    const langLower = (proj?.mainLanguage || '').toLowerCase();
+    const isEhr = nameLower.includes('ehr') || nameLower.includes('clinical') || nameLower.includes('patient');
+    const isMindguard = nameLower.includes('mindguard') || (proj?.slug || '').includes('mindguard') || nameLower.includes('quality');
+    const isEcommerce = nameLower.includes('ecommerce') || nameLower.includes('order') || nameLower.includes('shop') || nameLower.includes('store') || langLower === 'java';
+
+    if (isEcommerce) {
+      return {
+        nodes: [
+          { id: 'order-ctrl', name: 'OrderController', type: 'controller', layer: 'Presentation Layer', filesCount: 1, color: '#3B82F6' },
+          { id: 'order-srv', name: 'OrderService', type: 'service', layer: 'Application Service Layer', filesCount: 1, color: '#8B5CF6' },
+          { id: 'order-repo', name: 'OrderRepository', type: 'repository', layer: 'Persistence Layer', filesCount: 1, color: '#10B981' },
+          { id: 'order-model', name: 'Order (Entity)', type: 'model', layer: 'Domain Layer', filesCount: 1, color: '#EC4899' },
+          { id: 'order-item-model', name: 'OrderItem (Entity)', type: 'model', layer: 'Domain Layer', filesCount: 1, color: '#EC4899' },
+          { id: 'pg-db', name: 'PostgreSQL (ecommerce_db)', type: 'database', layer: 'Database Layer', filesCount: 1, color: '#F59E0B' },
+          { id: 'redis-cache', name: 'Redis (Cache & Session)', type: 'database', layer: 'Caching Layer', filesCount: 1, color: '#EF4444' },
+          { id: 'ollama-ai', name: 'Ollama AI (qwen2.5-coder:7b)', type: 'external', layer: 'AI Intelligence', filesCount: 1, color: '#06B6D4' }
+        ],
+        links: [
+          { source: 'order-ctrl', target: 'order-srv', label: 'delegates checkout & queries', callCount: 1450 },
+          { source: 'order-srv', target: 'order-repo', label: 'save & findByCustomerId', callCount: 1450 },
+          { source: 'order-srv', target: 'order-model', label: 'computes line totals & status', callCount: 1450 },
+          { source: 'order-model', target: 'order-item-model', label: '1:N cascade composition', callCount: 2890 },
+          { source: 'order-repo', target: 'pg-db', label: 'SQL SELECT/INSERT/UPDATE', callCount: 1450 },
+          { source: 'order-srv', target: 'redis-cache', label: 'cache query results', callCount: 820 },
+          { source: 'order-srv', target: 'ollama-ai', label: 'automated order audit', callCount: 340 }
+        ]
+      };
+    }
+
+    if (isMindguard || isEhr) {
+      return {
+        nodes: [
+          { id: 'assess-ctrl', name: 'AssessmentsRouter', type: 'controller', layer: 'Presentation Layer', filesCount: 1, color: '#3B82F6' },
+          { id: 'auth-ctrl', name: 'AuthRouter', type: 'controller', layer: 'Presentation Layer', filesCount: 1, color: '#3B82F6' },
+          { id: 'assess-srv', name: 'AssessmentService', type: 'service', layer: 'Application Service Layer', filesCount: 1, color: '#8B5CF6' },
+          { id: 'clinical-ai', name: 'ClinicalAIService', type: 'service', layer: 'Domain & AI Service', filesCount: 1, color: '#8B5CF6' },
+          { id: 'assess-repo', name: 'AssessmentRepository', type: 'repository', layer: 'Persistence Layer', filesCount: 1, color: '#10B981' },
+          { id: 'user-repo', name: 'UserRepository', type: 'repository', layer: 'Persistence Layer', filesCount: 1, color: '#10B981' },
+          { id: 'pg-db', name: 'PostgreSQL Database', type: 'database', layer: 'Database Layer', filesCount: 1, color: '#F59E0B' },
+          { id: 'ollama-ai', name: 'Ollama AI (qwen2.5-coder)', type: 'external', layer: 'AI Intelligence', filesCount: 1, color: '#06B6D4' }
+        ],
+        links: [
+          { source: 'assess-ctrl', target: 'assess-srv', label: 'submits test responses', callCount: 1240 },
+          { source: 'assess-srv', target: 'clinical-ai', label: 'evaluates psychometrics', callCount: 890 },
+          { source: 'clinical-ai', target: 'ollama-ai', label: 'local LLM prompt inference', callCount: 890 },
+          { source: 'assess-srv', target: 'assess-repo', label: 'saves assessment score', callCount: 1240 },
+          { source: 'auth-ctrl', target: 'user-repo', label: 'authenticates credential', callCount: 650 },
+          { source: 'assess-repo', target: 'pg-db', label: 'SQL INSERT/SELECT', callCount: 1240 },
+          { source: 'user-repo', target: 'pg-db', label: 'SQL SELECT', callCount: 650 }
+        ]
+      };
+    }
+
     return {
       nodes: [
         { id: 'auth-ctrl', name: 'AuthController', type: 'controller', layer: 'Presentation Layer', filesCount: 1, color: '#3B82F6' },

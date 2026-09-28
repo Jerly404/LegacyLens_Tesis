@@ -96,7 +96,15 @@ export class DiagramViewerComponent {
            (proj.name || '').toLowerCase().includes('quality');
   }
 
+  private isEcommerceProject(): boolean {
+    const proj = this.projectService.selectedProject();
+    const name = (proj.name || '').toLowerCase();
+    const lang = (proj.mainLanguage || '').toLowerCase();
+    return lang === 'java' || name.includes('ecommerce') || name.includes('order') || name.includes('shop');
+  }
+
   private isPythonProject(): boolean {
+    if (this.isEcommerceProject()) return false;
     const proj = this.projectService.selectedProject();
     return this.isMindguardProject() ||
            (proj.mainLanguage || '').toLowerCase() === 'python' || 
@@ -132,11 +140,12 @@ export class DiagramViewerComponent {
   // 1. FULLSTACK ARCHITECTURE SVG
   private renderFullstackArchitectureSvg(): string {
     const isMg = this.isMindguardProject();
+    const isEcom = this.isEcommerceProject();
     const isPy = this.isPythonProject();
-    const runtimeName = isMg ? 'Python 3.11 / FastAPI & Angular 17' : (isPy ? 'Python 3.11 / FastAPI ASGI' : 'Java 11 / Spring Boot 2.7');
-    const ormName = isMg ? 'SQLAlchemy ORM / SQLite & PostgreSQL' : (isPy ? 'Async SQLAlchemy 2.0 / asyncpg' : 'Spring Data JPA / Hibernate');
-    const ctrlName = isMg ? 'FastAPI APIRouters (assessments.py, auth.py)' : (isPy ? 'FastAPI APIRouter (patients_router.py)' : 'Spring REST Controllers (OrderController.java)');
-    const srvName = isMg ? 'Clinical AI & Psychometrics (clinical_ai.py)' : (isPy ? 'Clinical Domain Services (patient_service.py)' : 'Order Processing Services (OrderService.java)');
+    const runtimeName = isMg ? 'Python 3.11 / FastAPI & Angular 17' : (isEcom ? 'Java 11 / Spring Boot 2.7' : (isPy ? 'Python 3.11 / FastAPI ASGI' : 'Enterprise Backend Tier'));
+    const ormName = isMg ? 'SQLAlchemy ORM / SQLite & PostgreSQL' : (isEcom ? 'Spring Data JPA / Hibernate' : (isPy ? 'Async SQLAlchemy 2.0 / asyncpg' : 'Relational Persistence Tier'));
+    const ctrlName = isMg ? 'FastAPI APIRouters (assessments.py, auth.py)' : (isEcom ? 'Spring REST Controllers (OrderController.java)' : (isPy ? 'FastAPI APIRouter (patients_router.py)' : 'REST API Controllers'));
+    const srvName = isMg ? 'Clinical AI & Psychometrics (clinical_ai.py)' : (isEcom ? 'Order Processing Services (OrderService.java)' : (isPy ? 'Clinical Domain Services (patient_service.py)' : 'Domain Services Layer'));
 
     return `
       <svg width="960" height="600" viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg">
@@ -156,15 +165,15 @@ export class DiagramViewerComponent {
         
         <g transform="translate(70, 70)">
           <rect width="240" height="45" rx="10" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="120" y="27" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11.5" font-weight="600" text-anchor="middle">${isMg ? 'Angular 17 Web Portal' : 'Angular SPA Web Portal'}</text>
+          <text x="120" y="27" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11.5" font-weight="600" text-anchor="middle">${isMg ? 'Angular 17 Web Portal' : (isEcom ? 'Storefront Web App (Angular)' : (isPy ? 'Clinical Web Portal' : 'Web Client Application'))}</text>
         </g>
         <g transform="translate(360, 70)">
           <rect width="240" height="45" rx="10" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="120" y="27" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11.5" font-weight="600" text-anchor="middle">${isMg ? 'Mobile Psychometrics Client' : 'Mobile App (Clinical/Client)'}</text>
+          <text x="120" y="27" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11.5" font-weight="600" text-anchor="middle">${isMg ? 'Mobile Psychometrics Client' : (isEcom ? 'Mobile E-Commerce App' : (isPy ? 'Mobile App (Clinical Telemetry)' : 'Mobile Client App'))}</text>
         </g>
         <g transform="translate(650, 70)">
           <rect width="240" height="45" rx="10" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5" filter="url(#cardShadow)"/>
-          <text x="120" y="27" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11.5" font-weight="600" text-anchor="middle">Third-Party REST Consumers</text>
+          <text x="120" y="27" fill="#F8FAFC" font-family="Inter, sans-serif" font-size="11.5" font-weight="600" text-anchor="middle">${isEcom ? 'Partner Marketplaces & Webhooks' : 'Third-Party REST Consumers'}</text>
         </g>
 
         <!-- Arrows Tier 1 -> Tier 2 -->
@@ -503,7 +512,7 @@ export class DiagramViewerComponent {
       `;
     }
 
-    // Java E-Commerce ERD
+    // Java E-Commerce ERD (4 Tables with clear Foreign Keys & Cardinality)
     return `
       <svg width="960" height="620" viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -512,31 +521,59 @@ export class DiagramViewerComponent {
           </filter>
         </defs>
 
-        <!-- TABLE: ORDERS -->
-        <g transform="translate(60, 50)" filter="url(#erdShadow)">
-          <rect width="280" height="210" rx="12" fill="#151821" stroke="#3B82F6" stroke-width="1.5"/>
-          <rect width="280" height="34" rx="12" fill="#1E3A8A"/>
-          <text x="140" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">ORDERS</text>
+        <!-- TABLE: CUSTOMERS -->
+        <g transform="translate(60, 40)" filter="url(#erdShadow)">
+          <rect width="280" height="210" rx="12" fill="#151821" stroke="#8B5CF6" stroke-width="1.5"/>
+          <rect width="280" height="34" rx="12" fill="#4C1D95"/>
+          <text x="140" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">CUSTOMERS</text>
           
           <text x="15" y="60" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
           <text x="190" y="60" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
           
-          <text x="15" y="88" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  customer_id</text>
-          <text x="190" y="88" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
+          <text x="15" y="88" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">UQ  email</text>
+          <text x="190" y="88" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(128)</text>
 
-          <text x="15" y="116" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    total_amount</text>
-          <text x="190" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">DECIMAL</text>
+          <text x="15" y="116" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    full_name</text>
+          <text x="190" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(128)</text>
 
-          <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    status</text>
-          <text x="190" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR</text>
+          <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    shipping_addr</text>
+          <text x="190" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(256)</text>
 
           <text x="15" y="172" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    created_at</text>
           <text x="190" y="172" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">TIMESTAMP</text>
         </g>
 
+        <!-- TABLE: ORDERS -->
+        <g transform="translate(560, 40)" filter="url(#erdShadow)">
+          <rect width="320" height="230" rx="12" fill="#151821" stroke="#3B82F6" stroke-width="1.5"/>
+          <rect width="320" height="34" rx="12" fill="#1E3A8A"/>
+          <text x="160" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">ORDERS</text>
+          
+          <text x="15" y="60" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
+          <text x="210" y="60" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
+          
+          <text x="15" y="88" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  customer_id</text>
+          <text x="210" y="88" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
+
+          <text x="15" y="116" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    total_amount</text>
+          <text x="210" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">DECIMAL(12,2)</text>
+
+          <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    status</text>
+          <text x="210" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(32)</text>
+
+          <text x="15" y="172" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    created_at</text>
+          <text x="210" y="172" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">TIMESTAMP</text>
+        </g>
+
+        <!-- Connector Customers (1) -> Orders (N) -->
+        <path d="M 340 145 L 560 145" stroke="#38BDF8" stroke-width="2" stroke-dasharray="6"/>
+        <text x="350" y="135" fill="#F59E0B" font-family="Inter, sans-serif" font-size="12" font-weight="700">1</text>
+        <text x="540" y="135" fill="#38BDF8" font-family="Inter, sans-serif" font-size="12" font-weight="700">N</text>
+        <polygon points="555,145 545,140 545,150" fill="#38BDF8"/>
+
         <!-- TABLE: ORDER_ITEMS -->
-        <g transform="translate(560, 50)" filter="url(#erdShadow)">
-          <rect width="320" height="210" rx="12" fill="#151821" stroke="#10B981" stroke-width="1.5"/>
+        <g transform="translate(560, 340)" filter="url(#erdShadow)">
+          <rect width="320" height="250" rx="12" fill="#151821" stroke="#10B981" stroke-width="1.5"/>
           <rect width="320" height="34" rx="12" fill="#064E3B"/>
           <text x="160" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">ORDER_ITEMS</text>
           
@@ -549,26 +586,60 @@ export class DiagramViewerComponent {
           <text x="15" y="116" fill="#38BDF8" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">FK  product_id</text>
           <text x="210" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
 
-          <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    quantity</text>
-          <text x="210" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+          <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    product_sku</text>
+          <text x="210" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(64)</text>
 
-          <text x="15" y="172" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    unit_price</text>
-          <text x="210" y="172" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">DECIMAL</text>
+          <text x="15" y="172" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    quantity</text>
+          <text x="210" y="172" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+
+          <text x="15" y="200" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    unit_price</text>
+          <text x="210" y="200" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">DECIMAL(10,2)</text>
         </g>
 
         <!-- Connector Orders (1) -> Order Items (N) -->
-        <path d="M 340 140 L 560 140" stroke="#38BDF8" stroke-width="2" stroke-dasharray="6"/>
-        <text x="350" y="130" fill="#F59E0B" font-family="Inter, sans-serif" font-size="12" font-weight="700">1</text>
-        <text x="540" y="130" fill="#38BDF8" font-family="Inter, sans-serif" font-size="12" font-weight="700">N</text>
+        <path d="M 720 270 L 720 340" stroke="#10B981" stroke-width="2" stroke-dasharray="6"/>
+        <text x="730" y="290" fill="#F59E0B" font-family="Inter, sans-serif" font-size="12" font-weight="700">1</text>
+        <text x="730" y="330" fill="#10B981" font-family="Inter, sans-serif" font-size="12" font-weight="700">N</text>
+        <polygon points="720,335 715,325 725,325" fill="#10B981"/>
+
+        <!-- TABLE: PRODUCTS -->
+        <g transform="translate(60, 340)" filter="url(#erdShadow)">
+          <rect width="280" height="220" rx="12" fill="#151821" stroke="#F59E0B" stroke-width="1.5"/>
+          <rect width="280" height="34" rx="12" fill="#78350F"/>
+          <text x="140" y="22" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="700" text-anchor="middle">PRODUCTS (CATALOG)</text>
+          
+          <text x="15" y="60" fill="#F59E0B" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">PK  id</text>
+          <text x="190" y="60" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">UUID</text>
+          
+          <text x="15" y="88" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">UQ  sku</text>
+          <text x="190" y="88" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(64)</text>
+
+          <text x="15" y="116" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    name</text>
+          <text x="190" y="116" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">VARCHAR(128)</text>
+
+          <text x="15" y="144" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    price</text>
+          <text x="190" y="144" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">DECIMAL(10,2)</text>
+
+          <text x="15" y="172" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="11">    stock_quantity</text>
+          <text x="190" y="172" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="11">INTEGER</text>
+        </g>
+
+        <!-- Connector Products (1) -> Order Items (N) -->
+        <path d="M 340 450 L 560 450" stroke="#F59E0B" stroke-width="2" stroke-dasharray="6"/>
+        <text x="350" y="440" fill="#F59E0B" font-family="Inter, sans-serif" font-size="12" font-weight="700">1</text>
+        <text x="540" y="440" fill="#10B981" font-family="Inter, sans-serif" font-size="12" font-weight="700">N</text>
+        <polygon points="555,450 545,445 545,455" fill="#10B981"/>
       </svg>
     `;
   }
 
   // 3. C4 CONTAINER SVG
   private renderC4ContainerSvg(): string {
+    const isEcom = this.isEcommerceProject();
     const isPy = this.isPythonProject();
-    const appTitle = isPy ? 'FastAPI Async Backend' : 'Spring Boot Microservice';
-    const appTech = isPy ? 'Python 3.11 / Uvicorn ASGI' : 'Java 11 / Tomcat Embedded';
+    const appTitle = isEcom ? 'Spring Boot Order Microservice' : (isPy ? 'FastAPI Async Backend' : 'Backend Application Server');
+    const appTech = isEcom ? 'Java 11 / Spring Boot 2.7 & JPA' : (isPy ? 'Python 3.11 / Uvicorn ASGI' : 'Node.js / JVM Microservice');
+    const spaRole = isEcom ? 'customers and store managers.' : (isPy ? 'clinicians and operations.' : 'end users and admins.');
 
     return `
       <svg width="960" height="580" viewBox="0 0 960 580" xmlns="http://www.w3.org/2000/svg">
@@ -581,7 +652,7 @@ export class DiagramViewerComponent {
           <text x="125" y="35" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="14" font-weight="700" text-anchor="middle">Single-Page App</text>
           <text x="125" y="55" fill="#38BDF8" font-family="Inter, sans-serif" font-size="10" font-weight="600" text-anchor="middle">[Container: Angular 20 SPA]</text>
           <text x="125" y="90" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">Delivers responsive UI for</text>
-          <text x="125" y="110" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">clinicians and operations.</text>
+          <text x="125" y="110" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">${spaRole}</text>
         </g>
 
         <!-- Connector SPA -> API -->
@@ -626,6 +697,7 @@ export class DiagramViewerComponent {
 
   // 4. CLASS HIERARCHY SVG
   private renderClassDiagramSvg(): string {
+    const isEcom = this.isEcommerceProject();
     const isPy = this.isPythonProject();
 
     if (isPy) {
@@ -698,33 +770,103 @@ export class DiagramViewerComponent {
       `;
     }
 
-    // Java Class Diagram
+    // Java E-Commerce Class Diagram
     return `
-      <svg width="960" height="580" viewBox="0 0 960 580" xmlns="http://www.w3.org/2000/svg">
-        <rect x="60" y="40" width="250" height="130" rx="8" fill="#151821" stroke="#3B82F6" stroke-width="1.5"/>
-        <text x="185" y="70" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="12" font-weight="700" text-anchor="middle">OrderController</text>
-        <rect x="360" y="40" width="250" height="130" rx="8" fill="#151821" stroke="#8B5CF6" stroke-width="1.5"/>
-        <text x="485" y="70" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="12" font-weight="700" text-anchor="middle">OrderService</text>
-        <rect x="660" y="40" width="250" height="130" rx="8" fill="#151821" stroke="#10B981" stroke-width="1.5"/>
-        <text x="785" y="70" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="12" font-weight="700" text-anchor="middle">OrderRepository</text>
+      <svg width="960" height="600" viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg">
+        <!-- Class: OrderController -->
+        <g transform="translate(50, 40)">
+          <rect width="260" height="150" rx="8" fill="#151821" stroke="#3B82F6" stroke-width="1.5"/>
+          <rect width="260" height="28" fill="#1E3A8A"/>
+          <text x="130" y="19" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" text-anchor="middle">OrderController (Spring REST)</text>
+          <text x="12" y="52" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ createOrder(Order): ResponseEntity</text>
+          <text x="12" y="74" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ getOrder(UUID): ResponseEntity</text>
+          <text x="12" y="96" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ getCustomerOrders(UUID): List</text>
+          <text x="12" y="122" fill="#64748B" font-family="JetBrains Mono, monospace" font-size="9.5">- orderService: OrderService</text>
+        </g>
+
+        <!-- Class: OrderService -->
+        <g transform="translate(350, 40)">
+          <rect width="260" height="150" rx="8" fill="#151821" stroke="#8B5CF6" stroke-width="1.5"/>
+          <rect width="260" height="28" fill="#4C1D95"/>
+          <text x="130" y="19" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" text-anchor="middle">OrderService (@Transactional)</text>
+          <text x="12" y="52" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ processOrderCheckout(Order): Order</text>
+          <text x="12" y="74" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ findOrderById(UUID): Optional</text>
+          <text x="12" y="96" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ getOrdersByCustomer(UUID): List</text>
+          <text x="12" y="122" fill="#64748B" font-family="JetBrains Mono, monospace" font-size="9.5">- orderRepository: OrderRepository</text>
+        </g>
+
+        <!-- Class: OrderRepository -->
+        <g transform="translate(650, 40)">
+          <rect width="260" height="150" rx="8" fill="#151821" stroke="#10B981" stroke-width="1.5"/>
+          <rect width="260" height="28" fill="#064E3B"/>
+          <text x="130" y="19" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" text-anchor="middle">OrderRepository (Spring JPA)</text>
+          <text x="12" y="52" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">&lt;&lt;interface&gt;&gt; JpaRepository</text>
+          <text x="12" y="74" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ findByCustomerId(UUID): List</text>
+          <text x="12" y="96" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="10">+ findByStatus(String): List</text>
+          <text x="12" y="122" fill="#64748B" font-family="JetBrains Mono, monospace" font-size="9.5">+ save(Order): Order</text>
+        </g>
+
+        <!-- Arrow Controller -> Service -->
+        <path d="M 310 115 L 350 115" stroke="#60A5FA" stroke-width="2"/>
+        <polygon points="345,115 337,111 337,119" fill="#60A5FA"/>
+
+        <!-- Arrow Service -> Repository -->
+        <path d="M 610 115 L 650 115" stroke="#60A5FA" stroke-width="2"/>
+        <polygon points="645,115 637,111 637,119" fill="#60A5FA"/>
+
+        <!-- Class: Order Entity -->
+        <g transform="translate(180, 270)">
+          <rect width="270" height="180" rx="8" fill="#151821" stroke="#F59E0B" stroke-width="1.5"/>
+          <rect width="270" height="28" fill="#78350F"/>
+          <text x="135" y="19" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" text-anchor="middle">Order (@Entity: orders)</text>
+          <text x="12" y="52" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ id: UUID [PK]</text>
+          <text x="12" y="74" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ customerId: UUID</text>
+          <text x="12" y="96" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ totalAmount: BigDecimal</text>
+          <text x="12" y="118" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ status: String (PROCESSING)</text>
+          <text x="12" y="140" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ items: List&lt;OrderItem&gt;</text>
+          <text x="12" y="162" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ createdAt: LocalDateTime</text>
+        </g>
+
+        <!-- Class: OrderItem Entity -->
+        <g transform="translate(530, 270)">
+          <rect width="270" height="180" rx="8" fill="#151821" stroke="#EC4899" stroke-width="1.5"/>
+          <rect width="270" height="28" fill="#831843"/>
+          <text x="135" y="19" fill="#FFF" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" text-anchor="middle">OrderItem (@Entity: order_items)</text>
+          <text x="12" y="52" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ id: UUID [PK]</text>
+          <text x="12" y="74" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ order: Order [@ManyToOne]</text>
+          <text x="12" y="96" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ productId: UUID</text>
+          <text x="12" y="118" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ productSku: String</text>
+          <text x="12" y="140" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ quantity: Integer</text>
+          <text x="12" y="162" fill="#E2E8F0" font-family="JetBrains Mono, monospace" font-size="10">+ unitPrice: BigDecimal</text>
+        </g>
+
+        <!-- Association Order <-> OrderItem -->
+        <path d="M 450 360 L 530 360" stroke="#EC4899" stroke-width="2" stroke-dasharray="4"/>
+        <text x="460" y="350" fill="#F59E0B" font-family="Inter, sans-serif" font-size="11" font-weight="700">1</text>
+        <text x="515" y="350" fill="#EC4899" font-family="Inter, sans-serif" font-size="11" font-weight="700">N</text>
       </svg>
     `;
   }
 
   // 5. SEQUENCE FLOW SVG
   private renderSequenceSvg(): string {
+    const isEcom = this.isEcommerceProject();
     const isPy = this.isPythonProject();
-    const routerName = isPy ? 'FastAPI Router' : 'REST Controller';
-    const srvName = isPy ? 'PatientService' : 'OrderService';
-    const actionName = isPy ? 'POST /patients/{id}/records' : 'POST /orders/checkout';
-    const dbAction = isPy ? 'INSERT into clinical_records' : 'INSERT into orders, order_items';
+    const clientName = isEcom ? 'Customer / Storefront' : (isPy ? 'Client / Clinician' : 'Client Application');
+    const routerName = isEcom ? 'OrderController' : (isPy ? 'FastAPI Router' : 'REST Controller');
+    const srvName = isEcom ? 'OrderService' : (isPy ? 'PatientService' : 'Domain Service');
+    const actionName = isEcom ? 'POST /api/v1/orders/checkout' : (isPy ? 'POST /patients/{id}/records' : 'POST /api/v1/resource');
+    const step2Name = isEcom ? 'processOrderCheckout(order)' : (isPy ? 'Validate DTO & invoke domain logic' : 'Execute domain use case');
+    const step3Name = isEcom ? 'Compute total with BigDecimal' : (isPy ? 'Validate biometric telemetry & ranges' : 'Validate business invariants');
+    const dbAction = isEcom ? 'INSERT into orders, order_items (ACID)' : (isPy ? 'INSERT into clinical_records' : 'INSERT into primary_records');
+    const responseName = isEcom ? '200 OK (Order Confirmed with UUID)' : (isPy ? '201 Created (Clinical Observation Saved)' : '200 OK (Processed)');
 
     return `
       <svg width="960" height="560" viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg">
         <!-- Actors / Lifelines -->
         <g transform="translate(60, 30)">
           <rect width="140" height="40" rx="8" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5"/>
-          <text x="70" y="25" fill="#FFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">Client / Clinician</text>
+          <text x="70" y="25" fill="#FFF" font-family="Inter, sans-serif" font-size="12" font-weight="600" text-anchor="middle">${clientName}</text>
           <line x1="70" y1="40" x2="70" y2="480" stroke="#334155" stroke-dasharray="4"/>
         </g>
         <g transform="translate(280, 30)">
@@ -751,27 +893,27 @@ export class DiagramViewerComponent {
         <!-- Message 2: Router -> Service -->
         <path d="M 360 170 L 590 170" stroke="#34D399" stroke-width="2"/>
         <polygon points="585,170 575,165 575,175" fill="#34D399"/>
-        <text x="475" y="160" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">2. Validate DTO & invoke domain logic</text>
+        <text x="475" y="160" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">2. ${step2Name}</text>
 
         <!-- Message 3: Service -> DB -->
         <path d="M 590 230 L 820 230" stroke="#A78BFA" stroke-width="2"/>
         <polygon points="815,230 805,225 805,235" fill="#A78BFA"/>
-        <text x="705" y="220" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">3. ${dbAction}</text>
+        <text x="705" y="220" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">3. ${step3Name} &amp; ${dbAction}</text>
 
         <!-- Message 4: DB -> Service -->
         <path d="M 820 290 L 590 290" stroke="#FBBF24" stroke-width="2" stroke-dasharray="4"/>
         <polygon points="595,290 605,285 605,295" fill="#FBBF24"/>
-        <text x="705" y="280" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">4. Commit transaction & return entity</text>
+        <text x="705" y="280" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">4. Commit transaction &amp; return entity</text>
 
         <!-- Message 5: Service -> Router -->
         <path d="M 590 350 L 360 350" stroke="#34D399" stroke-width="2" stroke-dasharray="4"/>
         <polygon points="365,350 375,345 375,355" fill="#34D399"/>
-        <text x="475" y="340" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">5. Return DTO response</text>
+        <text x="475" y="340" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">5. Return response entity</text>
 
         <!-- Message 6: Router -> Client -->
         <path d="M 360 410 L 130 410" stroke="#60A5FA" stroke-width="2" stroke-dasharray="4"/>
         <polygon points="135,410 145,405 145,415" fill="#60A5FA"/>
-        <text x="245" y="400" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">6. 201 Created JSON response</text>
+        <text x="245" y="400" fill="#94A3B8" font-family="Inter, sans-serif" font-size="11" text-anchor="middle">6. ${responseName}</text>
       </svg>
     `;
   }

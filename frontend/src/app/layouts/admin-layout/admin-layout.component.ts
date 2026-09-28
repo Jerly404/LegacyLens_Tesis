@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -6,6 +6,7 @@ import { ThemeService } from '../../core/theme/theme.service';
 import { SettingsService } from '../../core/settings/settings.service';
 import { NotificationService } from '../../core/notifications/notification.service';
 import { ProjectService } from '../../core/projects/project.service';
+import { AnalysisService } from '../../core/analysis/analysis.service';
 import { TranslationService } from '../../core/i18n/translation.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
@@ -23,8 +24,15 @@ export class AdminLayoutComponent {
   settingsService = inject(SettingsService);
   notificationService = inject(NotificationService);
   projectService = inject(ProjectService);
+  analysisService = inject(AnalysisService);
   translationService = inject(TranslationService);
   router = inject(Router);
+
+  isAnalyzing = computed(() => {
+    const analysis = this.analysisService.currentAnalysis();
+    const proj = this.projectService.selectedProject();
+    return analysis.status === 'ANALYZING' || proj.status === 'ANALYZING';
+  });
 
   sidebarOpen = signal<boolean>(true);
   mobileDrawerOpen = signal<boolean>(false);

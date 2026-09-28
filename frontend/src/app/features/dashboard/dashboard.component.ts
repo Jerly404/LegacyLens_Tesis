@@ -73,4 +73,10 @@ export class DashboardComponent {
       this.notificationService.info('Workspace Limpio', 'Se han limpiado todos los proyectos del sistema.');
     });
   }
+
+  restoreDemos() {
+    this.projectService.resetDemoProjects().subscribe(() => {
+      this.notificationService.success('Proyectos Restaurados', 'Se han cargado los proyectos de ejemplo para exploración.');
+    });
+  }
 }
